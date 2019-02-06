@@ -83,7 +83,7 @@ Similarly, since the authorization_code method opens a browser to load the AAD a
 
 \section{Caching}{
 
-AzureAuth differs from httr in its handling of token caching in a number of ways. First, caching is based on all the inputs to \code{get_azure_token} as listed above. Second, it defines its own directory for cached tokens, using the rappdirs package. On recent Windows versions, this will usually be in the location \code{C:\\Users\\(username)\\AppData\\Local\\AzureR\\AzureAuth}. On Linux, it will be in \code{~/.config/AzureAuth}, and on MacOS, it will be in \code{~/Library/Application Support/AzureAuth}. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).
+AzureAuth differs from httr in its handling of token caching in a number of ways. First, caching is based on all the inputs to \code{get_azure_token} as listed above. Second, it defines its own directory for cached tokens, using the rappdirs package. On recent Windows versions, this will usually be in the location \code{C:\\Users\\(username)\\AppData\\Local\\AzureR}. On Linux, it will be in \code{~/.config/AzureR}, and on MacOS, it will be in \code{~/Library/Application Support/AzureR}. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).
 
 To list all cached tokens on disk, use \code{list_azure_tokens}. This returns a list of token objects, named according to their MD5 hashes.
 
