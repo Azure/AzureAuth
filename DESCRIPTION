@@ -1,0 +1,27 @@
+Package: AzureAuth
+Title: OAuth 2.0 authentication with Azure Active Directory
+Version: 0.0.1
+Authors@R: c(
+    person("Hong", "Ooi", , "hongooi@microsoft.com", role = c("aut", "cre")),
+    person("Microsoft", role="cph")
+    )
+Description: OAuth 2.0 authentication with Azure Active Directory.
+URL: https://github.com/cloudyr/AzureAuth
+BugReports: https://github.com/cloudyr/AzureAuth/issues
+License: MIT + file LICENSE
+VignetteBuilder: knitr
+Depends: 
+    R (>= 3.3)
+Imports: 
+    utils,
+    httr (>= 1.3),
+    openssl,
+    jsonlite,
+    R6,
+    rappdirs
+Suggests:
+    knitr,
+    testthat,
+    httpuv
+Roxygen: list(markdown=TRUE)
+RoxygenNote: 6.1.0.9000

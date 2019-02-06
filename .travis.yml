@@ -1,0 +1,10 @@
+language: r
+sudo: false
+cache: packages
+#r_packages:
+#- covr
+#- drat
+#after_success:
+#- Rscript -e 'library("covr");codecov()'
+#- test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && bash
+#  drat.sh
