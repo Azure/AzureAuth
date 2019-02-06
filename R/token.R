@@ -14,6 +14,8 @@
 #' @details
 #' `get_azure_token` does much the same thing as [httr::oauth2.0_token()], but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. `delete_azure_token` deletes a cached token, and `list_azure_tokens` lists currently cached tokens.
 #'
+#' `token_hash` computes the MD5 hash of its arguments. This is used by AzureAuth to identify tokens for caching purposes.
+#'
 #' Note that tokens are only cached if you allowed AzureAuth to create a data directory at package startup.
 #'
 #' @section Authentication methods:
@@ -208,11 +210,11 @@ delete_azure_token <- function(resource, tenant, app, password=NULL, username=NU
                                hash=NULL,
                                confirm=TRUE)
 {
-    if(!dir.exists(AzureAuth_dir()))
+    if(!dir.exists(AzureR_dir()))
         return(invisible(NULL))
 
     if(is.null(hash))
-        hash <- token_hash_from_original_args(resource, tenant, app, password, username, auth_type, aad_host)
+        hash <- token_hash(resource, tenant, app, password, username, auth_type, aad_host)
 
     if(confirm && interactive())
     {
@@ -220,7 +222,7 @@ delete_azure_token <- function(resource, tenant, app, password=NULL, username=NU
         if(tolower(substr(yn, 1, 1)) != "y")
             return(invisible(NULL))
     }
-    file.remove(file.path(AzureAuth_dir(), hash))
+    file.remove(file.path(AzureR_dir(), hash))
     invisible(NULL)
 }
 
@@ -229,7 +231,7 @@ delete_azure_token <- function(resource, tenant, app, password=NULL, username=NU
 #' @export
 clean_token_directory <- function(confirm=TRUE)
 {
-    if(!dir.exists(AzureAuth_dir()))
+    if(!dir.exists(AzureR_dir()))
         return(invisible(NULL))
 
     if(confirm && interactive())
@@ -238,7 +240,7 @@ clean_token_directory <- function(confirm=TRUE)
         if(tolower(substr(yn, 1, 1)) != "y")
             return(invisible(NULL))
     }
-    toks <- dir(AzureAuth_dir(), pattern="^[0-9a-f]{32}$", full.names=TRUE)
+    toks <- dir(AzureR_dir(), pattern="^[0-9a-f]{32}$", full.names=TRUE)
     file.remove(toks)
     invisible(NULL)
 }
@@ -248,7 +250,7 @@ clean_token_directory <- function(confirm=TRUE)
 #' @export
 list_azure_tokens <- function()
 {
-    tokens <- dir(AzureAuth_dir(), pattern="[0-9a-f]{32}", full.names=TRUE)
+    tokens <- dir(AzureR_dir(), pattern="[0-9a-f]{32}", full.names=TRUE)
     lst <- lapply(tokens, function(fname)
     {
         x <- try(readRDS(fname), silent=TRUE)
@@ -261,14 +263,9 @@ list_azure_tokens <- function()
 }
 
 
-token_hash <- function(endpoint, app, params)
-{
-    msg <- serialize(list(endpoint, app, params), NULL, version=2)
-    paste(openssl::md5(msg[-(1:14)]), collapse="")
-}
-
-
-token_hash_from_original_args <- function(resource, tenant, app, password=NULL, username=NULL, auth_type=NULL,
+#' @rdname get_azure_token
+#' @export
+token_hash <- function(resource, tenant, app, password=NULL, username=NULL, auth_type=NULL,
     aad_host="https://login.microsoftonline.com/")
 {
     # reconstruct the hash for the token object from the inputs
@@ -298,7 +295,14 @@ token_hash_from_original_args <- function(resource, tenant, app, password=NULL, 
                    use_basic_auth=FALSE, config_init=list(),
                    client_credentials=client_credentials, use_device=use_device)
 
-    token_hash(endp, app, params)
+    token_hash_internal(endp, app, params)
+}
+
+
+token_hash_internal <- function(endpoint, app, params)
+{
+    msg <- serialize(list(endpoint, app, params), NULL, version=2)
+    paste(openssl::md5(msg[-(1:14)]), collapse="")
 }
 
 

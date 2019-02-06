@@ -5,6 +5,7 @@
 \alias{delete_azure_token}
 \alias{clean_token_directory}
 \alias{list_azure_tokens}
+\alias{token_hash}
 \alias{is_azure_token}
 \title{Manage Azure Active Directory OAuth 2.0 tokens}
 \usage{
@@ -20,6 +21,9 @@ delete_azure_token(resource, tenant, app, password = NULL,
 clean_token_directory(confirm = TRUE)
 
 list_azure_tokens()
+
+token_hash(resource, tenant, app, password = NULL, username = NULL,
+  auth_type = NULL, aad_host = "https://login.microsoftonline.com/")
 
 is_azure_token(object)
 }
@@ -49,6 +53,8 @@ These functions extend the OAuth functionality in httr for use with Azure Active
 }
 \details{
 \code{get_azure_token} does much the same thing as \code{\link[httr:oauth2.0_token]{httr::oauth2.0_token()}}, but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. \code{delete_azure_token} deletes a cached token, and \code{list_azure_tokens} lists currently cached tokens.
+
+\code{token_hash} computes the MD5 hash of its arguments. This is used by AzureAuth to identify tokens for caching purposes.
 
 Note that tokens are only cached if you allowed AzureAuth to create a data directory at package startup.
 }

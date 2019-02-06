@@ -27,7 +27,7 @@ public=list(
 
         # if this is an existing object, don't use cached value
         # avoids infinite loop when refresh() calls initialize()
-        tokenfile <- file.path(AzureRMR_dir(), token_hash(endpoint, app, params))
+        tokenfile <- file.path(AzureRMR_dir(), token_hash_internal(endpoint, app, params))
         if(file.exists(tokenfile) && !isTRUE(private$initialized))
         {
             message("Loading cached token")
@@ -67,7 +67,7 @@ public=list(
     # overrides httr::Token method
     hash=function()
     {
-        token_hash(self$endpoint, self$app, self$params)
+        token_hash_internal(self$endpoint, self$app, self$params)
     },
 
     # overrides httr::Token method
