@@ -27,7 +27,7 @@ public=list(
 
         # if this is an existing object, don't use cached value
         # avoids infinite loop when refresh() calls initialize()
-        tokenfile <- file.path(AzureRMR_dir(), token_hash_internal(endpoint, app, params))
+        tokenfile <- file.path(AzureR_dir(), token_hash_internal(endpoint, app, params))
         if(file.exists(tokenfile) && !isTRUE(private$initialized))
         {
             message("Loading cached token")
@@ -58,7 +58,7 @@ public=list(
             private$init_with_device(user_params)
         else private$init_with_username(user_params)
 
-        if(dir.exists(AzureRMR_dir()))
+        if(dir.exists(AzureR_dir()))
             saveRDS(self, tokenfile)
 
         self
@@ -73,9 +73,9 @@ public=list(
     # overrides httr::Token method
     cache=function()
     {
-        if(dir.exists(AzureRMR_dir()))
+        if(dir.exists(AzureR_dir()))
         {
-            filename <- file.path(AzureRMR_dir(), self$hash())
+            filename <- file.path(AzureR_dir(), self$hash())
             saveRDS(self, filename)
         }
         invisible(NULL)
