@@ -9,7 +9,6 @@
 #' @param username Your AAD username, if using the resource owner grant. See 'Details' below.
 #' @param auth_type The authentication type. See 'Details' below.
 #' @param aad_host URL for your AAD host. For the public Azure cloud, this is `https://login.microsoftonline.com/`. Change this if you are using a government or private cloud.
-#' @param object For `is_azure_token`, an R object.
 #'
 #' @details
 #' `get_azure_token` does much the same thing as [httr::oauth2.0_token()], but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. `delete_azure_token` deletes a cached token, and `list_azure_tokens` lists currently cached tokens.
@@ -313,6 +312,7 @@ construct_path <- function(...)
 }
 
 
+#' @param object For `is_azure_token`, an R object.
 #' @rdname get_azure_token
 #' @export
 is_azure_token <- function(object)
