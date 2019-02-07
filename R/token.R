@@ -230,8 +230,12 @@ token_hash <- function(resource, tenant, app, password=NULL, username=NULL, cert
     client <- aad_request_credentials(app, password, username, certificate, auth_type)
 
     if(version == 1)
-        resource <- resource
-    else scope <- resource
+        scope <- NULL
+    else
+    {
+        scope <- resource
+        resource <- NULL
+    }
 
     token_hash_internal(version, aad_host, tenant, auth_type, client, resource, scope,
                         authorize_args, token_args)

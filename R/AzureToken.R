@@ -43,6 +43,11 @@ public=list(
         )
         environment(private$initfunc) <- parent.env(environment())
 
+        private$add_resource <- if(self$version == 1)
+            add_resource_v1
+        else add_resource_v2
+        environment(private$add_resource) <- parent.env(environment())
+
         res <- private$initfunc()
         creds <- process_aad_response(res)
 
@@ -51,7 +56,14 @@ public=list(
     },
 
     cache=function()
-    {},
+    {
+        if(dir.exists(AzureR_dir()))
+        {
+            filename <- file.path(AzureR_dir(), self$hash())
+            saveRDS(self, filename)
+        }
+        invisible(NULL)
+    },
 
     hash=function()
     {
@@ -96,13 +108,6 @@ public=list(
 
         self$credentials <- utils::modifyList(self$credentials, creds)
         self
-    },
-
-    add_resource <- function(body=self$client)
-    {
-        if(self$version == 1)
-            c(body, self$resource)
-        else c(body, self$scope)
     }
 ),
 
@@ -110,8 +115,22 @@ private=list(
 
     initialized=NULL,
 
-    initfunc=NULL # will be filled in by initialize()
+    # member functions to be filled in by initialize()
+    initfunc=NULL,
+    add_resource=NULL
 ))
+
+
+add_resource_v1 <- function(body=self$client)
+{
+    c(body, self$resource)
+}
+
+
+add_resource_v2 <- function(body=self$client)
+{
+    c(body, self$scope)
+}
 
 
 init_authcode <- function()
