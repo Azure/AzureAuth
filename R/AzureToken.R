@@ -108,6 +108,12 @@ public=list(
 
         self$credentials <- utils::modifyList(self$credentials, creds)
         self
+    },
+
+    print=function()
+    {
+        cat(format_auth_header(self))
+        invisible(self)
     }
 ),
 
