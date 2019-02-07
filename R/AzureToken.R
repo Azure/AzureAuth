@@ -32,9 +32,6 @@ public=list(
             self$resource <- resource
         else self$scope <- paste0(resource, collapse=" ")
 
-        # v2.0 endpoint doesn't provide an expires_on field, set it here
-        self$credentials$expires_on <- as.character(floor(as.numeric(Sys.time())))
-
         private$initfunc <- switch(self$auth_type,
             authorization_code=init_authcode,
             device_code=init_devcode,
@@ -48,6 +45,17 @@ public=list(
         else add_resource_v2
         environment(private$add_resource) <- parent.env(environment())
 
+        tokenfile <- file.path(AzureR_dir(), self$hash())
+        if(file.exists(tokenfile))
+        {
+            message("Loading cached token")
+            private$load_from_cache(tokenfile)
+            return(self$refresh())
+        }
+
+        # v2.0 endpoint doesn't provide an expires_on field, set it here
+        self$credentials$expires_on <- as.character(floor(as.numeric(Sys.time())))
+
         res <- private$initfunc()
         creds <- process_aad_response(res)
 
@@ -57,6 +65,7 @@ public=list(
         if(self$auth_type %in% c("authorization_code", "device_code") && is.null(self$credentials$refresh_token))
             message("Server did not provide a refresh token. To refresh, you will have to reauthenticate.")
 
+        self$cache()
         self
     },
 
@@ -111,7 +120,9 @@ public=list(
         }
 
         self$credentials <- utils::modifyList(self$credentials, creds)
-        self
+
+        self$cache()
+        invisible(self)
     },
 
     print=function()
@@ -123,7 +134,13 @@ public=list(
 
 private=list(
 
-    initialized=NULL,
+    load_from_cache=function(file)
+    {
+        token <- readRDS(file)
+        if(!is_azure_token(token))
+            stop("Invalid or corrupted cached token", call.=FALSE)
+        self$credentials <- token$credentials
+    },
 
     # member functions to be filled in by initialize()
     initfunc=NULL,
