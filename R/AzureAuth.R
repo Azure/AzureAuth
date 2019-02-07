@@ -1,6 +1,3 @@
-#' @importFrom utils modifyList
-NULL
-
 .onLoad <- function(libname, pkgname)
 {
     make_AzureR_dir()

@@ -116,9 +116,11 @@
 #' }
 # #' @export
 get_azure_token <- function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
-                            aad_host="https://login.microsoftonline.com/", version=1, ...)
+                            aad_host="https://login.microsoftonline.com/", version=1,
+                            authorize_args=list(), token_args=list())
 {
-    AzureToken$new(resource, tenant, app, password, username, certificate, auth_type, aad_host, version, ...)
+    AzureToken$new(resource, tenant, app, password, username, certificate, auth_type, aad_host, version,
+                   authorize_args, token_args)
 }
 
 
@@ -156,8 +158,8 @@ select_auth_type <- function(password, username, certificate, auth_type)
 #' @param confirm For `delete_azure_token`, whether to prompt for confirmation before deleting a token.
 #' @rdname get_azure_token
 #' @export
-delete_azure_token <- function(resource, tenant, app, password=NULL, username=NULL, auth_type=NULL,
-                               aad_host="https://login.microsoftonline.com/",
+delete_azure_token <- function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
+                               aad_host="https://login.microsoftonline.com/", version=1, ...,
                                hash=NULL,
                                confirm=TRUE)
 {
@@ -165,7 +167,7 @@ delete_azure_token <- function(resource, tenant, app, password=NULL, username=NU
         return(invisible(NULL))
 
     if(is.null(hash))
-        hash <- token_hash(resource, tenant, app, password, username, auth_type, aad_host)
+        hash <- token_hash(resource, tenant, app, password, username, certificate, auth_type, aad_host, version, ...)
 
     if(confirm && interactive())
     {
@@ -216,43 +218,32 @@ list_azure_tokens <- function()
 
 #' @rdname get_azure_token
 #' @export
-token_hash <- function(resource, tenant, app, password=NULL, username=NULL, auth_type=NULL,
-    aad_host="https://login.microsoftonline.com/")
+token_hash <- function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
+                       aad_host="https://login.microsoftonline.com/", version=1,
+                       authorize_args=list(), token_args=list())
 {
     # reconstruct the hash for the token object from the inputs
+    version <- normalize_aad_version(version)
     tenant <- normalize_tenant(tenant)
-    app <- normalize_guid(app)
-    base_url <- construct_path(aad_host, tenant)
+    auth_type <- select_auth_type(password, username, certificate, auth_type)
 
-    if(is.null(auth_type))
-        auth_type <- select_auth_type(password, username)
+    client <- aad_request_credentials(app, password, username, certificate, auth_type)
 
-    base_url <- construct_path(aad_host, tenant)
-    use_device <- auth_type == "device_code"
-    client_credentials <- auth_type == "client_credentials"
+    if(version == 1)
+        resource <- resource
+    else scope <- resource
 
-    endp <- httr::oauth_endpoint(base_url=base_url,
-        authorize="oauth2/authorize",
-        access=if(use_device) "oauth2/devicecode" else "oauth2/token")
-    app <- httr::oauth_app("azure", app,
-        secret=if(client_credentials) password else NULL,
-        redirect_uri=if(client_credentials) NULL else httr::oauth_callback())
-
-    user_params <- list(resource=resource)
-    if(auth_type == "resource_owner")
-        user_params <- c(user_params, password=NULL, username=NULL)
-
-    params <- list(scope=NULL, user_params=user_params, type=NULL, use_oob=FALSE, as_header=TRUE,
-                   use_basic_auth=FALSE, config_init=list(),
-                   client_credentials=client_credentials, use_device=use_device)
-
-    token_hash_internal(endp, app, params)
+    token_hash_internal(version, aad_host, tenant, auth_type, client, resource, scope,
+                        authorize_args, token_args)
 }
 
 
-token_hash_internal <- function(endpoint, app, params)
+token_hash_internal <- function(version, aad_host, tenant, auth_type, client, resource, scope,
+                                authorize_args, token_args)
 {
-    msg <- serialize(list(endpoint, app, params), NULL, version=2)
+    msg <- serialize(list(version, aad_host, tenant, auth_type, client, resource, scope,
+                          authorize_args, token_args),
+                     NULL, version=2)
     paste(openssl::md5(msg[-(1:14)]), collapse="")
 }
 
