@@ -10,8 +10,8 @@
 \title{Manage Azure Active Directory OAuth 2.0 tokens}
 \usage{
 get_azure_token(resource, tenant, app, password = NULL,
-  username = NULL, auth_type = NULL,
-  aad_host = "https://login.microsoftonline.com/")
+  username = NULL, certificate = NULL, auth_type = NULL,
+  aad_host = "https://login.microsoftonline.com/", version = 1, ...)
 
 delete_azure_token(resource, tenant, app, password = NULL,
   username = NULL, auth_type = NULL,
@@ -38,9 +38,13 @@ is_azure_token(object)
 
 \item{username}{Your AAD username, if using the resource owner grant. See 'Details' below.}
 
+\item{certificate}{A certificate to authenticate with.}
+
 \item{auth_type}{The authentication type. See 'Details' below.}
 
 \item{aad_host}{URL for your AAD host. For the public Azure cloud, this is \code{https://login.microsoftonline.com/}. Change this if you are using a government or private cloud.}
+
+\item{version}{The AAD version, either 1 or 2.}
 
 \item{hash}{The MD5 hash of this token, computed from the above inputs. Used by \code{delete_azure_token} to identify a cached token to delete.}
 
