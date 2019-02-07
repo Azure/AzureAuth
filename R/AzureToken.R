@@ -30,7 +30,7 @@ public=list(
 
         if(self$version == 1)
             self$resource <- resource
-        else self$scope <- resource
+        else self$scope <- paste0(resource, collapse=" ")
 
         # v2.0 endpoint doesn't provide an expires_on field, set it here
         self$credentials$expires_on <- as.character(floor(as.numeric(Sys.time())))
@@ -123,83 +123,15 @@ private=list(
 
 add_resource_v1 <- function(body=self$client)
 {
-    c(body, self$resource)
+    c(body, resource=self$resource)
 }
 
 
 add_resource_v2 <- function(body=self$client)
 {
-    c(body, self$scope)
+    c(body, scope=self$scope)
 }
 
-
-init_authcode <- function()
-{
-
-}
-
-
-init_devcode <- function()
-{
-    # contact devicecode endpoint to get code
-    dev_uri <- aad_endpoint(self$aad_host, self$tenant, self$version, "devicecode")
-    body <- private$add_resource(list(client_id=self$client$client_id))
-    
-    res <- httr::POST(dev_uri, body=body, encode="form")
-    creds <- process_aad_response(res)
-
-    # tell user to enter the code
-    cat(creds$message, "\n")
-
-    # poll token endpoint for token
-    access_uri <- aad_endpoint(self$aad_host, self$tenant, self$version, "token")
-    body <- c(self$client, code=creds$device_code)
-
-    message("Waiting for device code in browser...\nPress Esc/Ctrl + C to abort")
-    interval <- as.numeric(creds$interval)
-    ntries <- as.numeric(creds$expires_in) %/% interval
-    for(i in seq_len(ntries))
-    {
-        Sys.sleep(interval)
-
-        res <- httr::POST(access_uri, body=body, encode="form")
-
-        status <- httr::status_code(res)
-        cont <- httr::content(res)
-        if(status == 400 && cont$error == "authorization_pending")
-        {
-            # do nothing
-        }
-        else if(status >= 300)
-            process_aad_response(res) # fail here on error
-        else break
-    }
-    if(status >= 300)
-        stop("Unable to authenticate")
-
-    message("Authentication complete.")
-    res
-}
-
-
-init_clientcred <- function()
-{
-    # contact token endpoint directly with client credentials
-    uri <- aad_endpoint(self$aad_host, self$tenant, self$version, "token")
-    body <- private$add_resource()
-
-    httr::POST(uri, body=body, encode="form")
-}
-
-
-init_resowner <- function()
-{
-    # contact token endpoint directly with resource owner username/password
-    uri <- aad_endpoint(self$aad_host, self$tenant, self$version, "token")
-    body <- private$add_resource()
-
-    httr::POST(uri, body=body, encode="form")
-}
 
 
 aad_request_credentials <- function(app, password, username, certificate, auth_type)

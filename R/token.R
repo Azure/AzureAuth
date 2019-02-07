@@ -232,7 +232,7 @@ token_hash <- function(resource, tenant, app, password=NULL, username=NULL, cert
         scope <- NULL
     else
     {
-        scope <- resource
+        scope <- paste0(resource, collapse=" ")
         resource <- NULL
     }
 

@@ -3,6 +3,7 @@ Title: Authentication services for Azure Active Directory
 Version: 0.0.1
 Authors@R: c(
     person("Hong", "Ooi", , "hongooi@microsoft.com", role = c("aut", "cre")),
+    person("httr development team", role="ctb", comment="Original OAuth listener code"),
     person("Microsoft", role="cph")
     )
 Description: Provides Azure Active Directory authentication functionality for R users of Microsoft's 'Azure' cloud. Use this package to obtain 'OAuth' 2.0 tokens for services including Azure Resource Manager, Azure Storage and others.
