@@ -52,6 +52,11 @@ public=list(
         creds <- process_aad_response(res)
 
         self$credentials <- utils::modifyList(self$credentials, creds)
+
+        # notify user if interactive auth and no refresh token
+        if(self$auth_type %in% c("authorization_code", "device_code") && is.null(self$credentials$refresh_token))
+            message("Server did not provide a refresh token. To refresh, you will have to reauthenticate.")
+
         self
     },
 
@@ -91,15 +96,14 @@ public=list(
         {
             body <- utils::modifyList(self$client,
                 list(grant_type="refresh_token", refresh_token=self$credentials$refresh_token))
-            body <- private$add_resource()
+            body <- private$add_resource(body)
 
             uri <- aad_endpoint(self$aad_host, self$tenant, self$version, "token")
             httr::POST(uri, body=body, encode="form")
-
         }
         else private$initfunc() # reauthenticate if no refresh token
 
-        creds <- try(process_httr_response(res))
+        creds <- try(process_aad_response(res))
         if(inherits(creds, "try-error"))
         {
             delete_azure_token(hash=self$hash(), confirm=FALSE)
@@ -137,7 +141,6 @@ add_resource_v2 <- function(body=self$client)
 {
     c(body, scope=self$scope)
 }
-
 
 
 aad_request_credentials <- function(app, password, username, certificate, auth_type)
