@@ -226,7 +226,6 @@ token_hash <- function(resource, tenant, app, password=NULL, username=NULL, cert
     version <- normalize_aad_version(version)
     tenant <- normalize_tenant(tenant)
     auth_type <- select_auth_type(password, username, certificate, auth_type)
-
     client <- aad_request_credentials(app, password, username, certificate, auth_type)
 
     if(version == 1)
@@ -242,12 +241,9 @@ token_hash <- function(resource, tenant, app, password=NULL, username=NULL, cert
 }
 
 
-token_hash_internal <- function(version, aad_host, tenant, auth_type, client, resource, scope,
-                                authorize_args, token_args)
+token_hash_internal <- function(...)
 {
-    msg <- serialize(list(version, aad_host, tenant, auth_type, client, resource, scope,
-                          authorize_args, token_args),
-                     NULL, version=2)
+    msg <- serialize(list(...), NULL, version=2)
     paste(openssl::md5(msg[-(1:14)]), collapse="")
 }
 
