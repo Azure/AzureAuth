@@ -1,37 +1,12 @@
-context("AzureToken")
-
-test_that("normalize_tenant, normalize_guid work",
-{
-    guid <- "abcdefab-1234-5678-9012-abcdefabcdef"
-    expect_identical(normalize_guid(guid), guid)
-    guid2 <- paste0("{", guid, "}")
-    expect_identical(normalize_guid(guid2), guid)
-    guid3 <- paste0("(", guid, ")")
-    expect_identical(normalize_guid(guid3), guid)
-    guid4 <- gsub("-", "", guid, fixed=TRUE)
-    expect_identical(normalize_guid(guid4), guid)
-
-    # improperly formatted GUID will be treated as a name
-    guid5 <- paste0("(", guid)
-    expect_false(is_guid(guid5))
-    expect_error(normalize_guid(guid5))
-    expect_identical(normalize_tenant(guid5), paste0(guid5, ".onmicrosoft.com"))
-
-    expect_identical(normalize_tenant("common"), "common")
-    expect_identical(normalize_tenant("mytenant"), "mytenant.onmicrosoft.com")
-    expect_identical(normalize_tenant("mytenant.com"), "mytenant.com")
-    # iterating normalize shouldn't change result
-    expect_identical(normalize_tenant(normalize_tenant("mytenant")), "mytenant.onmicrosoft.com")
-})
-
+context("v1.0 token")
 
 tenant <- Sys.getenv("AZ_TEST_TENANT_ID")
 app <- Sys.getenv("AZ_TEST_APP_ID")
+username <- Sys.getenv("AZ_TEST_USERNAME")
 password <- Sys.getenv("AZ_TEST_PASSWORD")
-subscription <- Sys.getenv("AZ_TEST_SUBSCRIPTION")
 native_app <- Sys.getenv("AZ_TEST_NATIVE_APP_ID")
 
-if(tenant == "" || app == "" || password == "" || subscription == "" || native_app == "")
+if(tenant == "" || app == "" || username == "" || password == "" || native_app == "")
     skip("Authentication tests skipped: ARM credentials not set")
 
 if(system.file(package="httpuv") == "")
@@ -41,30 +16,34 @@ if(system.file(package="httpuv") == "")
 if(!interactive())
     skip("Authentication tests skipped: must be an interactive session")
 
-test_that("v1.0 authentication works",
+test_that("v1.0 simple authentication works",
 {
     suppressWarnings(file.remove(dir(AzureR_dir(), full.names=TRUE)))
+
+    aut_hash <- "a6496c5290d313b87e5bbfa705bb6b93"
+    ccd_hash <- "f789f3332b915896c18b03c10780c26c"
+    dev_hash <- "805098332527821e5e8d79cb34e3f3a7"
 
     res <- "https://management.azure.com/"
 
     # obtain new tokens
     aut_tok <- get_azure_token(res, tenant, native_app, auth_type="authorization_code")
     expect_true(is_azure_token(aut_tok))
-    expect_identical(aut_tok$hash(), "a6496c5290d313b87e5bbfa705bb6b93")
+    expect_identical(aut_tok$hash(), aut_hash)
 
     ccd_tok <- get_azure_token(res, tenant, app, password=password)
     expect_true(is_azure_token(ccd_tok))
-    expect_identical(ccd_tok$hash(), "f789f3332b915896c18b03c10780c26c")
+    expect_identical(ccd_tok$hash(), ccd_hash)
 
     dev_tok <- get_azure_token(res, tenant, native_app, auth_type="device_code")
     expect_true(is_azure_token(dev_tok))
-    expect_identical(dev_tok$hash(), "805098332527821e5e8d79cb34e3f3a7")
+    expect_identical(dev_tok$hash(), dev_hash)
 
     aut_expire <- as.numeric(aut_tok$credentials$expires_on)
     ccd_expire <- as.numeric(ccd_tok$credentials$expires_on)
     dev_expire <- as.numeric(dev_tok$credentials$expires_on)
 
-    Sys.sleep(5)
+    Sys.sleep(2)
 
     # refresh/reauthenticate
     aut_tok$refresh()
@@ -78,17 +57,35 @@ test_that("v1.0 authentication works",
     # load cached tokens: should not get repeated login prompts/screens
     aut_tok2 <- get_azure_token(res, tenant, native_app, auth_type="authorization_code")
     expect_true(is_azure_token(aut_tok2))
-    expect_identical(aut_tok2$hash(), "a6496c5290d313b87e5bbfa705bb6b93")
+    expect_identical(aut_tok2$hash(), aut_hash)
 
     ccd_tok2 <- get_azure_token(res, tenant, app, password=password)
     expect_true(is_azure_token(ccd_tok2))
-    expect_identical(ccd_tok2$hash(), "f789f3332b915896c18b03c10780c26c")
+    expect_identical(ccd_tok2$hash(), ccd_hash)
 
     dev_tok2 <- get_azure_token(res, tenant, native_app, auth_type="device_code")
     expect_true(is_azure_token(dev_tok2))
-    expect_identical(dev_tok2$hash(), "805098332527821e5e8d79cb34e3f3a7")
+    expect_identical(dev_tok2$hash(), dev_hash)
 
     expect_null(delete_azure_token(res, tenant, native_app, auth_type="authorization_code", confirm=FALSE))
     expect_null(delete_azure_token(res, tenant, app, password=password, confirm=FALSE))
     expect_null(delete_azure_token(res, tenant, native_app, auth_type="device_code", confirm=FALSE))
 })
+
+
+test_that("Providing optional args works",
+{
+    res <- "https://management.azure.com/"
+
+    # login hint
+    aut_tok <- get_azure_token(res, tenant, native_app, username=username, auth_type="authorization_code")
+    expect_true(is_azure_token(aut_tok))
+
+    # cannot provide username and password with authcode
+    expect_error(
+        get_azure_token(res, tenant, native_app, password=password, username=username, auth_type="authorization_code"))
+
+    expect_null(
+        delete_azure_token(res, tenant, native_app, username=username, auth_type="authorization_code", confirm=FALSE))
+})
+

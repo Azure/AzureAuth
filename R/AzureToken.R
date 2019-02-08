@@ -115,7 +115,7 @@ public=list(
         {
             body <- utils::modifyList(self$client,
                 list(grant_type="refresh_token", refresh_token=self$credentials$refresh_token))
-            body <- private$build_token_body(body)
+            body <- private$build_access_body(body)
 
             uri <- aad_endpoint(self$aad_host, self$tenant, self$version, "token")
             httr::POST(uri, body=body, encode="form")
@@ -152,7 +152,7 @@ private=list(
         self$credentials <- token$credentials
     },
 
-    build_token_body=function(body=self$client)
+    build_access_body=function(body=self$client)
     {
         stopifnot(is.list(self$token_args))
         body <- if(self$version == 1)
@@ -190,8 +190,12 @@ aad_request_credentials <- function(app, password, username, certificate, auth_t
     }
     else if(auth_type == "authorization_code")
     {
+        if(!is.null(password) && !is.null(username))
+            stop("Cannot provide both a username and secret with authorization_code method", call.=FALSE)
         if(!is.null(username))
             obj$login_hint <- username
+        if(!is.null(password))
+            obj$client_secret <- password
     }
 
     obj
@@ -214,9 +218,9 @@ aad_endpoint <- function(aad_host, tenant, version=1, type=c("authorize", "token
 
 normalize_aad_version <- function(v)
 {
-    if(v == "1.0")
+    if(v == "v1.0")
         v <- 1
-    else if(v == "2.0")
+    else if(v == "v2.0")
         v <- 2
     if(!(is.numeric(v) && v %in% c(1, 2)))
         stop("Invalid AAD version")
