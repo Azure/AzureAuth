@@ -114,7 +114,7 @@ public=list(
 
     refresh=function()
     {
-        self$credentials$expires_on <- as.character(floor(as.numeric(Sys.time())))
+        now <- as.character(floor(as.numeric(Sys.time())))
 
         res <- if(!is.null(self$credentials$refresh_token))
         {
@@ -134,7 +134,7 @@ public=list(
             stop("Unable to refresh token", call.=FALSE)
         }
 
-        self$credentials <- utils::modifyList(self$credentials, creds)
+        self$credentials <- utils::modifyList(list(expires_on=now), creds)
 
         self$cache()
         invisible(self)
