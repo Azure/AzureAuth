@@ -41,7 +41,7 @@ if(system.file(package="httpuv") == "")
 if(!interactive())
     skip("Authentication tests skipped: must be an interactive session")
 
-test_that("Authentication works",
+test_that("v1.0 authentication works",
 {
     suppressWarnings(file.remove(dir(AzureR_dir(), full.names=TRUE)))
 
@@ -50,15 +50,15 @@ test_that("Authentication works",
     # obtain new tokens
     aut_tok <- get_azure_token(res, tenant, native_app, auth_type="authorization_code")
     expect_true(is_azure_token(aut_tok))
-    expect_identical(aut_tok$hash(), "b29ef592fa435a4fd92672daf8726bae")
+    expect_identical(aut_tok$hash(), "a6496c5290d313b87e5bbfa705bb6b93")
 
     ccd_tok <- get_azure_token(res, tenant, app, password=password)
     expect_true(is_azure_token(ccd_tok))
-    expect_identical(ccd_tok$hash(), "c75c266d9c578af29e24d3f22013ebf6")
+    expect_identical(ccd_tok$hash(), "f789f3332b915896c18b03c10780c26c")
 
     dev_tok <- get_azure_token(res, tenant, native_app, auth_type="device_code")
     expect_true(is_azure_token(dev_tok))
-    expect_identical(dev_tok$hash(), "37cbd9fec7c15b5a47edc1ea6f2f2747")
+    expect_identical(dev_tok$hash(), "805098332527821e5e8d79cb34e3f3a7")
 
     aut_expire <- as.numeric(aut_tok$credentials$expires_on)
     ccd_expire <- as.numeric(ccd_tok$credentials$expires_on)
@@ -78,15 +78,15 @@ test_that("Authentication works",
     # load cached tokens: should not get repeated login prompts/screens
     aut_tok2 <- get_azure_token(res, tenant, native_app, auth_type="authorization_code")
     expect_true(is_azure_token(aut_tok2))
-    expect_identical(aut_tok2$hash(), "b29ef592fa435a4fd92672daf8726bae")
+    expect_identical(aut_tok2$hash(), "a6496c5290d313b87e5bbfa705bb6b93")
 
     ccd_tok2 <- get_azure_token(res, tenant, app, password=password)
     expect_true(is_azure_token(ccd_tok2))
-    expect_identical(ccd_tok2$hash(), "c75c266d9c578af29e24d3f22013ebf6")
+    expect_identical(ccd_tok2$hash(), "f789f3332b915896c18b03c10780c26c")
 
     dev_tok2 <- get_azure_token(res, tenant, native_app, auth_type="device_code")
     expect_true(is_azure_token(dev_tok2))
-    expect_identical(dev_tok2$hash(), "37cbd9fec7c15b5a47edc1ea6f2f2747")
+    expect_identical(dev_tok2$hash(), "805098332527821e5e8d79cb34e3f3a7")
 
     expect_null(delete_azure_token(res, tenant, native_app, auth_type="authorization_code", confirm=FALSE))
     expect_null(delete_azure_token(res, tenant, app, password=password, confirm=FALSE))

@@ -7,8 +7,12 @@
 #' @param app The client/app ID to use to authenticate with.
 #' @param password The password, either for the app, or your username if supplied. See 'Details' below.
 #' @param username Your AAD username, if using the resource owner grant. See 'Details' below.
+#' @param certificate A certificate to authenticate with.
 #' @param auth_type The authentication type. See 'Details' below.
 #' @param aad_host URL for your AAD host. For the public Azure cloud, this is `https://login.microsoftonline.com/`. Change this if you are using a government or private cloud.
+#' @param version The AAD version, either 1 or 2.
+#' @param authorize_args An optional list of further parameters for the AAD authorization endpoint. These will be included in the request URI as query parameters. Only used if `auth_type="authorization_code"`.
+#' @param token_args An optional list of further parameters for the token endpoint. These will be included in the body of the request.
 #'
 #' @details
 #' `get_azure_token` does much the same thing as [httr::oauth2.0_token()], but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. `delete_azure_token` deletes a cached token, and `list_azure_tokens` lists currently cached tokens.
@@ -18,15 +22,13 @@
 #' Note that tokens are only cached if you allowed AzureAuth to create a data directory at package startup.
 #'
 #' @section Authentication methods:
-#' The OAuth authentication type can be one of four possible values: "authorization_code", "client_credentials", "device_code", or "resource_owner". The first two are provided by the [httr::Token2.0] token class, while the last two are provided by the AzureToken class which extends httr::Token2.0. Here is a short description of these methods.
-#'
-#' 1. Using the authorization_code method is a 3-step process. First, `get_azure_token` contacts the AAD authorization endpoint to obtain a temporary access code. It then contacts the AAD access endpoint, passing it the code. The access endpoint sends back a login URL which `get_azure_token` opens in your browser, where you can enter your credentials. Once this is completed, the endpoint returns the OAuth token via a HTTP redirect URI.
-#'
-#' 2. The device_code method is similar in concept to authorization_code, but is meant for situations where you are unable to browse the Internet -- for example if you don't have a browser installed or your computer has input constraints. First, `get_azure_token` contacts the AAD devicecode endpoint, which responds with a login URL and an access code. You then visit the URL and enter the code, possibly using a different computer. Meanwhile, `get_azure_token` polls the AAD access endpoint for a token, which is provided once you have successfully entered the code.
-#'
-#' 3. The client_credentials method is much simpler than the above methods, requiring only one step. `get_azure_token` contacts the access endpoint, passing it the app secret (which you supplied in the `password` argument). Assuming the secret is valid, the endpoint then returns the OAuth token.
-#'
-#' 4. The resource_owner method also requires only one step. In this method, `get_azure_token` passes your (personal) username and password to the AAD access endpoint, which validates your credentials and returns the token.
+#' 1. Using the **authorization_code** method is a multi-step process. First, `get_azure_token` contacts the AAD authorization endpoint opens a login window in your browser, where you can enter your AAD credentials. In the background, it loads the [httpuv](https://github.com/rstudio/httpuv) package to listen on a local port. Once this is done, the AAD server passes your browser a (local) redirect URL that contains an authorization code. `get_azure_token` retrieves this authorization code and sends it to the AAD access endpoint, which returns the OAuth token.
+#' 
+#' 2. The **device_code** method is similar in concept to authorization_code, but is meant for situations where you are unable to browse the Internet -- for example if you don't have a browser installed or your computer has input constraints. First, `get_azure_token` contacts the AAD devicecode endpoint, which responds with a login URL and an access code. You then visit the URL and enter the code, possibly using a different computer. Meanwhile, `get_azure_token` polls the AAD access endpoint for a token, which is provided once you have successfully entered the code.
+#' 
+#' 3. The **client_credentials** method is much simpler than the above methods, requiring only one step. `get_azure_token` contacts the access endpoint, passing it the app secret (which you supplied in the `password` argument). Assuming the secret is valid, the endpoint then returns the OAuth token.
+#' 
+#' 4. The **resource_owner** method also requires only one step. In this method, `get_azure_token` passes your (personal) username and password to the AAD access endpoint, which validates your credentials and returns the token.
 #'
 #' If the authentication method is not specified, it is chosen based on the presence or absence of the `password` and `username` arguments:
 #'
@@ -112,80 +114,32 @@
 #' delete_azure_token(hash="7ea491716e5b10a77a673106f3f53bfd")
 #'
 #' }
-#' @export
-get_azure_token <- function(resource, tenant, app, password=NULL, username=NULL, auth_type=NULL,
-                            aad_host="https://login.microsoftonline.com/")
+# #' @export
+get_azure_token <- function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
+                            aad_host="https://login.microsoftonline.com/", version=1,
+                            authorize_args=list(), token_args=list())
 {
-    tenant <- normalize_tenant(tenant)
-    app <- normalize_guid(app)
-    base_url <- construct_path(aad_host, tenant)
-
-    if(is.null(auth_type))
-        auth_type <- select_auth_type(password, username)
-
-    # fail if authorization_code selected but httpuv not available
-    if(auth_type == "authorization_code" && system.file(package="httpuv") == "")
-        stop("httpuv package must be installed to use authorization_code method", call.=FALSE)
-
-    switch(auth_type,
-        client_credentials=
-            auth_with_client_creds(base_url, app, password, resource),
-        device_code=
-            auth_with_device(base_url, app, resource),
-        authorization_code=
-            auth_with_code(base_url, app, resource),
-        resource_owner=
-            auth_with_username(base_url, app, password, username, resource),
-        stop("Invalid auth_type argument", call.=FALSE))
+    AzureToken$new(resource, tenant, app, password, username, certificate, auth_type, aad_host, version,
+                   authorize_args, token_args)
 }
 
 
-auth_with_client_creds <- function(base_url, app, password, resource)
+select_auth_type <- function(password, username, certificate, auth_type)
 {
-    endp <- httr::oauth_endpoint(base_url=base_url, authorize="oauth2/authorize", access="oauth2/token")
-    app <- httr::oauth_app("azure", key=app, secret=password, redirect_uri=NULL)
+    if(!is.null(auth_type))
+    {
+        if(!auth_type %in% c("authorization_code", "device_code", "client_credentials", "resource_owner"))
+            stop("Invalid authentication method")
+        return(auth_type)
+    }
 
-    AzureToken$new(endp, app, user_params=list(resource=resource), use_device=FALSE, client_credentials=TRUE)
-}
-
-
-auth_with_device <- function(base_url, app, resource)
-{
-    endp <- httr::oauth_endpoint(base_url=base_url, authorize="oauth2/authorize", access="oauth2/devicecode")
-    app <- httr::oauth_app("azure", key=app, secret=NULL)
-
-    AzureToken$new(endp, app, user_params=list(resource=resource), use_device=TRUE, client_credentials=FALSE)
-}
-
-
-auth_with_code <- function(base_url, app, resource)
-{
-    endp <- httr::oauth_endpoint(base_url=base_url, authorize="oauth2/authorize", access="oauth2/token")
-    app <- httr::oauth_app("azure", key=app, secret=NULL)
-
-    AzureToken$new(endp, app, user_params=list(resource=resource), use_device=FALSE, client_credentials=FALSE)
-}
-
-
-auth_with_username <- function(base_url, app, password, username, resource)
-{
-    endp <- httr::oauth_endpoint(base_url=base_url, authorize="oauth2/authorize", access="oauth2/token")
-    app <- httr::oauth_app("azure", key=app, secret=NULL)
-
-    AzureToken$new(endp, app, user_params=list(resource=resource, username=username, password=password),
-        use_device=FALSE, client_credentials=FALSE)
-}
-
-
-# select authentication method based on input arguments and presence of httpuv
-select_auth_type <- function(password, username)
-{
     got_pwd <- !is.null(password)
     got_user <- !is.null(username)
+    got_cert <- !is.null(certificate)
 
-    if(got_pwd && got_user)
+    if(got_pwd && got_user && !got_cert)
         "resource_owner"
-    else if(!got_pwd && !got_user)
+    else if(!got_pwd && !got_user && !got_cert)
     {
         if(system.file(package="httpuv") == "")
         {
@@ -194,7 +148,7 @@ select_auth_type <- function(password, username)
         }
         else "authorization_code"
     }
-    else if(got_pwd && !got_user)
+    else if((got_pwd && !got_user) || got_cert)
         "client_credentials"
     else stop("Can't select authentication method", call.=FALSE)
 }
@@ -204,16 +158,17 @@ select_auth_type <- function(password, username)
 #' @param confirm For `delete_azure_token`, whether to prompt for confirmation before deleting a token.
 #' @rdname get_azure_token
 #' @export
-delete_azure_token <- function(resource, tenant, app, password=NULL, username=NULL, auth_type=NULL,
-                               aad_host="https://login.microsoftonline.com/",
-                               hash=NULL,
-                               confirm=TRUE)
+delete_azure_token <- function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
+                               aad_host="https://login.microsoftonline.com/", version=1,
+                               authorize_args=list(), token_args=list(),
+                               hash=NULL, confirm=TRUE)
 {
     if(!dir.exists(AzureR_dir()))
         return(invisible(NULL))
 
     if(is.null(hash))
-        hash <- token_hash(resource, tenant, app, password, username, auth_type, aad_host)
+        hash <- token_hash(resource, tenant, app, password, username, certificate, auth_type, aad_host, version,
+                           authorize_args, token_args)
 
     if(confirm && interactive())
     {
@@ -264,43 +219,32 @@ list_azure_tokens <- function()
 
 #' @rdname get_azure_token
 #' @export
-token_hash <- function(resource, tenant, app, password=NULL, username=NULL, auth_type=NULL,
-    aad_host="https://login.microsoftonline.com/")
+token_hash <- function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
+                       aad_host="https://login.microsoftonline.com/", version=1,
+                       authorize_args=list(), token_args=list())
 {
     # reconstruct the hash for the token object from the inputs
+    version <- normalize_aad_version(version)
     tenant <- normalize_tenant(tenant)
-    app <- normalize_guid(app)
-    base_url <- construct_path(aad_host, tenant)
+    auth_type <- select_auth_type(password, username, certificate, auth_type)
+    client <- aad_request_credentials(app, password, username, certificate, auth_type)
 
-    if(is.null(auth_type))
-        auth_type <- select_auth_type(password, username)
+    if(version == 1)
+        scope <- NULL
+    else
+    {
+        scope <- paste0(resource, collapse=" ")
+        resource <- NULL
+    }
 
-    base_url <- construct_path(aad_host, tenant)
-    use_device <- auth_type == "device_code"
-    client_credentials <- auth_type == "client_credentials"
-
-    endp <- httr::oauth_endpoint(base_url=base_url,
-        authorize="oauth2/authorize",
-        access=if(use_device) "oauth2/devicecode" else "oauth2/token")
-    app <- httr::oauth_app("azure", app,
-        secret=if(client_credentials) password else NULL,
-        redirect_uri=if(client_credentials) NULL else httr::oauth_callback())
-
-    user_params <- list(resource=resource)
-    if(auth_type == "resource_owner")
-        user_params <- c(user_params, password=NULL, username=NULL)
-
-    params <- list(scope=NULL, user_params=user_params, type=NULL, use_oob=FALSE, as_header=TRUE,
-                   use_basic_auth=FALSE, config_init=list(),
-                   client_credentials=client_credentials, use_device=use_device)
-
-    token_hash_internal(endp, app, params)
+    token_hash_internal(version, aad_host, tenant, auth_type, client, resource, scope,
+                        authorize_args, token_args)
 }
 
 
-token_hash_internal <- function(endpoint, app, params)
+token_hash_internal <- function(...)
 {
-    msg <- serialize(list(endpoint, app, params), NULL, version=2)
+    msg <- serialize(list(...), NULL, version=2)
     paste(openssl::md5(msg[-(1:14)]), collapse="")
 }
 
@@ -320,3 +264,8 @@ is_azure_token <- function(object)
     R6::is.R6(object) && inherits(object, "AzureToken")
 }
 
+
+is_empty <- function(x)
+{
+    is.null(x) || length(x) == 0
+}

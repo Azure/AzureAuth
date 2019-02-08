@@ -9,7 +9,7 @@
 AzureToken
 }
 \description{
-Azure OAuth 2.0 token class, inheriting from the \link[httr:Token2.0]{Token2.0 class} in httr. Rather than calling the initialization method directly, tokens should be created via \code{\link[=get_azure_token]{get_azure_token()}}.
+Azure OAuth 2.0 token class, with an interface based on the \link[httr:Token2.0]{Token2.0 class} in httr. Rather than calling the initialization method directly, tokens should be created via \code{\link[=get_azure_token]{get_azure_token()}}.
 }
 \section{Methods}{
 

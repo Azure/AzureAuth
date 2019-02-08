@@ -1,5 +1,5 @@
-#' @importFrom utils modifyList
-NULL
+utils::globalVariables(c("self", "private"))
+
 
 .onLoad <- function(libname, pkgname)
 {
