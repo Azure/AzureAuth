@@ -1,3 +1,18 @@
+#' Azure OAuth authentication
+#'
+#' Azure OAuth 2.0 token class, with an interface based on the [Token2.0 class][httr::Token2.0] in httr. Rather than calling the initialization method directly, tokens should be created via [get_azure_token()].
+#'
+#' @docType class
+#' @section Methods:
+#' - `refresh`: Refreshes the token. For expired Azure tokens using client credentials, refreshing really means requesting a new token.
+#' - `validate`: Checks if the token is still valid. For Azure tokens using client credentials, this just checks if the current time is less than the token's expiry time.
+#' - `hash`: Computes an MD5 hash on selected fields of the token. Used internally for identification purposes when caching.
+#' - `cache`: Stores the token on disk for use in future sessions.
+#'
+#' @seealso
+#' [get_azure_token], [httr::Token]
+#'
+#' @format An R6 object of class `AzureToken`.
 #' @export
 AzureToken <- R6::R6Class("AzureToken",
 
