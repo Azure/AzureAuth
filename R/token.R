@@ -233,7 +233,8 @@ token_hash <- function(resource, tenant, app, password=NULL, username=NULL, cert
         scope <- NULL
     else
     {
-        scope <- paste0(resource, collapse=" ")
+        # ignore warnings about invalid scopes when computing hash
+        scope <- suppressWarnings(sapply(resource, verify_v2_scope, USE.NAMES=FALSE))
         resource <- NULL
     }
 

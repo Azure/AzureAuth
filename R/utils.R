@@ -81,6 +81,8 @@ process_aad_response <- function(res)
 }
 
 
+# need to capture bad scopes before requesting auth code
+# v2.0 endpoint will show error page rather than redirecting, causing get_azure_token to wait forever
 verify_v2_scope <- function(scope)
 {
     # some OpenID scopes get a pass
@@ -95,7 +97,7 @@ verify_v2_scope <- function(scope)
 
     # is it a URI or GUID?
     valid_uri <- grepl("^https?://", scope)
-    valid_guid <- is_guid(sub("/.+$", "", scope))
+    valid_guid <- is_guid(sub("/.*$", "", scope))
     if(!valid_uri && !valid_guid)
         stop("Invalid scope (must be a URI or GUID): ", scope, call.=FALSE)
 
@@ -105,17 +107,17 @@ verify_v2_scope <- function(scope)
         uri <- httr::parse_url(scope)
         if(uri$path == "")
         {
-            warning("No path supplied for scope ", scope, "; setting to /.default")
+            warning("No path supplied for scope ", scope, "; setting to /.default", call.=FALSE)
             uri$path <- ".default"
             scope <- httr::build_url(uri)
         }
     }
     else
     {
-        path <- sub("^[^/]+/", "", scope)
+        path <- sub("^[^/]+/?", "", scope)
         if(path == "")
         {
-            warning("No path supplied for scope ", scope, "; setting to /.default")
+            warning("No path supplied for scope ", scope, "; setting to /.default", call.=FALSE)
             scope <- sub("//", "/", paste0(scope, "/.default"))
         }
     }

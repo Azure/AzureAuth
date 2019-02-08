@@ -45,7 +45,7 @@ public=list(
 
         if(self$version == 1)
             self$resource <- resource
-        else self$scope <- paste0(resource, collapse=" ")
+        else self$scope <- sapply(resource, verify_v2_scope, USE.NAMES=FALSE)
 
         private$initfunc <- switch(self$auth_type,
             authorization_code=init_authcode,
@@ -73,7 +73,12 @@ public=list(
 
         # notify user if interactive auth and no refresh token
         if(self$auth_type %in% c("authorization_code", "device_code") && is.null(self$credentials$refresh_token))
-            message("Server did not provide a refresh token. To refresh, you will have to reauthenticate.")
+        {
+            if(self$version == 1)
+                message("Server did not provide a refresh token: please reauthenticate to refresh.")
+            else message("Server did not provide a refresh token: you will have to reauthenticate to refresh.\n",
+                         "Add the 'offline_access' scope to obtain a refresh token.")
+        }
 
         self$cache()
         self
@@ -157,7 +162,7 @@ private=list(
         stopifnot(is.list(self$token_args))
         body <- if(self$version == 1)
             c(body, self$authorize_args, resource=self$resource)
-        else c(body, self$authorize_args, scope=self$scope)
+        else c(body, self$authorize_args, scope=paste(self$scope, collapse=" "))
     },
 
     # member function to be filled in by initialize()

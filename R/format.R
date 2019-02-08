@@ -12,7 +12,7 @@ format_auth_header <- function(token)
     
     res <- if(token$version == 1)
         paste("resource", token$resource)
-    else paste("scope", token$scope)
+    else paste("scope", paste(token$scope, collapse=" "))
 
     version <- if(token$version == 1) "v1.0" else "v2.0"
 

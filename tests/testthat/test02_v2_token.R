@@ -16,6 +16,7 @@ if(system.file(package="httpuv") == "")
 if(!interactive())
     skip("Authentication tests skipped: must be an interactive session")
 
+# should get 2 authcode and 2 devcode prompts here
 test_that("v2.0 simple authentication works",
 {
     suppressWarnings(file.remove(dir(AzureR_dir(), full.names=TRUE)))
@@ -54,25 +55,13 @@ test_that("v2.0 simple authentication works",
     expect_true(as.numeric(ccd_tok$credentials$expires_on) > ccd_expire)
     expect_true(as.numeric(dev_tok$credentials$expires_on) > dev_expire)
 
-    # load cached tokens: should not get repeated login prompts/screens
-    aut_tok2 <- get_azure_token(res, tenant, native_app, auth_type="authorization_code", version=2)
-    expect_true(is_azure_token(aut_tok2))
-    expect_identical(aut_tok2$hash(), aut_hash)
-
-    ccd_tok2 <- get_azure_token(res, tenant, app, password=password, version=2)
-    expect_true(is_azure_token(ccd_tok2))
-    expect_identical(ccd_tok2$hash(), ccd_hash)
-
-    dev_tok2 <- get_azure_token(res, tenant, native_app, auth_type="device_code", version=2)
-    expect_true(is_azure_token(dev_tok2))
-    expect_identical(dev_tok2$hash(), dev_hash)
-
     expect_null(delete_azure_token(res, tenant, native_app, auth_type="authorization_code", version=2, confirm=FALSE))
     expect_null(delete_azure_token(res, tenant, app, password=password, version=2, confirm=FALSE))
     expect_null(delete_azure_token(res, tenant, native_app, auth_type="device_code", version=2, confirm=FALSE))
 })
 
 
+# should only get 1 authcode and 1 devcode prompt here
 test_that("v2.0 refresh with offline scope works",
 {
     res <- "https://management.azure.com/.default"
@@ -96,12 +85,20 @@ test_that("v2.0 refresh with offline scope works",
     expect_true(as.numeric(aut_tok$credentials$expires_on) > aut_expire)
     expect_true(as.numeric(dev_tok$credentials$expires_on) > dev_expire)
 
+    # load cached tokens: should not get repeated login prompts/screens
+    aut_tok2 <- get_azure_token(c(res, res2), tenant, native_app, auth_type="authorization_code", version=2)
+    expect_true(is_azure_token(aut_tok2))
+
+    dev_tok2 <- get_azure_token(c(res, res2), tenant, native_app, auth_type="device_code", version=2)
+    expect_true(is_azure_token(dev_tok2))
+
     expect_null(
         delete_azure_token(c(res, res2), tenant, native_app, auth_type="authorization_code", version=2, confirm=FALSE))
     expect_null(delete_azure_token(c(res, res2), tenant, native_app, auth_type="device_code", version=2, confirm=FALSE))
 })
 
 
+# should get 1 authcode screen here
 test_that("Providing optional args works",
 {
     res <- "https://management.azure.com/.default"
@@ -119,3 +116,13 @@ test_that("Providing optional args works",
             confirm=FALSE))
 })
 
+
+test_that("Dubious requests handled gracefully",
+{
+    badres <- "resource"
+    expect_error(get_azure_token(badres, tenant, app, password=password, version=2))
+
+    nopath <- "https://management.azure.com"
+    expect_warning(tok <- get_azure_token(nopath, tenant, app, password=password, version=2))
+    expect_equal(tok$scope, "https://management.azure.com/.default")
+})

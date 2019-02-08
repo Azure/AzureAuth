@@ -11,7 +11,7 @@ init_authcode <- function()
         response_type="code",
         redirect_uri="http://localhost:1410/",
         resource=self$resource,
-        scope=self$scope,
+        scope=paste(self$scope, collapse=" "),
         client_secret=self$client$client_secret,
         login_hint=self$client$login_hint,
         state=paste0(sample(letters, 20), collapse="") # random nonce
