@@ -1,6 +1,6 @@
 # AzureAuth
 
-AzureAuth provides Azure Active Directory (AAD) authentication functionality for R users of Microsoft's Azure cloud. Use this package to obtain OAuth 2.0 tokens for Azure services including Azure Resource Manager, Azure Storage and others. Its interface is based on the OAuth framework in the [httr](https://github.com/r-lib/httr) package, customised and streamlined for Azure.
+AzureAuth provides Azure Active Directory (AAD) authentication functionality for R users of Microsoft's Azure cloud. Use this package to obtain OAuth 2.0 tokens for Azure services including Azure Resource Manager, Azure Storage and others. Both AAD v1.0 and v2.0 are supported.
 
 You can install the development version of the package from GitHub, with `devtools::install_github("cloudyr/AzureAuth")`.
 
@@ -28,7 +28,7 @@ AzureAuth supports four distinct methods for authenticating with AAD: **authoriz
 
 ## Acknowledgements
 
-AzureAuth is an independent implementation of OAuth, but benefited greatly from the work done by [Hadley Wickham](https://hadley.nz) and the rest of the httr development team.
+The AzureAuth interface is based on the OAuth framework in the [httr](https://github.com/r-lib/httr) package, customised and streamlined for Azure. It is an independent implementation of OAuth, but benefited greatly from the work done by [Hadley Wickham](https://hadley.nz) and the rest of the httr development team.
 
 ---
 [![cloudyr project logo](https://i.imgur.com/JHS98Y7.png)](https://github.com/cloudyr)

@@ -30,7 +30,7 @@ init_devcode <- function()
 {
     # contact devicecode endpoint to get code
     dev_uri <- aad_endpoint(self$aad_host, self$tenant, self$version, "devicecode")
-    body <- private$add_resource(list(client_id=self$client$client_id))
+    body <- private$build_token_body(list(client_id=self$client$client_id))
     
     res <- httr::POST(dev_uri, body=body, encode="form")
     creds <- process_aad_response(res)
@@ -50,7 +50,7 @@ init_clientcred <- function()
 {
     # contact token endpoint directly with client credentials
     uri <- aad_endpoint(self$aad_host, self$tenant, self$version, "token")
-    body <- private$add_resource()
+    body <- private$build_token_body()
 
     httr::POST(uri, body=body, encode="form")
 }
@@ -60,7 +60,7 @@ init_resowner <- function()
 {
     # contact token endpoint directly with resource owner username/password
     uri <- aad_endpoint(self$aad_host, self$tenant, self$version, "token")
-    body <- private$add_resource()
+    body <- private$build_token_body()
 
     httr::POST(uri, body=body, encode="form")
 }

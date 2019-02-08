@@ -55,11 +55,6 @@ public=list(
         )
         environment(private$initfunc) <- parent.env(environment())
 
-        private$add_resource <- if(self$version == 1)
-            add_resource_v1
-        else add_resource_v2
-        environment(private$add_resource) <- parent.env(environment())
-
         tokenfile <- file.path(AzureR_dir(), self$hash())
         if(file.exists(tokenfile))
         {
@@ -120,7 +115,7 @@ public=list(
         {
             body <- utils::modifyList(self$client,
                 list(grant_type="refresh_token", refresh_token=self$credentials$refresh_token))
-            body <- private$add_resource(body)
+            body <- private$build_token_body(body)
 
             uri <- aad_endpoint(self$aad_host, self$tenant, self$version, "token")
             httr::POST(uri, body=body, encode="form")
@@ -157,22 +152,17 @@ private=list(
         self$credentials <- token$credentials
     },
 
-    # member functions to be filled in by initialize()
-    initfunc=NULL,
-    add_resource=NULL
+    build_token_body=function(body=self$client)
+    {
+        stopifnot(is.list(self$token_args))
+        body <- if(self$version == 1)
+            c(body, self$authorize_args, resource=self$resource)
+        else c(body, self$authorize_args, scope=self$scope)
+    },
+
+    # member function to be filled in by initialize()
+    initfunc=NULL
 ))
-
-
-add_resource_v1 <- function(body=self$client)
-{
-    c(body, resource=self$resource)
-}
-
-
-add_resource_v2 <- function(body=self$client)
-{
-    c(body, scope=self$scope)
-}
 
 
 aad_request_credentials <- function(app, password, username, certificate, auth_type)

@@ -1,3 +1,6 @@
+utils::globalVariables(c("self", "private"))
+
+
 .onLoad <- function(libname, pkgname)
 {
     make_AzureR_dir()

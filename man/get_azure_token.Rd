@@ -49,6 +49,10 @@ is_azure_token(object)
 
 \item{version}{The AAD version, either 1 or 2.}
 
+\item{authorize_args}{An optional list of further parameters for the AAD authorization endpoint. These will be included in the request URI as query parameters. Only used if \code{auth_type="authorization_code"}.}
+
+\item{token_args}{An optional list of further parameters for the token endpoint. These will be included in the body of the request.}
+
 \item{hash}{The MD5 hash of this token, computed from the above inputs. Used by \code{delete_azure_token} to identify a cached token to delete.}
 
 \item{confirm}{For \code{delete_azure_token}, whether to prompt for confirmation before deleting a token.}
