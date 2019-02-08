@@ -16,8 +16,9 @@ get_azure_token(resource, tenant, app, password = NULL,
 
 delete_azure_token(resource, tenant, app, password = NULL,
   username = NULL, certificate = NULL, auth_type = NULL,
-  aad_host = "https://login.microsoftonline.com/", version = 1, ...,
-  hash = NULL, confirm = TRUE)
+  aad_host = "https://login.microsoftonline.com/", version = 1,
+  authorize_args = list(), token_args = list(), hash = NULL,
+  confirm = TRUE)
 
 clean_token_directory(confirm = TRUE)
 

@@ -159,15 +159,16 @@ select_auth_type <- function(password, username, certificate, auth_type)
 #' @rdname get_azure_token
 #' @export
 delete_azure_token <- function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
-                               aad_host="https://login.microsoftonline.com/", version=1, ...,
-                               hash=NULL,
-                               confirm=TRUE)
+                               aad_host="https://login.microsoftonline.com/", version=1,
+                               authorize_args=list(), token_args=list(),
+                               hash=NULL, confirm=TRUE)
 {
     if(!dir.exists(AzureR_dir()))
         return(invisible(NULL))
 
     if(is.null(hash))
-        hash <- token_hash(resource, tenant, app, password, username, certificate, auth_type, aad_host, version, ...)
+        hash <- token_hash(resource, tenant, app, password, username, certificate, auth_type, aad_host, version,
+                           authorize_args, token_args)
 
     if(confirm && interactive())
     {
