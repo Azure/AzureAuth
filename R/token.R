@@ -114,7 +114,7 @@
 #' delete_azure_token(hash="7ea491716e5b10a77a673106f3f53bfd")
 #'
 #' }
-# #' @export
+#' @export
 get_azure_token <- function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
                             aad_host="https://login.microsoftonline.com/", version=1,
                             authorize_args=list(), token_args=list())
