@@ -18,7 +18,9 @@ init_authcode <- function()
     ), self$authorize_args)
 
     auth_uri$query <- opts
-    code <- listen_for_authcode(auth_uri, "127.0.0.1", httr::parse_url(opts$redirect_uri)$port)
+    redirect <- httr::parse_url(opts$redirect_uri)
+    host <- if(redirect$hostname == "localhost") "127.0.0.1" else redirect$hostname
+    code <- listen_for_authcode(auth_uri, host, redirect$port)
 
     # contact token endpoint for token
     access_uri <- aad_endpoint(self$aad_host, self$tenant, self$version, "token")
