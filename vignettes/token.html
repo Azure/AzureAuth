@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Hong Ooi" />
+
+
+<title>Acquire an OAuth token</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Acquire an OAuth token</h1>
+<h4 class="author"><em>Hong Ooi</em></h4>
+
+
+
+<p>This is a short introduction to authenticating with Azure Active Directory (AAD) with AzureAuth.</p>
+<div id="the-get_azure_token-function" class="section level2">
+<h2>The <code>get_azure_token</code> function</h2>
+<p>The main function in AzureAuth is <code>get_azure_token</code>, which obtains an OAuth token from AAD:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(AzureAuth)
+
+token &lt;-<span class="st"> </span><span class="kw">get_azure_token</span>(<span class="dt">resource=</span><span class="st">&quot;myresource&quot;</span>, <span class="dt">tenant=</span><span class="st">&quot;mytenant&quot;</span>, <span class="dt">app=</span><span class="st">&quot;app_id&quot;</span>,
+    <span class="dt">password=</span><span class="st">&quot;mypassword&quot;</span>, <span class="dt">username=</span><span class="st">&quot;username&quot;</span>, <span class="dt">certificate=</span><span class="st">&quot;encoded_cert&quot;</span>, <span class="dt">version=</span><span class="dv">1</span>, ...)</code></pre></div>
+<p>The function has the following arguments:</p>
+<ul>
+<li><code>resource</code>: The resource or scope for which you want a token. For AAD v1.0, this should be a single URL (eg “<a href="https://example.com" class="uri">https://example.com</a>”) or a GUID. For AAD v2.0, this should be a vector of scopes (see below).</li>
+<li><code>tenant</code>: The AAD tenant.</li>
+<li><code>app</code>: The app ID or service principal ID to authenticate with.</li>
+<li><code>username</code>, <code>password</code>, <code>certificate</code>: Your authentication credentials.</li>
+<li><code>auth_type</code>: The OAuth authentication method to use. See the next section.</li>
+<li><code>version</code>: The version of AAD for which you want a token, either 1 or 2. The default is version 1. Note that the <em>OAuth scheme</em> is always 2.0.</li>
+</ul>
+<p>Scopes in AAD v2.0 consist of a URL or a GUID, along with a path that designates the scope. If a scope doesn’t have a path, <code>get_azure_token</code> will append the <code>/.default</code> path with a warning. A special scope is <code>offline_access</code>, which requests a refresh token from AAD along with the access token: without this, you will have to reauthenticate if you want to refresh the token.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># request an AAD v1.0 token for Resource Manager</span>
+token1 &lt;-<span class="st"> </span><span class="kw">get_azure_token</span>(<span class="st">&quot;https://management.azure.com/&quot;</span>, <span class="st">&quot;mytenant&quot;</span>, <span class="st">&quot;app_id&quot;</span>)
+
+<span class="co"># same request to AAD v2.0, along with a refresh token</span>
+token2 &lt;-<span class="st"> </span><span class="kw">get_azure_token</span>(<span class="kw">c</span>(<span class="st">&quot;https://management.azure.com/.default&quot;</span>, <span class="st">&quot;offline_access&quot;</span>),
+    <span class="st">&quot;mytenant&quot;</span>, <span class="st">&quot;app_id&quot;</span>, <span class="dt">version=</span><span class="dv">2</span>)</code></pre></div>
+</div>
+<div id="authentication-methods" class="section level2">
+<h2>Authentication methods</h2>
+<p>AzureAuth supports four distinct methods for authenticating with AAD: <strong>authorization_code</strong>, <strong>device_code</strong>, <strong>client_credentials</strong> and <strong>resource_owner</strong>.</p>
+<ol style="list-style-type: decimal">
+<li>Using the <strong>authorization_code</strong> method is a multi-step process. First, <code>get_azure_token</code> contacts the AAD authorization endpoint opens a login window in your browser, where you can enter your AAD credentials. In the background, it loads the <a href="https://github.com/rstudio/httpuv">httpuv</a> package to listen on a local port. Once this is done, the AAD server passes your browser a (local) redirect URL that contains an authorization code. <code>get_azure_token</code> retrieves this authorization code and sends it to the AAD access endpoint, which returns the OAuth token.
+</p>
+The httpuv package must be installed to use this method, as it requires a web server to listen on the (local) redirect URI. Since it opens a browser to load the AAD authorization page, your machine must also have an Internet browser installed that can be run from inside R. In particular, if you are using a Linux <a href="https://azure.microsoft.com/en-us/services/virtual-machines/data-science-virtual-machines/">Data Science Virtual Machine</a> in Azure, you may run into difficulties; use one of the other methods instead.</li>
+</ol>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># obtain a token using authorization_code</span>
+<span class="co"># no user credentials needed</span>
+<span class="kw">get_azure_token</span>(<span class="st">&quot;myresource&quot;</span>, <span class="st">&quot;mytenant&quot;</span>, <span class="st">&quot;app_id&quot;</span>, <span class="dt">auth_type=</span><span class="st">&quot;authorization_code&quot;</span>)</code></pre></div>
+<ol start="2" style="list-style-type: decimal">
+<li>The <strong>device_code</strong> method is similar in concept to authorization_code, but is meant for situations where you are unable to browse the Internet – for example if you don’t have a browser installed or your computer has input constraints. First, <code>get_azure_token</code> contacts the AAD devicecode endpoint, which responds with a login URL and an access code. You then visit the URL and enter the code, possibly using a different computer. Meanwhile, <code>get_azure_token</code> polls the AAD access endpoint for a token, which is provided once you have entered the code.</li>
+</ol>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># obtain a token using device_code</span>
+<span class="co"># no user credentials needed</span>
+<span class="kw">get_azure_token</span>(<span class="st">&quot;myresource&quot;</span>, <span class="st">&quot;mytenant&quot;</span>, <span class="st">&quot;app_id&quot;</span>, <span class="dt">auth_type=</span><span class="st">&quot;device_code&quot;</span>)</code></pre></div>
+<ol start="3" style="list-style-type: decimal">
+<li>The <strong>client_credentials</strong> method is much simpler than the above methods, requiring only one step. <code>get_azure_token</code> contacts the access endpoint, passing it the credentials. This can be either a client secret or a certificate, which you supply in the <code>password</code> or <code>certificate</code> argument respectively. Once the credentials are verified, the endpoint returns the token. This is the method typically used by service accounts.</li>
+</ol>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># obtain a token using client_credentials</span>
+<span class="co"># supply credentials in password arg</span>
+<span class="kw">get_azure_token</span>(<span class="st">&quot;myresource&quot;</span>, <span class="st">&quot;mytenant&quot;</span>, <span class="st">&quot;app_id&quot;</span>,
+                <span class="dt">password=</span><span class="st">&quot;client_secret&quot;</span>, <span class="dt">auth_type=</span><span class="st">&quot;client_credentials&quot;</span>)
+
+<span class="co"># can also supply a client certificate, as a string</span>
+<span class="kw">get_azure_token</span>(<span class="st">&quot;myresource&quot;</span>, <span class="st">&quot;mytenant&quot;</span>, <span class="st">&quot;app_id&quot;</span>,
+                <span class="dt">certificate=</span><span class="st">&quot;encoded_certificate&quot;</span>, <span class="dt">auth_type=</span><span class="st">&quot;client_credentials&quot;</span>)</code></pre></div>
+<ol start="4" style="list-style-type: decimal">
+<li>The <strong>resource_owner</strong> method also requires only one step. In this method, <code>get_azure_token</code> passes your (personal) username and password to the AAD access endpoint, which validates your credentials and returns the token.</li>
+</ol>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># obtain a token using resource_owner</span>
+<span class="co"># supply credentials in username and password args</span>
+<span class="kw">get_azure_token</span>(<span class="st">&quot;myresource&quot;</span>, <span class="st">&quot;mytenant&quot;</span>, <span class="st">&quot;app_id&quot;</span>,
+                <span class="dt">username=</span><span class="st">&quot;myusername&quot;</span>, <span class="dt">password=</span><span class="st">&quot;mypassword&quot;</span>, <span class="dt">auth_type=</span><span class="st">&quot;resource_owner&quot;</span>)</code></pre></div>
+<p>If you don’t specify the method, <code>get_azure_token</code> makes a best guess based on the presence or absence of the other authentication arguments, and whether httpuv is installed.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># this will default to authorization_code if httpuv is installed, and device_code if not</span>
+<span class="kw">get_azure_token</span>(<span class="st">&quot;myresource&quot;</span>, <span class="st">&quot;mytenant&quot;</span>, <span class="st">&quot;app_id&quot;</span>)</code></pre></div>
+</div>
+<div id="caching" class="section level2">
+<h2>Caching</h2>
+<p>AzureAuth caches tokens based on all the inputs to <code>get_azure_token</code>, as listed above. It defines its own directory for cached tokens, using the rappdirs package. On recent Windows versions, this will usually be in the location <code>C:\Users\(username)\AppData\Local\AzureR</code>. On Linux, it will be in <code>~/.config/AzureR</code>, and on MacOS, it will be in <code>~/Library/Application Support/AzureR</code>. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).</p>
+<p>To list all cached tokens on disk, use <code>list_azure_tokens</code>. This returns a list of token objects, named according to their MD5 hashes.</p>
+<p>To delete a cached token, use <code>delete_azure_token</code>. This takes the same inputs as <code>get_azure_token</code>, or you can specify the MD5 hash directly in the <code>hash</code> argument. To delete <em>all</em> cached tokens, use <code>clean_token_directory</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># list all tokens</span>
+<span class="kw">list_azure_tokens</span>()
+
+<span class="co"># &lt;... list of token objects ...&gt;</span>
+
+<span class="co"># delete a token</span>
+<span class="kw">delete_azure_token</span>(<span class="st">&quot;myresource&quot;</span>, <span class="st">&quot;mytenant&quot;</span>, <span class="st">&quot;app_id&quot;</span>,
+                   <span class="dt">password=</span><span class="st">&quot;client_credentials&quot;</span>, <span class="dt">auth_type=</span><span class="st">&quot;client_credentials&quot;</span>)</code></pre></div>
+</div>
+<div id="more-information" class="section level2">
+<h2>More information</h2>
+<p>For the details on Azure Active Directory, consult the <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/">Microsoft documentation</a>.</p>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

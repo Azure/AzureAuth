@@ -40,7 +40,7 @@ get_azure_token("myresource", "mytenant", "app_id", auth_type="device_code")
 # obtain a token using client_credentials
 # supply credentials in password arg
 get_azure_token("myresource", "mytenant", "app_id",
-                password="mypassword", auth_type="client_credentials")
+                password="client_secret", auth_type="client_credentials")
 
 # can also supply a client certificate, as a string
 get_azure_token("myresource", "mytenant", "app_id",
@@ -53,7 +53,7 @@ get_azure_token("myresource", "mytenant", "app_id",
 # obtain a token using resource_owner
 # supply credentials in username and password args
 get_azure_token("myresource", "mytenant", "app_id",
-                password="mypassword", auth_type="resource_owner")
+                username="myusername", password="mypassword", auth_type="resource_owner")
 ```
 
 If you don't specify the method, `get_azure_token` makes a best guess based on the presence or absence of the other authentication arguments, and whether httpuv is installed.
