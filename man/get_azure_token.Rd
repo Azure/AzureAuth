@@ -32,7 +32,7 @@ token_hash(resource, tenant, app, password = NULL, username = NULL,
 is_azure_token(object)
 }
 \arguments{
-\item{resource}{URL for your resource host. For Resource Manager in the public Azure cloud, this is \code{https://management.azure.com/}.}
+\item{resource}{For AAD v1.0, the URL of your resource host, or a GUID. For AAD v2.0, a character vector of scopes, each consisting of a URL or GUID along with a path designating the access scope. See 'Details' below.}
 
 \item{tenant}{Your tenant. This can be a name ("myaadtenant"), a fully qualified domain name ("myaadtenant.onmicrosoft.com" or "mycompanyname.com"), or a GUID.}
 
@@ -66,26 +66,24 @@ These functions extend the OAuth functionality in httr for use with Azure Active
 \details{
 \code{get_azure_token} does much the same thing as \code{\link[httr:oauth2.0_token]{httr::oauth2.0_token()}}, but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. \code{delete_azure_token} deletes a cached token, and \code{list_azure_tokens} lists currently cached tokens.
 
+The \code{resource} arg should be a single URL or GUID for AAD v1.0, and a vector of scopes for AAD v2.0. The latter consist of a URL or a GUID, along with a path that designates the scope. If a v2.0 scope doesn't have a path, \code{get_azure_token} will append the \code{/.default} path with a warning. A special scope is \code{offline_access}, which requests a refresh token from AAD along with the access token: without this scope, you will have to reauthenticate if you want to refresh the token.
+
 \code{token_hash} computes the MD5 hash of its arguments. This is used by AzureAuth to identify tokens for caching purposes.
 
 Note that tokens are only cached if you allowed AzureAuth to create a data directory at package startup.
+
+One particular use of the \code{authorize_args} argument is to specify a different redirect URI to the default; see the examples below.
 }
 \section{Authentication methods}{
 
 \enumerate{
 \item Using the \strong{authorization_code} method is a multi-step process. First, \code{get_azure_token} contacts the AAD authorization endpoint opens a login window in your browser, where you can enter your AAD credentials. In the background, it loads the \href{https://github.com/rstudio/httpuv}{httpuv} package to listen on a local port. Once this is done, the AAD server passes your browser a (local) redirect URL that contains an authorization code. \code{get_azure_token} retrieves this authorization code and sends it to the AAD access endpoint, which returns the OAuth token.
-\item The \strong{device_code} method is similar in concept to authorization_code, but is meant for situations where you are unable to browse the Internet -- for example if you don't have a browser installed or your computer has input constraints. First, \code{get_azure_token} contacts the AAD devicecode endpoint, which responds with a login URL and an access code. You then visit the URL and enter the code, possibly using a different computer. Meanwhile, \code{get_azure_token} polls the AAD access endpoint for a token, which is provided once you have successfully entered the code.
-\item The \strong{client_credentials} method is much simpler than the above methods, requiring only one step. \code{get_azure_token} contacts the access endpoint, passing it the app secret (which you supplied in the \code{password} argument). Assuming the secret is valid, the endpoint then returns the OAuth token.
+\item The \strong{device_code} method is similar in concept to authorization_code, but is meant for situations where you are unable to browse the Internet -- for example if you don't have a browser installed or your computer has input constraints. First, \code{get_azure_token} contacts the AAD devicecode endpoint, which responds with a login URL and an access code. You then visit the URL and enter the code, possibly using a different computer. Meanwhile, \code{get_azure_token} polls the AAD access endpoint for a token, which is provided once you have entered the code.
+\item The \strong{client_credentials} method is much simpler than the above methods, requiring only one step. \code{get_azure_token} contacts the access endpoint, passing it either the app secret or the certificate (which you supply in the \code{password} or \code{certificate} argument respectively). Once the credentials are verified, the endpoint returns the token. This is the method typically used by service accounts.
 \item The \strong{resource_owner} method also requires only one step. In this method, \code{get_azure_token} passes your (personal) username and password to the AAD access endpoint, which validates your credentials and returns the token.
 }
 
-If the authentication method is not specified, it is chosen based on the presence or absence of the \code{password} and \code{username} arguments:
-\itemize{
-\item Password and username present: resource_owner.
-\item Password and username absent: authorization_code if the httpuv package is installed, device_code otherwise
-\item Password present, username absent: client_credentials
-\item Password absent, username present: error
-}
+If the authentication method is not specified, it is chosen based on the presence or absence of the \code{password},  \code{username} and \code{certificate} arguments, and whether httpuv is installed.
 
 The httpuv package must be installed to use the authorization_code method, as this requires a web server to listen on the (local) redirect URI. See \link[httr:oauth2.0_token]{httr::oauth2.0_token} for more information; note that Azure does not support the \code{use_oob} feature of the httr OAuth 2.0 token class.
 
@@ -114,49 +112,40 @@ For \code{get_azure_token}, an object of class \code{AzureToken} representing th
 # authenticate with Azure Resource Manager:
 # no user credentials are supplied, so this will use the authorization_code
 # method if httpuv is installed, and device_code if not
-arm_token <- get_azure_token(
-   resource="https://management.azure.com/",
-   tenant="myaadtenant.onmicrosoft.com",
-   app="app_id")
+get_azure_token("https://management.azure.com/", tenant="mytenant", app="app_id")
 
 # you can force a specific authentication method with the auth_type argument
-arm_token <- get_azure_token(
-   resource="https://management.azure.com/",
-   tenant="myaadtenant.onmicrosoft.com",
-   app="app_id",
-   auth_type="device_code")
+get_azure_token("https://management.azure.com/", tenant="mytenant", app="app_id",
+    auth_type="device_code")
 
-# to use the client_credentials method, supply the app secret as the password
-arm_token <- get_azure_token(
-   resource="https://management.azure.com/",
-   tenant="myaadtenant.onmicrosoft.com",
-   app="app_id",
-   password="app_secret")
-
-# authenticate with Azure storage
-storage_token <- get_azure_token(
-   resource="https://storage.azure.com/",
-   tenant="myaadtenant.onmicrosoft.com",
-   app="app_id")
+# to default to the client_credentials method, supply the app secret as the password
+get_azure_token("https://management.azure.com/", tenant="mytenant", app="app_id",
+    password="app_secret")
 
 # authenticate to your resource with the resource_owner method: provide your username and password
-owner_token <- get_azure_token(
-   resource="https://myresource/",
-   tenant="myaadtenant",
-   app="app_id",
-   username="user",
-   password="abcdefg")
+get_azure_token(resource="https://myresource/", tenant="mytenant", app="app_id",
+    username="user", password="abcdefg")
+
+
+# use a different redirect URI to the default localhost:1410
+get_azure_token("https://management.azure.com/", tenant="mytenant", app="app_id",
+    authorize_args=list(redirect_uri="http://127.255.10.1:8000"))
+
+
+# request an AAD v1.0 token for Resource Manager (the default)
+token1 <- get_azure_token("https://management.azure.com/", "mytenant", "app_id")
+
+# same request to AAD v2.0, along with a refresh token
+token2 <- get_azure_token(c("https://management.azure.com/.default", "offline_access"),
+    "mytenant", "app_id", version=2)
+
 
 # list saved tokens
 list_azure_tokens()
 
 # delete a saved token from disk
-delete_azure_token(
-   resource="https://myresource/",
-   tenant="myaadtenant",
-   app="app_id",
-   username="user",
-   password="abcdefg")
+delete_azure_token(resource="https://myresource/", tenant="mytenant", app="app_id",
+    username="user", password="abcdefg")
 
 # delete a saved token by specifying its MD5 hash
 delete_azure_token(hash="7ea491716e5b10a77a673106f3f53bfd")
@@ -166,7 +155,7 @@ delete_azure_token(hash="7ea491716e5b10a77a673106f3f53bfd")
 \seealso{
 \link{AzureToken}, \link[httr:oauth2.0_token]{httr::oauth2.0_token}, \link[httr:Token]{httr::Token},
 
-\href{https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code}{OAuth authentication for Azure Active Directory},
+\href{https://docs.microsoft.com/en-us/azure/active-directory/develop/}{Azure Active Directory for developers},
 \href{https://www.oauth.com/oauth2-servers/device-flow/token-request/}{Device code flow on OAuth.com},
 \href{https://tools.ietf.org/html/rfc6749}{OAuth 2.0 RFC} for the gory details on how OAuth works
 }
