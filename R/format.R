@@ -16,8 +16,15 @@ format_auth_header <- function(token)
 
     version <- if(token$version == 1) "v1.0" else "v2.0"
 
+    tenant <- token$tenant
+    if(tenant == "common")
+    {
+        token_obj <- decode_jwt(token$credentials$access_token)
+        tenant <- paste0(tenant, " / ", token_obj$payload$tid)
+    }
+
     paste0("Azure Active Directory ", version, " token for ", res, "\n",
-           "  Tenant: ", token$tenant, "\n",
+           "  Tenant: ", tenant, "\n",
            "  App ID: ", token$client$client_id, "\n",
            "  Authentication method: ", token$auth_type, "\n",
            "  Token valid from: ", format(obtained, usetz=TRUE), "  to: ", format(expiry, usetz=TRUE), "\n",

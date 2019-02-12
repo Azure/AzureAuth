@@ -124,3 +124,26 @@ verify_v2_scope <- function(scope)
     scope
 }
 
+
+# decode info in a token (which is a JWT object)
+decode_jwt <- function(token)
+{
+    decode <- function(string)
+    {
+        m <- nchar(string) %% 4
+        if(m == 2)
+            string <- paste0(string, "==")
+        else if(m == 3)
+            string <- paste0(string, "=")
+        jsonlite::fromJSON(rawToChar(openssl::base64_decode(string)))
+    }
+
+    token <- as.list(strsplit(token, "\\.")[[1]])
+    token[1:2] <- lapply(token[1:2], decode)
+
+    names(token)[1:2] <- c("header", "payload")
+    if(length(token) > 2)
+        names(token)[3] <- "signature"
+
+    token
+}

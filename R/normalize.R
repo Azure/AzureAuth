@@ -47,6 +47,8 @@
 #' @rdname guid
 normalize_tenant <- function(tenant)
 {
+    tenant <- tolower(tenant)
+
     # check if supplied a guid; if not, check if a fqdn;
     # if not, check if 'common'; if not, append '.onmicrosoft.com'
     if(is_guid(tenant))
