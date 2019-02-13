@@ -10,11 +10,16 @@ format_auth_header <- function(token)
     expiry <- as.POSIXct(as.numeric(token$credentials$expires_on), origin="1970-01-01")
     obtained <- expiry - as.numeric(token$credentials$expires_in)
     
-    res <- if(token$version == 1)
-        paste("resource", token$resource)
-    else paste("scope", paste(token$scope, collapse=" "))
-
-    version <- if(token$version == 1) "v1.0" else "v2.0"
+    if(is_azure_v1_token(token))
+    {
+        version <- "v1.0"
+        res <- paste("resource", token$resource)
+    }
+    else
+    {
+        version <- "v2.0"
+        res <- paste("scope", paste(token$scope, collapse=" "))
+    }
 
     tenant <- token$tenant
     if(tenant == "common")

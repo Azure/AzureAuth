@@ -35,20 +35,6 @@ aad_request_credentials <- function(app, password, username, certificate, auth_t
 }
 
 
-aad_endpoint <- function(aad_host, tenant, version=1, type=c("authorize", "token", "devicecode"))
-{
-    type <- match.arg(type)
-    tenant <- normalize_tenant(tenant)
-
-    uri <- httr::parse_url(aad_host)
-    uri$path <- if(version == 1)
-        file.path(tenant, "oauth2", type)
-    else file.path(tenant, "oauth2/v2.0", type)
-
-    httr::build_url(uri)
-}
-
-
 normalize_aad_version <- function(v)
 {
     if(v == "v1.0")
