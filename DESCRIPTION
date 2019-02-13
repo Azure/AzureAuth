@@ -1,12 +1,12 @@
 Package: AzureAuth
-Title: Authentication services for Azure Active Directory
+Title: Authentication Services for Azure Active Directory
 Version: 1.0.0
 Authors@R: c(
     person("Hong", "Ooi", , "hongooi@microsoft.com", role = c("aut", "cre")),
     person("httr development team", role="ctb", comment="Original OAuth listener code"),
     person("Microsoft", role="cph")
     )
-Description: Provides Azure Active Directory (AAD) authentication functionality for R users of Microsoft's 'Azure' cloud <https://azure.microsoft.com/>. Use this package to obtain 'OAuth' 2.0 tokens for services including Azure Resource Manager, Azure Storage and others. Itsupports both AAD v1.0 and v2.0, as well as multiple authentication methods, including device code and resource owner grant. Tokens are cached in a user-specific directory obtained using the rappdirs package. The interface is based on the OAuth framework in the httr package, but customised and streamlined for Azure.
+Description: Provides Azure Active Directory (AAD) authentication functionality for R users of Microsoft's 'Azure' cloud <https://azure.microsoft.com/>. Use this package to obtain 'OAuth' 2.0 tokens for services including Azure Resource Manager, Azure Storage and others. It supports both AAD v1.0 and v2.0, as well as multiple authentication methods, including device code and resource owner grant. Tokens are cached in a user-specific directory obtained using the 'rappdirs' package. The interface is based on the 'OAuth' framework in the 'httr' package, but customised and streamlined for Azure.
 URL: https://github.com/cloudyr/AzureAuth
 BugReports: https://github.com/cloudyr/AzureAuth/issues
 License: MIT + file LICENSE

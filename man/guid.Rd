@@ -59,5 +59,5 @@ normalize_tenant("72f988bf-86f1-41af-91ab-2d7cd011db47") # returns the GUID
 \seealso{
 \link{get_azure_token}
 
-\href{https://docs.microsoft.com/en-us/dotnet/api/system.guid.parse]}{Parsing rules for GUIDs in .NET}. \code{is_guid} and \code{normalize_guid} recognise the "N", "D", "B" and "P" formats.
+\href{https://docs.microsoft.com/en-us/dotnet/api/system.guid.parse}{Parsing rules for GUIDs in .NET}. \code{is_guid} and \code{normalize_guid} recognise the "N", "D", "B" and "P" formats.
 }

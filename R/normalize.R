@@ -24,7 +24,7 @@
 #' @seealso
 #' [get_azure_token]
 #'
-#' [Parsing rules for GUIDs in .NET](https://docs.microsoft.com/en-us/dotnet/api/system.guid.parse]). `is_guid` and `normalize_guid` recognise the "N", "D", "B" and "P" formats.
+#' [Parsing rules for GUIDs in .NET](https://docs.microsoft.com/en-us/dotnet/api/system.guid.parse). `is_guid` and `normalize_guid` recognise the "N", "D", "B" and "P" formats.
 #'
 #' @examples
 #'
