@@ -26,10 +26,14 @@ public=list(
     token_args=NULL,
     credentials=list(), # returned token details from host
 
-    initialize=function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
+    initialize=function(tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
                         aad_host="https://login.microsoftonline.com/",
                         authorize_args=list(), token_args=list())
     {
+        # fail if this constructor is called directly
+        if(is.null(self$version))
+            stop("Do not call this constructor directly; use get_azure_token() instead")
+
         self$aad_host <- aad_host
         self$tenant <- normalize_tenant(tenant)
         self$auth_type <- select_auth_type(password, username, certificate, auth_type)
@@ -39,6 +43,7 @@ public=list(
         self$authorize_args <- authorize_args
         self$token_args <- token_args
 
+        # set the "real" init method based on auth type
         private$initfunc <- switch(self$auth_type,
             authorization_code=init_authcode,
             device_code=init_devcode,
@@ -166,7 +171,7 @@ public=list(
     initialize=function(resource, ...)
     {
         self$resource <- resource
-        super$initialize(self$resource, ...)
+        super$initialize(...)
     }
 ),
 
@@ -200,7 +205,7 @@ public=list(
     initialize=function(resource, ...)
     {
         self$scope <- sapply(resource, verify_v2_scope, USE.NAMES=FALSE)
-        super$initialize(self$scope, ...)
+        super$initialize(...)
     }
 ),
 
