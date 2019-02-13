@@ -50,7 +50,7 @@
 #' To delete _all_ cached tokens, use `clean_token_directory`.
 #'
 #' @section Value:
-#' For `get_azure_token`, an object of class `AzureToken` representing the AAD token. For `list_azure_tokens`, a list of such objects retrieved from disk.
+#' For `get_azure_token`, an object of class either `AzureTokenV1` or `AzureTokenV2` depending on whether the token is for AAD v1.0 or v2.0. For `list_azure_tokens`, a list of such objects retrieved from disk.
 #' 
 #' @seealso
 #' [AzureToken], [httr::oauth2.0_token], [httr::Token],
@@ -109,8 +109,11 @@ get_azure_token <- function(resource, tenant, app, password=NULL, username=NULL,
                             aad_host="https://login.microsoftonline.com/", version=1,
                             authorize_args=list(), token_args=list())
 {
-    AzureToken$new(resource, tenant, app, password, username, certificate, auth_type, aad_host, version,
-                   authorize_args, token_args)
+    if(normalize_aad_version(version) == 1)
+        AzureTokenV1$new(resource, tenant, app, password, username, certificate, auth_type, aad_host,
+                         authorize_args, token_args)
+    else AzureTokenV2$new(resource, tenant, app, password, username, certificate, auth_type, aad_host,
+                          authorize_args, token_args)
 }
 
 
@@ -247,7 +250,13 @@ construct_path <- function(...)
 }
 
 
-#' @param object For `is_azure_token`, an R object.
+is_empty <- function(x)
+{
+    is.null(x) || length(x) == 0
+}
+
+
+#' @param object For `is_azure_token`, `is_azure_v1_token` and `is_azure_v2_token`, an R object.
 #' @rdname get_azure_token
 #' @export
 is_azure_token <- function(object)
@@ -256,7 +265,17 @@ is_azure_token <- function(object)
 }
 
 
-is_empty <- function(x)
+#' @rdname get_azure_token
+#' @export
+is_azure_v1_token <- function(object)
 {
-    is.null(x) || length(x) == 0
+    is_azure_token(object) && inherits(object, "AzureTokenV1")
+}
+
+
+#' @rdname get_azure_token
+#' @export
+is_azure_v2_token <- function(object)
+{
+    is_azure_token(object) && inherits(object, "AzureTokenV2")
 }

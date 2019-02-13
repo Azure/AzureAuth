@@ -3,20 +3,26 @@
 \docType{class}
 \name{AzureToken}
 \alias{AzureToken}
+\alias{AzureTokenV1}
+\alias{AzureTokenV2}
 \title{Azure OAuth authentication}
-\format{An R6 object of class \code{AzureToken}.}
+\format{An R6 object representing an Azure Active Directory token and its associated credentials. The \code{AzureTokenV1} class is for AAD v1.0 tokens, and the \code{AzureTokenV2} class is for AAD v2.0 tokens. Objects of the AzureToken class should not be created directly.}
 \usage{
 AzureToken
+
+AzureTokenV1
+
+AzureTokenV2
 }
 \description{
-Azure OAuth 2.0 token class, with an interface based on the \link[httr:Token2.0]{Token2.0 class} in httr. Rather than calling the initialization method directly, tokens should be created via \code{\link[=get_azure_token]{get_azure_token()}}.
+Azure OAuth 2.0 token classes, with an interface based on the \link[httr:Token2.0]{Token2.0 class} in httr. Rather than calling the initialization methods directly, tokens should be created via \code{\link[=get_azure_token]{get_azure_token()}}.
 }
 \section{Methods}{
 
 \itemize{
-\item \code{refresh}: Refreshes the token. For expired Azure tokens using client credentials, refreshing really means requesting a new token.
-\item \code{validate}: Checks if the token is still valid. For Azure tokens using client credentials, this just checks if the current time is less than the token's expiry time.
-\item \code{hash}: Computes an MD5 hash on selected fields of the token. Used internally for identification purposes when caching.
+\item \code{refresh}: Refreshes the token. For expired tokens without an associated refresh token, refreshing really means requesting a new token.
+\item \code{validate}: Checks if the token is still valid. If there is no associated refresh token, this just checks if the current time is less than the token's expiry time.
+\item \code{hash}: Computes an MD5 hash on the input fields of the object. Used internally for identification purposes when caching.
 \item \code{cache}: Stores the token on disk for use in future sessions.
 }
 }

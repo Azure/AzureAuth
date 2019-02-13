@@ -7,6 +7,8 @@
 \alias{list_azure_tokens}
 \alias{token_hash}
 \alias{is_azure_token}
+\alias{is_azure_v1_token}
+\alias{is_azure_v2_token}
 \title{Manage Azure Active Directory OAuth 2.0 tokens}
 \usage{
 get_azure_token(resource, tenant, app, password = NULL,
@@ -30,6 +32,10 @@ token_hash(resource, tenant, app, password = NULL, username = NULL,
   authorize_args = list(), token_args = list())
 
 is_azure_token(object)
+
+is_azure_v1_token(object)
+
+is_azure_v2_token(object)
 }
 \arguments{
 \item{resource}{For AAD v1.0, the URL of your resource host, or a GUID. For AAD v2.0, a character vector of scopes, each consisting of a URL or GUID along with a path designating the access scope. See 'Details' below.}
@@ -58,7 +64,7 @@ is_azure_token(object)
 
 \item{confirm}{For \code{delete_azure_token}, whether to prompt for confirmation before deleting a token.}
 
-\item{object}{For \code{is_azure_token}, an R object.}
+\item{object}{For \code{is_azure_token}, \code{is_azure_v1_token} and \code{is_azure_v2_token}, an R object.}
 }
 \description{
 These functions extend the OAuth functionality in httr for use with Azure Active Directory (AAD).
@@ -103,7 +109,7 @@ To delete \emph{all} cached tokens, use \code{clean_token_directory}.
 
 \section{Value}{
 
-For \code{get_azure_token}, an object of class \code{AzureToken} representing the AAD token. For \code{list_azure_tokens}, a list of such objects retrieved from disk.
+For \code{get_azure_token}, an object of class either \code{AzureTokenV1} or \code{AzureTokenV2} depending on whether the token is for AAD v1.0 or v2.0. For \code{list_azure_tokens}, a list of such objects retrieved from disk.
 }
 
 \examples{
