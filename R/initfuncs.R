@@ -4,7 +4,7 @@ init_authcode <- function()
         stop("httpuv package must be installed to use authorization_code method", call.=FALSE)
 
     # browse to authorization endpoint to get code
-    auth_uri <- httr::parse_url(aad_endpoint(self$aad_host, self$tenant, self$version, "authorize") )
+    auth_uri <- httr::parse_url(private$aad_endpoint("authorize"))
 
     opts <- utils::modifyList(list(
         client_id=self$client$client_id,
@@ -23,7 +23,7 @@ init_authcode <- function()
     code <- listen_for_authcode(auth_uri, host, redirect$port)
 
     # contact token endpoint for token
-    access_uri <- aad_endpoint(self$aad_host, self$tenant, self$version, "token")
+    access_uri <- private$aad_endpoint("token")
     body <- c(self$client, code=code, redirect_uri=opts$redirect_uri)
 
     httr::POST(access_uri, body=body, encode="form")
@@ -33,7 +33,7 @@ init_authcode <- function()
 init_devcode <- function()
 {
     # contact devicecode endpoint to get code
-    dev_uri <- aad_endpoint(self$aad_host, self$tenant, self$version, "devicecode")
+    dev_uri <- private$aad_endpoint("devicecode")
     body <- private$build_access_body(list(client_id=self$client$client_id))
     
     res <- httr::POST(dev_uri, body=body, encode="form")
@@ -43,7 +43,7 @@ init_devcode <- function()
     cat(creds$message, "\n")
 
     # poll token endpoint for token
-    access_uri <- aad_endpoint(self$aad_host, self$tenant, self$version, "token")
+    access_uri <- private$aad_endpoint("token")
     body <- c(self$client, code=creds$device_code)
 
     poll_for_token(access_uri, body, creds$interval, creds$expires_in)
@@ -53,7 +53,7 @@ init_devcode <- function()
 init_clientcred <- function()
 {
     # contact token endpoint directly with client credentials
-    uri <- aad_endpoint(self$aad_host, self$tenant, self$version, "token")
+    uri <- private$aad_endpoint("token")
     body <- private$build_access_body()
 
     httr::POST(uri, body=body, encode="form")
@@ -63,7 +63,7 @@ init_clientcred <- function()
 init_resowner <- function()
 {
     # contact token endpoint directly with resource owner username/password
-    uri <- aad_endpoint(self$aad_host, self$tenant, self$version, "token")
+    uri <- private$aad_endpoint("token")
     body <- private$build_access_body()
 
     httr::POST(uri, body=body, encode="form")

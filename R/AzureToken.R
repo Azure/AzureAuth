@@ -1,39 +1,39 @@
 #' Azure OAuth authentication
 #'
-#' Azure OAuth 2.0 token class, with an interface based on the [Token2.0 class][httr::Token2.0] in httr. Rather than calling the initialization method directly, tokens should be created via [get_azure_token()].
+#' Azure OAuth 2.0 token classes, with an interface based on the [Token2.0 class][httr::Token2.0] in httr. Rather than calling the initialization methods directly, tokens should be created via [get_azure_token()].
 #'
 #' @docType class
 #' @section Methods:
-#' - `refresh`: Refreshes the token. For expired Azure tokens using client credentials, refreshing really means requesting a new token.
-#' - `validate`: Checks if the token is still valid. For Azure tokens using client credentials, this just checks if the current time is less than the token's expiry time.
-#' - `hash`: Computes an MD5 hash on selected fields of the token. Used internally for identification purposes when caching.
+#' - `refresh`: Refreshes the token. For expired tokens without an associated refresh token, refreshing really means requesting a new token.
+#' - `validate`: Checks if the token is still valid. If there is no associated refresh token, this just checks if the current time is less than the token's expiry time.
+#' - `hash`: Computes an MD5 hash on the input fields of the object. Used internally for identification purposes when caching.
 #' - `cache`: Stores the token on disk for use in future sessions.
 #'
 #' @seealso
 #' [get_azure_token], [httr::Token]
 #'
-#' @format An R6 object of class `AzureToken`.
+#' @format An R6 object representing an Azure Active Directory token and its associated credentials. The `AzureTokenV1` class is for AAD v1.0 tokens, and the `AzureTokenV2` class is for AAD v2.0 tokens. Objects of the AzureToken class should not be created directly.
 #' @export
 AzureToken <- R6::R6Class("AzureToken",
 
 public=list(
 
-    version=NULL,
     aad_host=NULL,
     tenant=NULL,
     auth_type=NULL,
     client=NULL,
-    resource=NULL,
-    scope=NULL,
     authorize_args=NULL,
     token_args=NULL,
     credentials=list(), # returned token details from host
 
-    initialize=function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
-                        aad_host="https://login.microsoftonline.com/", version=1,
+    initialize=function(tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
+                        aad_host="https://login.microsoftonline.com/",
                         authorize_args=list(), token_args=list())
     {
-        self$version <- normalize_aad_version(version)
+        # fail if this constructor is called directly
+        if(is.null(self$version))
+            stop("Do not call this constructor directly; use get_azure_token() instead")
+
         self$aad_host <- aad_host
         self$tenant <- normalize_tenant(tenant)
         self$auth_type <- select_auth_type(password, username, certificate, auth_type)
@@ -43,10 +43,7 @@ public=list(
         self$authorize_args <- authorize_args
         self$token_args <- token_args
 
-        if(self$version == 1)
-            self$resource <- resource
-        else self$scope <- sapply(resource, verify_v2_scope, USE.NAMES=FALSE)
-
+        # set the "real" init method based on auth type
         private$initfunc <- switch(self$auth_type,
             authorization_code=init_authcode,
             device_code=init_devcode,
@@ -122,7 +119,7 @@ public=list(
                 list(grant_type="refresh_token", refresh_token=self$credentials$refresh_token))
             body <- private$build_access_body(body)
 
-            uri <- aad_endpoint(self$aad_host, self$tenant, self$version, "token")
+            uri <- private$aad_endpoint("token")
             httr::POST(uri, body=body, encode="form")
         }
         else private$initfunc() # reauthenticate if no refresh token
@@ -157,16 +154,74 @@ private=list(
         self$credentials <- token$credentials
     },
 
-    build_access_body=function(body=self$client)
-    {
-        stopifnot(is.list(self$token_args))
-        body <- if(self$version == 1)
-            c(body, self$authorize_args, resource=self$resource)
-        else c(body, self$authorize_args, scope=paste(self$scope, collapse=" "))
-    },
-
     # member function to be filled in by initialize()
     initfunc=NULL
 ))
 
+
+#' @rdname AzureToken
+#' @export
+AzureTokenV1 <- R6::R6Class("AzureTokenV1", inherit=AzureToken,
+
+public=list(
+
+    version=1, # for compatibility
+    resource=NULL,
+
+    initialize=function(resource, ...)
+    {
+        self$resource <- resource
+        super$initialize(...)
+    }
+),
+
+private=list(
+
+    build_access_body=function(body=self$client)
+    {
+        stopifnot(is.list(self$token_args))
+        c(body, self$authorize_args, resource=self$resource)
+    },
+
+    aad_endpoint=function(type)
+    {
+        uri <- httr::parse_url(self$aad_host)
+        uri$path <- file.path(self$tenant, "oauth2", type)
+        httr::build_url(uri)
+    }
+
+))
+
+
+#' @rdname AzureToken
+#' @export
+AzureTokenV2 <- R6::R6Class("AzureTokenV2", inherit=AzureToken,
+
+public=list(
+
+    version=2, # for compatibility
+    scope=NULL,
+
+    initialize=function(resource, ...)
+    {
+        self$scope <- sapply(resource, verify_v2_scope, USE.NAMES=FALSE)
+        super$initialize(...)
+    }
+),
+
+private=list(
+
+    build_access_body=function(body=self$client)
+    {
+        stopifnot(is.list(self$token_args))
+        c(body, self$authorize_args, scope=paste(self$scope, collapse=" "))
+    },
+
+    aad_endpoint=function(type)
+    {
+        uri <- httr::parse_url(self$aad_host)
+        uri$path <- file.path(self$tenant, "oauth2/v2.0", type)
+        httr::build_url(uri)
+    }
+))
 
