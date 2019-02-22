@@ -1,5 +1,9 @@
 # AzureAuth
 
+[![CRAN](https://www.r-pkg.org/badges/version/AzureAuth)](https://cran.r-project.org/package=AzureAuth)
+![Downloads](https://cranlogs.r-pkg.org/badges/AzureAuth)
+[![Travis Build Status](https://travis-ci.org/cloudyr/AzureAuth.png?branch=master)](https://travis-ci.org/cloudyr/AzureAuth)
+
 AzureAuth provides Azure Active Directory (AAD) authentication functionality for R users of Microsoft's Azure cloud. Use this package to obtain OAuth 2.0 tokens for Azure services including Azure Resource Manager, Azure Storage and others. Both AAD v1.0 and v2.0 are supported.
 
 You can install the development version of the package from GitHub, with `devtools::install_github("cloudyr/AzureAuth")`.
