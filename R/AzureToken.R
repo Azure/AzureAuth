@@ -86,7 +86,7 @@ public=list(
         if(dir.exists(AzureR_dir()))
         {
             filename <- file.path(AzureR_dir(), self$hash())
-            saveRDS(self, filename)
+            saveRDS(self, filename, version=2)
         }
         invisible(NULL)
     },

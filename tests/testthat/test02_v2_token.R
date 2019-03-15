@@ -22,7 +22,7 @@ test_that("v2.0 simple authentication works",
     suppressWarnings(file.remove(dir(AzureR_dir(), full.names=TRUE)))
 
     aut_hash <- "312b6c583c7daf6cc28e8f11ebefb324"
-    ccd_hash <- "c7cedaf732b89512509288a4bd09ef95"
+    ccd_hash <- "cdec8c0e80fbb28bca78d990af5604c7"
     dev_hash <- "91dac99e237261e76ca63b2876ec08ce"
 
     res <- "https://management.azure.com/.default"
