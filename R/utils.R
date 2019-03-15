@@ -1,3 +1,44 @@
+#' Decode info in a token (which is a JWT object)
+#'
+#' @param token A string representing the encoded token.
+#'
+#' @details
+#' An OAuth token is a _JSON Web Token_, which is a set of base64URL-encoded JSON objects containing the token credentials along with an optional (opaque) verification signature. `decode_jwt` decodes the credentials into an R object so they can be viewed.
+#'
+#' Note that `decode_jwt` does not touch the token signature or attempt to verify the credentials. You should not rely on the decoded information without verifying it independently. Passing the token itself to Azure is safe, as Azure will carry out its own verification procedure.
+#'
+#' @return
+#' A list containing up to 3 components: `header`, `payload` and `signature`.
+#'
+#' @seealso
+#' [jwt.io](https://jwt.io), the main JWT informational site
+#'
+#' [JWT Wikipedia entry](https://en.wikipedia.org/wiki/JSON_Web_Token)
+#' @export
+decode_jwt <- function(token)
+{
+    decode <- function(string)
+    {
+        m <- nchar(string) %% 4
+        if(m == 2)
+            string <- paste0(string, "==")
+        else if(m == 3)
+            string <- paste0(string, "=")
+        string <- chartr('-_', '+/', string)
+        jsonlite::fromJSON(rawToChar(openssl::base64_decode(string)))
+    }
+
+    token <- as.list(strsplit(token, "\\.")[[1]])
+    token[1:2] <- lapply(token[1:2], decode)
+
+    names(token)[1:2] <- c("header", "payload")
+    if(length(token) > 2)
+        names(token)[3] <- "signature"
+
+    token
+}
+
+
 aad_request_credentials <- function(app, password, username, certificate, auth_type)
 {
     obj <- list(client_id=app, grant_type=auth_type)
@@ -111,25 +152,3 @@ verify_v2_scope <- function(scope)
 }
 
 
-# decode info in a token (which is a JWT object)
-decode_jwt <- function(token)
-{
-    decode <- function(string)
-    {
-        m <- nchar(string) %% 4
-        if(m == 2)
-            string <- paste0(string, "==")
-        else if(m == 3)
-            string <- paste0(string, "=")
-        jsonlite::fromJSON(rawToChar(openssl::base64_decode(string)))
-    }
-
-    token <- as.list(strsplit(token, "\\.")[[1]])
-    token[1:2] <- lapply(token[1:2], decode)
-
-    names(token)[1:2] <- c("header", "payload")
-    if(length(token) > 2)
-        names(token)[3] <- "signature"
-
-    token
-}
