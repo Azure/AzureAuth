@@ -1,6 +1,6 @@
 init_authcode <- function()
 {
-    if(!requireNamespace("httpuv"))
+    if(!requireNamespace("httpuv", quietly=TRUE))
         stop("httpuv package must be installed to use authorization_code method", call.=FALSE)
 
     # browse to authorization endpoint to get code
