@@ -23,7 +23,7 @@ token <- get_azure_token(resource="myresource", tenant="mytenant", app="app_id",
 
 The function has the following arguments:
 
-- `resource`: The resource or scope for which you want a token. For AAD v1.0, this should be a single URL (eg "https://example.com") or a GUID. For AAD v2.0, this should be a vector of scopes (see below).
+- `resource`: The resource or scope for which you want a token. For AAD v1.0, this should be a single URL (eg "[https://example.com](https://example.com)") or a GUID. For AAD v2.0, this should be a vector of scopes (see below).
 - `tenant`: The AAD tenant.
 - `app`: The app ID or service principal ID to authenticate with.
 - `username`, `password`, `certificate`: Your authentication credentials.
