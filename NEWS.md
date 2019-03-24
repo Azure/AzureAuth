@@ -1,3 +1,7 @@
+# AzureAuth 1.0.1.9000
+
+* Corrections to vignette and readme.
+
 # AzureAuth 1.0.1
 
 * Export `decode_jwt`, a utility function to view the token data.
