@@ -1,6 +1,7 @@
 # AzureAuth 1.0.1.9000
 
 * Corrections to vignette and readme.
+* Make prompt to create caching directory more generic, since other AzureR packages will also use it.
 
 # AzureAuth 1.0.1
 
