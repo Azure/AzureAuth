@@ -130,7 +130,7 @@ test_that("Dubious requests handled gracefully",
 
 test_that("Providing path in aad_host works",
 {
-    res <- "https://management.azure.com/"
+    res <- "https://management.azure.com/.default"
     aad_url <- file.path("https://login.microsoftonline.com", normalize_tenant(tenant), "oauth2/v2.0")
 
     tok <- get_azure_token(res, tenant, app, password=password, aad_host=aad_url, version=2)

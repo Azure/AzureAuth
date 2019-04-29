@@ -92,7 +92,7 @@ test_that("Providing optional args works",
 
 test_that("Providing path in aad_host works",
 {
-    res <- "https://management.azure.com/.default"
+    res <- "https://management.azure.com/"
     aad_url <- file.path("https://login.microsoftonline.com", normalize_tenant(tenant), "oauth2")
 
     tok <- get_azure_token(res, tenant, app, password=password, aad_host=aad_url)
