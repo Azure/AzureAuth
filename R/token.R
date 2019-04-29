@@ -9,7 +9,7 @@
 #' @param username Your AAD username, if using the resource owner grant. See 'Details' below.
 #' @param certificate A certificate to authenticate with.
 #' @param auth_type The authentication type. See 'Details' below.
-#' @param aad_host URL for your AAD host. For the public Azure cloud, this is `https://login.microsoftonline.com/`. Change this if you are using a government or private cloud.
+#' @param aad_host URL for your AAD host. For the public Azure cloud, this is `https://login.microsoftonline.com/`. Change this if you are using a government or private cloud. Can also be a full URL, eg `https://mydomain.b2clogin.com/mydomain/other/path/names/oauth2`.
 #' @param version The AAD version, either 1 or 2.
 #' @param authorize_args An optional list of further parameters for the AAD authorization endpoint. These will be included in the request URI as query parameters. Only used if `auth_type="authorization_code"`.
 #' @param token_args An optional list of further parameters for the token endpoint. These will be included in the body of the request.
@@ -18,6 +18,8 @@
 #' `get_azure_token` does much the same thing as [httr::oauth2.0_token()], but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. `delete_azure_token` deletes a cached token, and `list_azure_tokens` lists currently cached tokens.
 #'
 #' The `resource` arg should be a single URL or GUID for AAD v1.0, and a vector of scopes for AAD v2.0. The latter consist of a URL or a GUID, along with a path that designates the scope. If a v2.0 scope doesn't have a path, `get_azure_token` will append the `/.default` path with a warning. A special scope is `offline_access`, which requests a refresh token from AAD along with the access token: without this scope, you will have to reauthenticate if you want to refresh the token.
+#'
+#' For B2C logins, the `aad_host` argument can be a full URL including the tenant and arbitrary path components, but excluding the specific endpoint.
 #'
 #' `token_hash` computes the MD5 hash of its arguments. This is used by AzureAuth to identify tokens for caching purposes.
 #'

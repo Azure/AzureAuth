@@ -52,7 +52,7 @@ is_azure_v2_token(object)
 
 \item{auth_type}{The authentication type. See 'Details' below.}
 
-\item{aad_host}{URL for your AAD host. For the public Azure cloud, this is \code{https://login.microsoftonline.com/}. Change this if you are using a government or private cloud.}
+\item{aad_host}{URL for your AAD host. For the public Azure cloud, this is \code{https://login.microsoftonline.com/}. Change this if you are using a government or private cloud. Can also be a full URL, eg \code{https://mydomain.b2clogin.com/mydomain/other/path/names/oauth2}.}
 
 \item{version}{The AAD version, either 1 or 2.}
 
@@ -73,6 +73,8 @@ These functions extend the OAuth functionality in httr for use with Azure Active
 \code{get_azure_token} does much the same thing as \code{\link[httr:oauth2.0_token]{httr::oauth2.0_token()}}, but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. \code{delete_azure_token} deletes a cached token, and \code{list_azure_tokens} lists currently cached tokens.
 
 The \code{resource} arg should be a single URL or GUID for AAD v1.0, and a vector of scopes for AAD v2.0. The latter consist of a URL or a GUID, along with a path that designates the scope. If a v2.0 scope doesn't have a path, \code{get_azure_token} will append the \code{/.default} path with a warning. A special scope is \code{offline_access}, which requests a refresh token from AAD along with the access token: without this scope, you will have to reauthenticate if you want to refresh the token.
+
+For B2C logins, the \code{aad_host} argument can be a full URL including the tenant and arbitrary path components, but excluding the specific endpoint.
 
 \code{token_hash} computes the MD5 hash of its arguments. This is used by AzureAuth to identify tokens for caching purposes.
 

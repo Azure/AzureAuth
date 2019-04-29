@@ -89,3 +89,12 @@ test_that("Providing optional args works",
         delete_azure_token(res, tenant, native_app, username=username, auth_type="authorization_code", confirm=FALSE))
 })
 
+
+test_that("Providing path in aad_host works",
+{
+    res <- "https://management.azure.com/.default"
+    aad_url <- file.path("https://login.microsoftonline.com", normalize_tenant(tenant), "oauth2")
+
+    tok <- get_azure_token(res, tenant, app, password=password, aad_host=aad_url)
+    expect_true(is_azure_token(tok))
+})

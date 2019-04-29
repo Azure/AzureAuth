@@ -126,3 +126,13 @@ test_that("Dubious requests handled gracefully",
     expect_warning(tok <- get_azure_token(nopath, tenant, app, password=password, version=2))
     expect_equal(tok$scope, "https://management.azure.com/.default")
 })
+
+
+test_that("Providing path in aad_host works",
+{
+    res <- "https://management.azure.com/"
+    aad_url <- file.path("https://login.microsoftonline.com", normalize_tenant(tenant), "oauth2/v2.0")
+
+    tok <- get_azure_token(res, tenant, app, password=password, aad_host=aad_url, version=2)
+    expect_true(is_azure_token(tok))
+})
