@@ -1,3 +1,7 @@
+# AzureAuth 1.0.2.9000
+
+* Support providing a path in the aad_host argument, for B2C logins.
+
 # AzureAuth 1.0.2
 
 * Corrections to vignette and readme.
