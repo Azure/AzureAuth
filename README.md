@@ -48,7 +48,7 @@ get_azure_token("myresource", "mytenant", "app_id", auth_type="device_code")
 get_azure_token("myresource", "mytenant", "app_id",
                 password="client_secret", auth_type="client_credentials")
 
-# can also supply a client certificate as a PEM file...
+# can also supply a client certificate as a PEM/PFX file...
 get_azure_token("myresource", "mytenant", "app_id",
                 certificate="mycert.pem", auth_type="client_credentials")
 

@@ -1,6 +1,6 @@
 #' Create a client assertion for certificate authentication
 #'
-#' @param certificate An Azure Key Vault certificate object, or the name of a PEM file containing _both_ a private key and a public certificate.
+#' @param certificate An Azure Key Vault certificate object, or the name of a PEM or PFX file containing _both_ a private key and a public certificate.
 #' @param duration The requested validity period of the token, in seconds. The default is 1 hour.
 #' @param signature_size The size of the SHA2 signature.
 #' @param ... Other named arguments which will be treated as custom claims.
@@ -124,11 +124,22 @@ sign_assertion.character <- function(certificate, claim, size)
 
 read_cert_pair <- function(file)
 {
-    pem <- openssl::read_pem(file)
-    obj <- list(
-        key=openssl::read_key(pem[["PRIVATE KEY"]]),
-        cert=openssl::read_cert(pem[["CERTIFICATE"]])
-    )
+    ext <- tolower(tools::file_ext(file))
+    if(ext == "pem")
+    {
+        pem <- openssl::read_pem(file)
+        obj <- list(
+            key=openssl::read_key(pem[["PRIVATE KEY"]]),
+            cert=openssl::read_cert(pem[["CERTIFICATE"]])
+        )
+    }
+    else if(ext %in% c("p12", "pfx"))
+    {
+        pfx <- openssl::read_p12(file)
+        obj <- list(key=pfx$key, cert=pfx$cert)
+    }
+    else stop("Unsupported file extension: ", ext, call.=FALSE)
+
     structure(obj, class="openssl_cert_pair")
 }
 

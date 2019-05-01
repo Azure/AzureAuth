@@ -7,7 +7,7 @@
 cert_assertion(certificate, duration = 3600, signature_size = 256, ...)
 }
 \arguments{
-\item{certificate}{An Azure Key Vault certificate object, or the name of a PEM file containing \emph{both} a private key and a public certificate.}
+\item{certificate}{An Azure Key Vault certificate object, or the name of a PEM or PFX file containing \emph{both} a private key and a public certificate.}
 
 \item{duration}{The requested validity period of the token, in seconds. The default is 1 hour.}
 

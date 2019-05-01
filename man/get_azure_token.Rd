@@ -48,7 +48,7 @@ is_azure_v2_token(object)
 
 \item{username}{Your AAD username, if using the resource owner grant. See 'Details' below.}
 
-\item{certificate}{A PEM file containing the certificate for authenticating with, an Azure Key Vault certificate object, or a call to the \code{cert_assertion} function to build a client assertion with a certificate. See 'Certificate authentication' below.}
+\item{certificate}{A file containing the certificate for authenticating with, an Azure Key Vault certificate object, or a call to the \code{cert_assertion} function to build a client assertion with a certificate. See 'Certificate authentication' below.}
 
 \item{auth_type}{The authentication type. See 'Details' below.}
 
@@ -102,7 +102,7 @@ Similarly, since the authorization_code method opens a browser to load the AAD a
 
 OAuth tokens can be authenticated via an SSL/TLS certificate, which is considered more secure than a client secret. To do this, use the \code{certificate} argument, which can contain any of the following:
 \itemize{
-\item The name of a PEM file, containing \emph{both} the private key and the public certificate.
+\item The name of a PEM or PFX file, containing \emph{both} the private key and the public certificate.
 \item A certificate object from the AzureKeyVault package, representing a cert stored in the Key Vault service.
 \item A call to the \code{cert_assertion()} function to customise details of the requested token, eg the duration, expiry date, custom claims, etc. See the examples below.
 }
