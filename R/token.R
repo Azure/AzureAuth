@@ -7,7 +7,7 @@
 #' @param app The client/app ID to use to authenticate with.
 #' @param password The password, either for the app, or your username if supplied. See 'Details' below.
 #' @param username Your AAD username, if using the resource owner grant. See 'Details' below.
-#' @param certificate A certificate to authenticate with.
+#' @param certificate A PEM file containing the certificate for authenticating with, an Azure Key Vault certificate object, or a call to the `cert_assertion` function to build a client assertion with a certificate. See 'Certificate authentication' below.
 #' @param auth_type The authentication type. See 'Details' below.
 #' @param aad_host URL for your AAD host. For the public Azure cloud, this is `https://login.microsoftonline.com/`. Change this if you are using a government or private cloud. Can also be a full URL, eg `https://mydomain.b2clogin.com/mydomain/other/path/names/oauth2`.
 #' @param version The AAD version, either 1 or 2.
@@ -32,7 +32,7 @@
 #' 
 #' 2. The **device_code** method is similar in concept to authorization_code, but is meant for situations where you are unable to browse the Internet -- for example if you don't have a browser installed or your computer has input constraints. First, `get_azure_token` contacts the AAD devicecode endpoint, which responds with a login URL and an access code. You then visit the URL and enter the code, possibly using a different computer. Meanwhile, `get_azure_token` polls the AAD access endpoint for a token, which is provided once you have entered the code.
 #' 
-#' 3. The **client_credentials** method is much simpler than the above methods, requiring only one step. `get_azure_token` contacts the access endpoint, passing it either the app secret or the certificate (which you supply in the `password` or `certificate` argument respectively). Once the credentials are verified, the endpoint returns the token. This is the method typically used by service accounts.
+#' 3. The **client_credentials** method is much simpler than the above methods, requiring only one step. `get_azure_token` contacts the access endpoint, passing it either the app secret or the certificate assertion (which you supply in the `password` or `certificate` argument respectively). Once the credentials are verified, the endpoint returns the token. This is the method typically used by service accounts.
 #' 
 #' 4. The **resource_owner** method also requires only one step. In this method, `get_azure_token` passes your (personal) username and password to the AAD access endpoint, which validates your credentials and returns the token.
 #'
@@ -42,6 +42,12 @@
 #'
 #' Similarly, since the authorization_code method opens a browser to load the AAD authorization page, your machine must have an Internet browser installed that can be run from inside R. In particular, if you are using a Linux [Data Science Virtual Machine](https://azure.microsoft.com/en-us/services/virtual-machines/data-science-virtual-machines/) in Azure, you may run into difficulties; use one of the other methods instead.
 #'
+#' @section Certificate authentication:
+#' OAuth tokens can be authenticated via an SSL/TLS certificate, which is considered more secure than a client secret. To do this, use the `certificate` argument, which can contain any of the following:
+#' - The name of a PEM file, containing _both_ the private key and the public certificate.
+#' - A certificate object from the AzureKeyVault package, representing a cert stored in the Key Vault service.
+#' - A call to the `cert_assertion()` function to customise details of the requested token, eg the duration, expiry date, custom claims, etc. See the examples below.
+#' 
 #' @section Caching:
 #' AzureAuth differs from httr in its handling of token caching in a number of ways. First, caching is based on all the inputs to `get_azure_token` as listed above. Second, it defines its own directory for cached tokens, using the rappdirs package. On recent Windows versions, this will usually be in the location `C:\\Users\\(username)\\AppData\\Local\\AzureR`. On Linux, it will be in `~/.config/AzureR`, and on MacOS, it will be in `~/Library/Application Support/AzureR`. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).
 #'
@@ -55,7 +61,7 @@
 #' For `get_azure_token`, an object of class either `AzureTokenV1` or `AzureTokenV2` depending on whether the token is for AAD v1.0 or v2.0. For `list_azure_tokens`, a list of such objects retrieved from disk.
 #' 
 #' @seealso
-#' [AzureToken], [httr::oauth2.0_token], [httr::Token],
+#' [AzureToken], [httr::oauth2.0_token], [httr::Token], [cert_assertion]
 #'
 #' [Azure Active Directory for developers](https://docs.microsoft.com/en-us/azure/active-directory/develop/),
 #' [Device code flow on OAuth.com](https://www.oauth.com/oauth2-servers/device-flow/token-request/),
@@ -104,6 +110,25 @@
 #'
 #' # delete a saved token by specifying its MD5 hash
 #' delete_azure_token(hash="7ea491716e5b10a77a673106f3f53bfd")
+#'
+#'
+#' # authenticating for B2C logins (custom AAD host)
+#' get_azure_token("https://mydomain.com", "mytenant", "app_id", "password",
+#'     aad_host="https://mytenant.b2clogin.com/tfp/mytenant.onmicrosoft.com/custom/oauth2")
+#'
+#'
+#' # authenticating with a certificate
+#' get_azure_token("https://management.azure.com/", "mytenant", "app_id",
+#'     certificate="mycert.pem")
+#'
+#' # authenticating with a certificate stored in Azure Key Vault
+#' cert <- AzureKeyVault::key_vault("myvault")$certificates$get("mycert")
+#' get_azure_token("https://management.azure.com/", "mytenant", "app_id",
+#'     certificate=cert)
+#'
+#' # get a token valid for 2 hours (default is 1 hour)
+#' get_azure_token("https://management.azure.com/", "mytenant", "app_id",
+#'     certificate=cert_assertion("mycert.pem", duration=2*3600)
 #'
 #' }
 #' @export

@@ -48,7 +48,7 @@ is_azure_v2_token(object)
 
 \item{username}{Your AAD username, if using the resource owner grant. See 'Details' below.}
 
-\item{certificate}{A certificate to authenticate with.}
+\item{certificate}{A PEM file containing the certificate for authenticating with, an Azure Key Vault certificate object, or a call to the \code{cert_assertion} function to build a client assertion with a certificate. See 'Certificate authentication' below.}
 
 \item{auth_type}{The authentication type. See 'Details' below.}
 
@@ -87,7 +87,7 @@ One particular use of the \code{authorize_args} argument is to specify a differe
 \enumerate{
 \item Using the \strong{authorization_code} method is a multi-step process. First, \code{get_azure_token} opens a login window in your browser, where you can enter your AAD credentials. In the background, it loads the \href{https://github.com/rstudio/httpuv}{httpuv} package to listen on a local port. Once you have logged in, the AAD server redirects your browser to a local URL that contains an authorization code. \code{get_azure_token} retrieves this authorization code and sends it to the AAD access endpoint, which returns the OAuth token.
 \item The \strong{device_code} method is similar in concept to authorization_code, but is meant for situations where you are unable to browse the Internet -- for example if you don't have a browser installed or your computer has input constraints. First, \code{get_azure_token} contacts the AAD devicecode endpoint, which responds with a login URL and an access code. You then visit the URL and enter the code, possibly using a different computer. Meanwhile, \code{get_azure_token} polls the AAD access endpoint for a token, which is provided once you have entered the code.
-\item The \strong{client_credentials} method is much simpler than the above methods, requiring only one step. \code{get_azure_token} contacts the access endpoint, passing it either the app secret or the certificate (which you supply in the \code{password} or \code{certificate} argument respectively). Once the credentials are verified, the endpoint returns the token. This is the method typically used by service accounts.
+\item The \strong{client_credentials} method is much simpler than the above methods, requiring only one step. \code{get_azure_token} contacts the access endpoint, passing it either the app secret or the certificate assertion (which you supply in the \code{password} or \code{certificate} argument respectively). Once the credentials are verified, the endpoint returns the token. This is the method typically used by service accounts.
 \item The \strong{resource_owner} method also requires only one step. In this method, \code{get_azure_token} passes your (personal) username and password to the AAD access endpoint, which validates your credentials and returns the token.
 }
 
@@ -96,6 +96,16 @@ If the authentication method is not specified, it is chosen based on the presenc
 The httpuv package must be installed to use the authorization_code method, as this requires a web server to listen on the (local) redirect URI. See \link[httr:oauth2.0_token]{httr::oauth2.0_token} for more information; note that Azure does not support the \code{use_oob} feature of the httr OAuth 2.0 token class.
 
 Similarly, since the authorization_code method opens a browser to load the AAD authorization page, your machine must have an Internet browser installed that can be run from inside R. In particular, if you are using a Linux \href{https://azure.microsoft.com/en-us/services/virtual-machines/data-science-virtual-machines/}{Data Science Virtual Machine} in Azure, you may run into difficulties; use one of the other methods instead.
+}
+
+\section{Certificate authentication}{
+
+OAuth tokens can be authenticated via an SSL/TLS certificate, which is considered more secure than a client secret. To do this, use the \code{certificate} argument, which can contain any of the following:
+\itemize{
+\item The name of a PEM file, containing \emph{both} the private key and the public certificate.
+\item A certificate object from the AzureKeyVault package, representing a cert stored in the Key Vault service.
+\item A call to the \code{cert_assertion()} function to customise details of the requested token, eg the duration, expiry date, custom claims, etc. See the examples below.
+}
 }
 
 \section{Caching}{
@@ -158,10 +168,29 @@ delete_azure_token(resource="https://myresource/", tenant="mytenant", app="app_i
 # delete a saved token by specifying its MD5 hash
 delete_azure_token(hash="7ea491716e5b10a77a673106f3f53bfd")
 
+
+# authenticating for B2C logins (custom AAD host)
+get_azure_token("https://mydomain.com", "mytenant", "app_id", "password",
+    aad_host="https://mytenant.b2clogin.com/tfp/mytenant.onmicrosoft.com/custom/oauth2")
+
+
+# authenticating with a certificate
+get_azure_token("https://management.azure.com/", "mytenant", "app_id",
+    certificate="mycert.pem")
+
+# authenticating with a certificate stored in Azure Key Vault
+cert <- AzureKeyVault::key_vault("myvault")$certificates$get("mycert")
+get_azure_token("https://management.azure.com/", "mytenant", "app_id",
+    certificate=cert)
+
+# get a token valid for 2 hours (default is 1 hour)
+get_azure_token("https://management.azure.com/", "mytenant", "app_id",
+    certificate=cert_assertion("mycert.pem", duration=2*3600)
+
 }
 }
 \seealso{
-\link{AzureToken}, \link[httr:oauth2.0_token]{httr::oauth2.0_token}, \link[httr:Token]{httr::Token},
+\link{AzureToken}, \link[httr:oauth2.0_token]{httr::oauth2.0_token}, \link[httr:Token]{httr::Token}, \link{cert_assertion}
 
 \href{https://docs.microsoft.com/en-us/azure/active-directory/develop/}{Azure Active Directory for developers},
 \href{https://www.oauth.com/oauth2-servers/device-flow/token-request/}{Device code flow on OAuth.com},

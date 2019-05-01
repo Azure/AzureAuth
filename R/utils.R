@@ -17,19 +17,9 @@
 #' @export
 decode_jwt <- function(token)
 {
-    decode <- function(string)
-    {
-        m <- nchar(string) %% 4
-        if(m == 2)
-            string <- paste0(string, "==")
-        else if(m == 3)
-            string <- paste0(string, "=")
-        string <- chartr('-_', '+/', string)
-        jsonlite::fromJSON(rawToChar(openssl::base64_decode(string)))
-    }
-
     token <- as.list(strsplit(token, "\\.")[[1]])
-    token[1:2] <- lapply(token[1:2], decode)
+    token[1:2] <- lapply(token[1:2], function(x)
+        jsonlite::fromJSON(rawToChar(jose::base64url_decode(x))))
 
     names(token)[1:2] <- c("header", "payload")
     if(length(token) > 2)
@@ -58,7 +48,7 @@ aad_request_credentials <- function(app, password, username, certificate, auth_t
         else if(!is.null(certificate))
         {
             obj$client_assertion_type <- "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
-            obj$client_assertion <- certificate
+            obj$client_assertion <- certificate  # not actual assertion: will be replaced later
         }
         else stop("Must provide either a client secret or certificate for client_credentials grant", call.=FALSE)
     }

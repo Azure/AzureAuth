@@ -180,6 +180,11 @@ private=list(
     build_access_body=function(body=self$client)
     {
         stopifnot(is.list(self$token_args))
+
+        # fill in cert assertion details
+        body$client_assertion <- build_assertion(body$client_assertion,
+            self$tenant, body$client_id, self$aad_host, self$version)
+
         c(body, self$authorize_args, resource=self$resource)
     },
 
@@ -216,6 +221,11 @@ private=list(
     build_access_body=function(body=self$client)
     {
         stopifnot(is.list(self$token_args))
+
+        # fill in cert assertion details
+        body$client_assertion <- build_assertion(body$client_assertion,
+            self$tenant, body$client_id, self$aad_host, self$version)
+
         c(body, self$authorize_args, scope=paste(self$scope, collapse=" "))
     },
 

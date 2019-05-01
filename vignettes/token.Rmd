@@ -70,9 +70,14 @@ get_azure_token("myresource", "mytenant", "app_id", auth_type="device_code")
 get_azure_token("myresource", "mytenant", "app_id",
                 password="client_secret", auth_type="client_credentials")
 
-# can also supply a client certificate, as a string
+# can also supply a client certificate as a PEM file...
 get_azure_token("myresource", "mytenant", "app_id",
-                certificate="encoded_certificate", auth_type="client_credentials")
+                certificate="mycert.pem", auth_type="client_credentials")
+
+# ... or as an object in Azure Key Vault
+cert <- AzureKeyVault::key_vault("myvault")$certificates$get("mycert")
+get_azure_token("myresource", "mytenant", "app_id",
+                certificate=cert, auth_type="client_credentials")
 ```
 
 4. The **resource_owner** method also requires only one step. In this method, `get_azure_token` passes your (personal) username and password to the AAD access endpoint, which validates your credentials and returns the token.
