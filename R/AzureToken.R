@@ -70,12 +70,7 @@ public=list(
 
         # notify user if interactive auth and no refresh token
         if(self$auth_type %in% c("authorization_code", "device_code") && is.null(self$credentials$refresh_token))
-        {
-            if(self$version == 1)
-                message("Server did not provide a refresh token: please reauthenticate to refresh.")
-            else message("Server did not provide a refresh token: you will have to reauthenticate to refresh.\n",
-                         "Add the 'offline_access' scope to obtain a refresh token.")
-        }
+            private$norenew_alert()
 
         self$cache()
         self
@@ -185,7 +180,7 @@ private=list(
         body$client_assertion <- build_assertion(body$client_assertion,
             self$tenant, body$client_id, self$aad_host, self$version)
 
-        c(body, self$authorize_args, resource=self$resource)
+        c(body, self$token_args, resource=self$resource)
     },
 
     aad_endpoint=function(type)
@@ -195,8 +190,12 @@ private=list(
             file.path(self$tenant, "oauth2", type)
         else file.path(uri$path, type)
         httr::build_url(uri)
-    }
+    },
 
+    norenew_alert=function()
+    {
+        message("Server did not provide a refresh token: please reauthenticate to refresh.")
+    }
 ))
 
 
@@ -226,7 +225,7 @@ private=list(
         body$client_assertion <- build_assertion(body$client_assertion,
             self$tenant, body$client_id, self$aad_host, self$version)
 
-        c(body, self$authorize_args, scope=paste(self$scope, collapse=" "))
+        c(body, self$token_args, scope=paste(self$scope, collapse=" "))
     },
 
     aad_endpoint=function(type)
@@ -236,6 +235,12 @@ private=list(
             file.path(self$tenant, "oauth2/v2.0", type)
         else file.path(uri$path, type)
         httr::build_url(uri)
+    },
+
+    norenew_alert=function()
+    {
+        message("Server did not provide a refresh token: you will have to reauthenticate to refresh.\n",
+                "Add the 'offline_access' scope to obtain a refresh token.")
     }
 ))
 
