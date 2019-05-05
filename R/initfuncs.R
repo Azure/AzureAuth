@@ -101,7 +101,10 @@ listen_for_authcode <- function(url, localhost="127.0.0.1", localport=1410)
     httpuv::service()
 
     if(is_empty(info$code))
-        stop("Authentication failed.", call.=FALSE)
+    {
+        msg <- gsub("\\+", " ", URLdecode(info$error_description))
+        stop("Authentication failed. Message:\n", msg, call.=FALSE)
+    }
 
     message("Authentication complete.")
     info$code
