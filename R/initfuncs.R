@@ -1,5 +1,7 @@
 init_authcode <- function()
 {
+    stopifnot(is.list(self$token_args))
+
     if(!requireNamespace("httpuv", quietly=TRUE))
         stop("httpuv package must be installed to use authorization_code method", call.=FALSE)
 
@@ -14,7 +16,7 @@ init_authcode <- function()
         scope=paste(self$scope, collapse=" "),
         client_secret=self$client$client_secret,
         login_hint=self$client$login_hint,
-        state=paste0(sample(letters, 20), collapse="") # random nonce
+        state=paste0(sample(letters, 20, TRUE), collapse="") # random nonce
     ), self$authorize_args)
 
     auth_uri$query <- opts
@@ -24,7 +26,7 @@ init_authcode <- function()
 
     # contact token endpoint for token
     access_uri <- private$aad_endpoint("token")
-    body <- c(self$client, code=code, redirect_uri=opts$redirect_uri)
+    body <- c(self$client, code=code, redirect_uri=opts$redirect_uri, self$token_args)
 
     httr::POST(access_uri, body=body, encode="form")
 }
