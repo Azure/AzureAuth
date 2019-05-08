@@ -9,6 +9,13 @@ native_app <- Sys.getenv("AZ_TEST_NATIVE_APP_ID")
 if(tenant == "" || app == "" || username == "" || password == "" || native_app == "")
     skip("Authentication tests skipped: ARM credentials not set")
 
+aut_hash <- Sys.getenv("AZ_TEST_AUT_HASH2")
+ccd_hash <- Sys.getenv("AZ_TEST_CCD_HASH2")
+dev_hash <- Sys.getenv("AZ_TEST_DEV_HASH2")
+
+if(aut_hash == "" || ccd_hash == "" || dev_hash == "")
+    skip("Authentication tests skipped: token hashes not set")
+
 if(system.file(package="httpuv") == "")
     skip("Authentication tests skipped: httpuv must be installed")
 
@@ -20,10 +27,6 @@ if(!interactive())
 test_that("v2.0 simple authentication works",
 {
     suppressWarnings(file.remove(dir(AzureR_dir(), full.names=TRUE)))
-
-    aut_hash <- "312b6c583c7daf6cc28e8f11ebefb324"
-    ccd_hash <- "cdec8c0e80fbb28bca78d990af5604c7"
-    dev_hash <- "91dac99e237261e76ca63b2876ec08ce"
 
     res <- "https://management.azure.com/.default"
 
@@ -135,4 +138,25 @@ test_that("Providing path in aad_host works",
 
     tok <- get_azure_token(res, tenant, app, password=password, aad_host=aad_url, version=2)
     expect_true(is_azure_token(tok))
+})
+
+
+test_that("On-behalf-of flow works",
+{
+    res <- file.path(app, ".default")
+    res2 <- "offline_access"
+
+    tok0 <- get_azure_token(c(res, res2), tenant, native_app, version=2)
+    expect_true(is_azure_token(tok0))
+
+    name0 <- decode_jwt(tok0$credentials$access_token)$payload$name
+    expect_type(name0, "character")
+
+    tok1 <- get_azure_token("https://graph.microsoft.com/.default", tenant, app, password, on_behalf_of=tok0, version=2)
+    expect_true(is_azure_token(tok1))
+
+    name1 <- decode_jwt(tok1$credentials$access_token)$payload$name
+    expect_identical(name0, name1)
+
+    expect_silent(tok1$refresh())
 })

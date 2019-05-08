@@ -14,13 +14,13 @@
 get_azure_token(resource, tenant, app, password = NULL,
   username = NULL, certificate = NULL, auth_type = NULL,
   aad_host = "https://login.microsoftonline.com/", version = 1,
-  authorize_args = list(), token_args = list())
+  authorize_args = list(), token_args = list(), on_behalf_of = NULL)
 
 delete_azure_token(resource, tenant, app, password = NULL,
   username = NULL, certificate = NULL, auth_type = NULL,
   aad_host = "https://login.microsoftonline.com/", version = 1,
-  authorize_args = list(), token_args = list(), hash = NULL,
-  confirm = TRUE)
+  authorize_args = list(), token_args = list(), on_behalf_of = NULL,
+  hash = NULL, confirm = TRUE)
 
 clean_token_directory(confirm = TRUE)
 
@@ -29,7 +29,7 @@ list_azure_tokens()
 token_hash(resource, tenant, app, password = NULL, username = NULL,
   certificate = NULL, auth_type = NULL,
   aad_host = "https://login.microsoftonline.com/", version = 1,
-  authorize_args = list(), token_args = list())
+  authorize_args = list(), token_args = list(), on_behalf_of = NULL)
 
 is_azure_token(object)
 
@@ -60,6 +60,8 @@ is_azure_v2_token(object)
 
 \item{token_args}{An optional list of further parameters for the token endpoint. These will be included in the body of the request.}
 
+\item{on_behalf_of}{For the on-behalf-of authentication type, a token. This should be either an AzureToken object, or a string containing the JWT-encoded token itself.}
+
 \item{hash}{The MD5 hash of this token, computed from the above inputs. Used by \code{delete_azure_token} to identify a cached token to delete.}
 
 \item{confirm}{For \code{delete_azure_token}, whether to prompt for confirmation before deleting a token.}
@@ -89,9 +91,10 @@ One particular use of the \code{authorize_args} argument is to specify a differe
 \item The \strong{device_code} method is similar in concept to authorization_code, but is meant for situations where you are unable to browse the Internet -- for example if you don't have a browser installed or your computer has input constraints. First, \code{get_azure_token} contacts the AAD devicecode endpoint, which responds with a login URL and an access code. You then visit the URL and enter the code, possibly using a different computer. Meanwhile, \code{get_azure_token} polls the AAD access endpoint for a token, which is provided once you have entered the code.
 \item The \strong{client_credentials} method is much simpler than the above methods, requiring only one step. \code{get_azure_token} contacts the access endpoint, passing it either the app secret or the certificate assertion (which you supply in the \code{password} or \code{certificate} argument respectively). Once the credentials are verified, the endpoint returns the token. This is the method typically used by service accounts.
 \item The \strong{resource_owner} method also requires only one step. In this method, \code{get_azure_token} passes your (personal) username and password to the AAD access endpoint, which validates your credentials and returns the token.
+\item The \strong{on_behalf_of} method is used to authenticate with an Azure resource by passing a token obtained beforehand. It is mostly used by intermediate apps to authenticate for users. In particular, you can use this method to obtain tokens for multiple resources, while only requiring the user to authenticate once: see the examples below.
 }
 
-If the authentication method is not specified, it is chosen based on the presence or absence of the \code{password},  \code{username} and \code{certificate} arguments, and whether httpuv is installed.
+If the authentication method is not specified, it is chosen based on the presence or absence of the other arguments, and whether httpuv is installed.
 
 The httpuv package must be installed to use the authorization_code method, as this requires a web server to listen on the (local) redirect URI. See \link[httr:oauth2.0_token]{httr::oauth2.0_token} for more information; note that Azure does not support the \code{use_oob} feature of the httr OAuth 2.0 token class.
 
@@ -141,13 +144,22 @@ get_azure_token("https://management.azure.com/", tenant="mytenant", app="app_id"
     password="app_secret")
 
 # authenticate to your resource with the resource_owner method: provide your username and password
-get_azure_token(resource="https://myresource/", tenant="mytenant", app="app_id",
+get_azure_token("https://myresource/", tenant="mytenant", app="app_id",
     username="user", password="abcdefg")
+
+# obtaining multiple tokens: authenticate (interactively) once...
+tok0 <- get_azure_token("serviceapp_id", tenant="mytenant", app="clientapp_id",
+    auth_type="authorization_code")
+# ...then get tokens for each resource (Resource Manager and MS Graph) with on_behalf_of
+tok1 <- get_azure_token("https://management.azure.com/", tenant="mytenant," app="serviceapp_id",
+    password="serviceapp_secret", on_behalf_of=tok0)
+tok2 <- get_azure_token("https://graph.microsoft.com/", tenant="mytenant," app="serviceapp_id",
+    password="serviceapp_secret", on_behalf_of=tok0)
 
 
 # use a different redirect URI to the default localhost:1410
 get_azure_token("https://management.azure.com/", tenant="mytenant", app="app_id",
-    authorize_args=list(redirect_uri="http://127.255.10.1:8000"))
+    authorize_args=list(redirect_uri="http://localhost:8000"))
 
 
 # request an AAD v1.0 token for Resource Manager (the default)

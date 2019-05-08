@@ -22,7 +22,7 @@ token <- get_azure_token(resource="myresource", tenant="mytenant", app="app_id",
 
 Other supplied functions include `list_azure_tokens`, `delete_azure_token` and `clean_token_directory`, to let you manage the token cache.
 
-AzureAuth supports four distinct methods for authenticating with AAD: **authorization_code**, **device_code**, **client_credentials** and **resource_owner**.
+AzureAuth supports the following methods for authenticating with AAD: **authorization_code**, **device_code**, **client_credentials**, **resource_owner** and **on_behalf_of**.
 
 1. Using the **authorization_code** method is a multi-step process. First, `get_azure_token` opens a login window in your browser, where you can enter your AAD credentials. In the background, it loads the [httpuv](https://github.com/rstudio/httpuv) package to listen on a local port. Once you have logged in, the AAD server redirects your browser to a local URL that contains an authorization code. `get_azure_token` retrieves this authorization code and sends it to the AAD access endpoint, which returns the OAuth token.
 
@@ -67,11 +67,27 @@ get_azure_token("myresource", "mytenant", "app_id",
                 username="myusername", password="mypassword", auth_type="resource_owner")
 ```
 
+5. The **on_behalf_of** method is used to authenticate with an Azure resource by passing a token obtained beforehand. It is mostly used by intermediate apps to authenticate for users. In particular, you can use this method to obtain tokens for multiple resources, while only requiring the user to authenticate once.
+
+```r
+# obtaining multiple tokens: authenticate (interactively) once...
+tok0 <- get_azure_token("serviceapp_id", "mytenant", "clientapp_id", auth_type="authorization_code")
+# ...then get tokens for each resource with on_behalf_of
+tok1 <- get_azure_token("resource1", "mytenant," "serviceapp_id",
+                        password="serviceapp_secret", auth_type="on_behalf_of", on_behalf_of=tok0)
+tok2 <- get_azure_token("resource2", "mytenant," "serviceapp_id",
+                        password="serviceapp_secret", auth_type="on_behalf_of", on_behalf_of=tok0)
+```
+
 If you don't specify the method, `get_azure_token` makes a best guess based on the presence or absence of the other authentication arguments, and whether httpuv is installed.
 
 ```r
 # this will default to authorization_code if httpuv is installed, and device_code if not
 get_azure_token("myresource", "mytenant", "app_id")
+
+# this will use on_behalf_of method
+get_azure_token("myresource", "mytenant", "app_id",
+                password="client_secret", on_behalf_of=token)
 ```
 
 ## Acknowledgements

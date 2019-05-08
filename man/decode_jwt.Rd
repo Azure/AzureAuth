@@ -23,5 +23,7 @@ Note that \code{decode_jwt} does not touch the token signature or attempt to ver
 \seealso{
 \href{https://jwt.io}{jwt.io}, the main JWT informational site
 
+\href{https://jwt.ms}{jwt.ms}, Microsoft site to decode and explain JWTs
+
 \href{https://en.wikipedia.org/wiki/JSON_Web_Token}{JWT Wikipedia entry}
 }

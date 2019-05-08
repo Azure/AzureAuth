@@ -13,6 +13,7 @@
 #' @param version The AAD version, either 1 or 2.
 #' @param authorize_args An optional list of further parameters for the AAD authorization endpoint. These will be included in the request URI as query parameters. Only used if `auth_type="authorization_code"`.
 #' @param token_args An optional list of further parameters for the token endpoint. These will be included in the body of the request.
+#' @param on_behalf_of For the on-behalf-of authentication type, a token. This should be either an AzureToken object, or a string containing the JWT-encoded token itself.
 #'
 #' @details
 #' `get_azure_token` does much the same thing as [httr::oauth2.0_token()], but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. `delete_azure_token` deletes a cached token, and `list_azure_tokens` lists currently cached tokens.
@@ -36,7 +37,9 @@
 #' 
 #' 4. The **resource_owner** method also requires only one step. In this method, `get_azure_token` passes your (personal) username and password to the AAD access endpoint, which validates your credentials and returns the token.
 #'
-#' If the authentication method is not specified, it is chosen based on the presence or absence of the `password`,  `username` and `certificate` arguments, and whether httpuv is installed.
+#' 5. The **on_behalf_of** method is used to authenticate with an Azure resource by passing a token obtained beforehand. It is mostly used by intermediate apps to authenticate for users. In particular, you can use this method to obtain tokens for multiple resources, while only requiring the user to authenticate once: see the examples below.
+#'
+#' If the authentication method is not specified, it is chosen based on the presence or absence of the other arguments, and whether httpuv is installed.
 #'
 #' The httpuv package must be installed to use the authorization_code method, as this requires a web server to listen on the (local) redirect URI. See [httr::oauth2.0_token] for more information; note that Azure does not support the `use_oob` feature of the httr OAuth 2.0 token class.
 #'
@@ -84,13 +87,22 @@
 #'     password="app_secret")
 #'
 #' # authenticate to your resource with the resource_owner method: provide your username and password
-#' get_azure_token(resource="https://myresource/", tenant="mytenant", app="app_id",
+#' get_azure_token("https://myresource/", tenant="mytenant", app="app_id",
 #'     username="user", password="abcdefg")
+#'
+#' # obtaining multiple tokens: authenticate (interactively) once...
+#' tok0 <- get_azure_token("serviceapp_id", tenant="mytenant", app="clientapp_id",
+#'     auth_type="authorization_code")
+#' # ...then get tokens for each resource (Resource Manager and MS Graph) with on_behalf_of
+#' tok1 <- get_azure_token("https://management.azure.com/", tenant="mytenant," app="serviceapp_id",
+#'     password="serviceapp_secret", on_behalf_of=tok0)
+#' tok2 <- get_azure_token("https://graph.microsoft.com/", tenant="mytenant," app="serviceapp_id",
+#'     password="serviceapp_secret", on_behalf_of=tok0)
 #'
 #'
 #' # use a different redirect URI to the default localhost:1410
 #' get_azure_token("https://management.azure.com/", tenant="mytenant", app="app_id",
-#'     authorize_args=list(redirect_uri="http://127.255.10.1:8000"))
+#'     authorize_args=list(redirect_uri="http://localhost:8000"))
 #'
 #'
 #' # request an AAD v1.0 token for Resource Manager (the default)
@@ -134,21 +146,22 @@
 #' @export
 get_azure_token <- function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
                             aad_host="https://login.microsoftonline.com/", version=1,
-                            authorize_args=list(), token_args=list())
+                            authorize_args=list(), token_args=list(), on_behalf_of=NULL)
 {
     if(normalize_aad_version(version) == 1)
         AzureTokenV1$new(resource, tenant, app, password, username, certificate, auth_type, aad_host,
-                         authorize_args, token_args)
+                         authorize_args, token_args, on_behalf_of)
     else AzureTokenV2$new(resource, tenant, app, password, username, certificate, auth_type, aad_host,
-                          authorize_args, token_args)
+                          authorize_args, token_args, on_behalf_of)
 }
 
 
-select_auth_type <- function(password, username, certificate, auth_type)
+select_auth_type <- function(password, username, certificate, auth_type, on_behalf_of)
 {
     if(!is.null(auth_type))
     {
-        if(!auth_type %in% c("authorization_code", "device_code", "client_credentials", "resource_owner"))
+        if(!auth_type %in%
+           c("authorization_code", "device_code", "client_credentials", "resource_owner", "on_behalf_of"))
             stop("Invalid authentication method")
         return(auth_type)
     }
@@ -169,7 +182,11 @@ select_auth_type <- function(password, username, certificate, auth_type)
         else "authorization_code"
     }
     else if((got_pwd && !got_user) || got_cert)
-        "client_credentials"
+    {
+        if(is_empty(on_behalf_of))
+            "client_credentials"
+        else "on_behalf_of"
+    }
     else stop("Can't select authentication method", call.=FALSE)
 }
 
@@ -180,7 +197,7 @@ select_auth_type <- function(password, username, certificate, auth_type)
 #' @export
 delete_azure_token <- function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
                                aad_host="https://login.microsoftonline.com/", version=1,
-                               authorize_args=list(), token_args=list(),
+                               authorize_args=list(), token_args=list(), on_behalf_of=NULL,
                                hash=NULL, confirm=TRUE)
 {
     if(!dir.exists(AzureR_dir()))
@@ -188,7 +205,7 @@ delete_azure_token <- function(resource, tenant, app, password=NULL, username=NU
 
     if(is.null(hash))
         hash <- token_hash(resource, tenant, app, password, username, certificate, auth_type, aad_host, version,
-                           authorize_args, token_args)
+                           authorize_args, token_args, on_behalf_of)
 
     if(confirm && interactive())
     {
@@ -241,13 +258,13 @@ list_azure_tokens <- function()
 #' @export
 token_hash <- function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
                        aad_host="https://login.microsoftonline.com/", version=1,
-                       authorize_args=list(), token_args=list())
+                       authorize_args=list(), token_args=list(), on_behalf_of=NULL)
 {
     # reconstruct the hash for the token object from the inputs
     version <- normalize_aad_version(version)
     tenant <- normalize_tenant(tenant)
-    auth_type <- select_auth_type(password, username, certificate, auth_type)
-    client <- aad_request_credentials(app, password, username, certificate, auth_type)
+    auth_type <- select_auth_type(password, username, certificate, auth_type, on_behalf_of)
+    client <- aad_request_credentials(app, password, username, certificate, auth_type, on_behalf_of)
 
     if(version == 1)
         scope <- NULL
