@@ -5,8 +5,11 @@ app <- Sys.getenv("AZ_TEST_APP_ID")
 username <- Sys.getenv("AZ_TEST_USERNAME")
 password <- Sys.getenv("AZ_TEST_PASSWORD")
 native_app <- Sys.getenv("AZ_TEST_NATIVE_APP_ID")
+cert_app <- Sys.getenv("AZ_TEST_CERT_APP_ID")
+cert_file <- Sys.getenv("AZ_TEST_CERT_FILE")
 
-if(tenant == "" || app == "" || username == "" || password == "" || native_app == "")
+if(tenant == "" || app == "" || username == "" || password == "" || native_app == "" ||
+   cert_app == "" || cert_file == "")
     skip("Authentication tests skipped: ARM credentials not set")
 
 aut_hash <- Sys.getenv("AZ_TEST_AUT_HASH2")
@@ -159,4 +162,12 @@ test_that("On-behalf-of flow works",
     expect_identical(name0, name1)
 
     expect_silent(tok1$refresh())
+})
+
+
+test_that("Certificate authentication works",
+{
+    res <- "https://management.azure.com/.default"
+    tok <- get_azure_token(res, tenant, cert_app, certificate=cert_file, version=2)
+    expect_true(is_azure_token(tok))
 })
