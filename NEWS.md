@@ -3,6 +3,7 @@
 * Much improved support for authenticating with a certificate. In the `certificate` argument, specify either the name of a PEM/PFX file, or an AzureKeyVault object representing a cert.
 * Support providing a path in the `aad_host` argument, for Azure B2C logins. Note that B2C requires https redirect URIs, which are not currently supported by httpuv; rather than the authorization_code flow, use device_code or client_credentials.
 * Fix bug that prevented `token_args` argument from being passed to the token endpoint.
+* If authentication fails using the `authorization_code` flow, print the AAD error message, if possible.
 * Add support for the `on_behalf_of` authorization flow.
 
 # AzureAuth 1.0.2

@@ -1,6 +1,7 @@
 init_authcode <- function()
 {
     stopifnot(is.list(self$token_args))
+    stopifnot(is.list(self$authorize_args))
 
     if(!requireNamespace("httpuv", quietly=TRUE))
         stop("httpuv package must be installed to use authorization_code method", call.=FALSE)
