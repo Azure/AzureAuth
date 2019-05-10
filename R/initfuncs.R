@@ -104,7 +104,7 @@ listen_for_authcode <- function(url, localhost="127.0.0.1", localport=1410)
 
     if(is_empty(info$code))
     {
-        msg <- gsub("\\+", " ", URLdecode(info$error_description))
+        msg <- gsub("\\+", " ", utils::URLdecode(info$error_description))
         stop("Authentication failed. Message:\n", msg, call.=FALSE)
     }
 
