@@ -5,5 +5,5 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- script: 'git push -f https://$(ghPat)@github.com/cloudyr/AzureAuth'
+- script: 'git push --prune https://$(ghPat)@github.com/cloudyr/AzureAuth' +refs/remotes/origin/*:refs/heads/* +refs/tags/*:refs/tags/*
   displayName: 'copy to cloudyr'
