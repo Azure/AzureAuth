@@ -1,0 +1,9 @@
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- script: 'git push -f https://$(ghPat)@github.com/cloudyr/AzureAuth'
+  displayName: 'copy to cloudyr'
