@@ -73,6 +73,13 @@ init_resowner <- function()
 }
 
 
+init_managed <- function()
+{
+    uri <- private$aad_endpoint("token")
+    httr::GET(uri, httr::add_headers(metadata="true", query=list(`api-version`="2018-02-01")))
+}
+
+
 listen_for_authcode <- function(url, localhost="127.0.0.1", localport=1410)
 {
     # based on httr::oauth_listener

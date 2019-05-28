@@ -49,7 +49,8 @@ public=list(
             device_code=init_devcode,
             client_credentials=init_clientcred,
             on_behalf_of=init_clientcred,
-            resource_owner=init_resowner
+            resource_owner=init_resowner,
+            managed=init_managed
         )
         environment(private$initfunc) <- parent.env(environment())
 
