@@ -1,3 +1,7 @@
+# AzureAuth 1.1.0.9000
+
+* New `get_managed_token` function to obtain a token for a managed identity. Note this only works within a VM or container with an identity.
+
 # AzureAuth 1.1.0
 
 * Much improved support for authenticating with a certificate. In the `certificate` argument, specify either the name of a PEM/PFX file, or an AzureKeyVault object representing a cert.
