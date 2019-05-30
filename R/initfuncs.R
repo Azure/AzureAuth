@@ -79,7 +79,7 @@ init_managed <- function()
 
     uri <- private$aad_endpoint("token")
     query <- utils::modifyList(self$token_args,
-        list(`api-version`="2018-02-01", resource=self$resource))
+        list(`api-version`=getOption("azure_imds_version"), resource=self$resource))
 
     httr::GET(uri, httr::add_headers(metadata="true"), query=query)
 }
