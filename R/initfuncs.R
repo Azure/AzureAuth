@@ -75,9 +75,13 @@ init_resowner <- function()
 
 init_managed <- function()
 {
+    stopifnot(is.list(self$token_args))
+
     uri <- private$aad_endpoint("token")
-    httr::GET(uri, httr::add_headers(metadata="true"),
-              query=list(`api-version`="2018-02-01", resource=self$resource))
+    query <- utils::modifyList(self$token_args,
+        list(`api-version`="2018-02-01", resource=self$resource))
+
+    httr::GET(uri, httr::add_headers(metadata="true"), query=query)
 }
 
 
