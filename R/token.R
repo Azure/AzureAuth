@@ -1,6 +1,6 @@
 #' Manage Azure Active Directory OAuth 2.0 tokens
 #'
-#' These functions extend the OAuth functionality in httr for use with Azure Active Directory (AAD).
+#' Use these functions to authenticate with Azure Active Directory (AAD).
 #'
 #' @param resource For AAD v1.0, the URL of your resource host, or a GUID. For AAD v2.0, a character vector of scopes, each consisting of a URL or GUID along with a path designating the access scope. See 'Details' below.
 #' @param tenant Your tenant. This can be a name ("myaadtenant"), a fully qualified domain name ("myaadtenant.onmicrosoft.com" or "mycompanyname.com"), or a GUID.
@@ -12,11 +12,13 @@
 #' @param aad_host URL for your AAD host. For the public Azure cloud, this is `https://login.microsoftonline.com/`. Change this if you are using a government or private cloud. Can also be a full URL, eg `https://mydomain.b2clogin.com/mydomain/other/path/names/oauth2`.
 #' @param version The AAD version, either 1 or 2.
 #' @param authorize_args An optional list of further parameters for the AAD authorization endpoint. These will be included in the request URI as query parameters. Only used if `auth_type="authorization_code"`.
-#' @param token_args An optional list of further parameters for the token endpoint. These will be included in the body of the request.
+#' @param token_args An optional list of further parameters for the token endpoint. These will be included in the body of the request for `get_azure_token`, or as URI query parameters for `get_managed_token`.
 #' @param on_behalf_of For the on-behalf-of authentication type, a token. This should be either an AzureToken object, or a string containing the JWT-encoded token itself.
 #'
 #' @details
 #' `get_azure_token` does much the same thing as [httr::oauth2.0_token()], but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. `delete_azure_token` deletes a cached token, and `list_azure_tokens` lists currently cached tokens.
+#'
+#' `get_managed_token` is a specialised function to acquire tokens for a _managed identity_. This is an Azure service, such as a VM or container, that has been assigned its own identity and can be granted access permissions like a regular user. The advantage of managed identities over the other authentication methods (see below) is that you don't have to store a secret password, which improves security. Note that `get_managed_token` can only be used from within the managed identity itself.
 #'
 #' The `resource` arg should be a single URL or GUID for AAD v1.0, and a vector of scopes for AAD v2.0. The latter consist of a URL or a GUID, along with a path that designates the scope. If a v2.0 scope doesn't have a path, `get_azure_token` will append the `/.default` path with a warning. A special scope is `offline_access`, which requests a refresh token from AAD along with the access token: without this scope, you will have to reauthenticate if you want to refresh the token.
 #'
@@ -142,6 +144,10 @@
 #' get_azure_token("https://management.azure.com/", "mytenant", "app_id",
 #'     certificate=cert_assertion("mycert.pem", duration=2*3600)
 #'
+#'
+#' # get a token from within a managed service identity (VM, container or service)
+#' get_managed_token("https://management.azure.com/")
+#'
 #' }
 #' @export
 get_azure_token <- function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
@@ -161,7 +167,8 @@ select_auth_type <- function(password, username, certificate, auth_type, on_beha
     if(!is.null(auth_type))
     {
         if(!auth_type %in%
-           c("authorization_code", "device_code", "client_credentials", "resource_owner", "on_behalf_of"))
+           c("authorization_code", "device_code", "client_credentials", "resource_owner", "on_behalf_of",
+             "managed"))
             stop("Invalid authentication method")
         return(auth_type)
     }

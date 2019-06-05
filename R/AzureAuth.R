@@ -4,6 +4,7 @@ utils::globalVariables(c("self", "private"))
 .onLoad <- function(libname, pkgname)
 {
     make_AzureR_dir()
+    options(azure_imds_version="2018-02-01")
     invisible(NULL)
 }
 

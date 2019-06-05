@@ -73,6 +73,18 @@ init_resowner <- function()
 }
 
 
+init_managed <- function()
+{
+    stopifnot(is.list(self$token_args))
+
+    uri <- private$aad_endpoint("token")
+    query <- utils::modifyList(self$token_args,
+        list(`api-version`=getOption("azure_imds_version"), resource=self$resource))
+
+    httr::GET(uri, httr::add_headers(metadata="true"), query=query)
+}
+
+
 listen_for_authcode <- function(url, localhost="127.0.0.1", localport=1410)
 {
     # based on httr::oauth_listener

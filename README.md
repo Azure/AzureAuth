@@ -90,6 +90,14 @@ get_azure_token("myresource", "mytenant", "app_id",
                 password="client_secret", on_behalf_of=token)
 ```
 
+Finally, AzureAuth provides `get_managed_token` to obtain tokens from within a managed identity. This is a VM, service or container in Azure that can authenticate as itself, which removes the need to save secret passwords or certificates.
+
+```r
+# run this from within an Azure VM or container for which an identity has been setup
+get_managed_token("myresource")
+```
+
+
 ## Acknowledgements
 
 The AzureAuth interface is based on the OAuth framework in the [httr](https://github.com/r-lib/httr) package, customised and streamlined for Azure. It is an independent implementation of OAuth, but benefited greatly from the work done by Hadley Wickham and the rest of the httr development team.
