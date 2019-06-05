@@ -204,6 +204,10 @@ get_azure_token("https://management.azure.com/", "mytenant", "app_id",
 get_azure_token("https://management.azure.com/", "mytenant", "app_id",
     certificate=cert_assertion("mycert.pem", duration=2*3600)
 
+
+# get a token from within a managed service identity (VM, container or service)
+get_managed_token("https://management.azure.com/")
+
 }
 }
 \seealso{

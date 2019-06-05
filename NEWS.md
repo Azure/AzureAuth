@@ -1,6 +1,6 @@
 # AzureAuth 1.1.0.9000
 
-* New `get_managed_token` function to obtain a token for a managed identity. Note this only works within a VM or container with an identity.
+* New `get_managed_token` function to obtain a token for a managed identity. Note this only works within a VM, service or container to which an identity has been assigned.
 
 # AzureAuth 1.1.0
 
