@@ -123,6 +123,18 @@ test_that("Providing optional args works",
 })
 
 
+# should get a 'permissions requested' screen here
+test_that("Providing multiple scopes works",
+{
+    scopes <- c(paste0("https://graph.microsoft.com/",
+                     c("User.Read.All", "Directory.Read.All", "Directory.AccessAsUser.All")),
+                "offline_access")
+
+    aut_tok <- get_azure_token(scopes, tenant, native_app, auth_type="authorization_code", version=2)
+    expect_true(is_azure_token(aut_tok))
+})
+
+
 test_that("Dubious requests handled gracefully",
 {
     badres <- "resource"

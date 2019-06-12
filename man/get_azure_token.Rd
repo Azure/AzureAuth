@@ -79,7 +79,7 @@ Use these functions to authenticate with Azure Active Directory (AAD).
 
 \code{get_managed_token} is a specialised function to acquire tokens for a \emph{managed identity}. This is an Azure service, such as a VM or container, that has been assigned its own identity and can be granted access permissions like a regular user. The advantage of managed identities over the other authentication methods (see below) is that you don't have to store a secret password, which improves security. Note that \code{get_managed_token} can only be used from within the managed identity itself.
 
-The \code{resource} arg should be a single URL or GUID for AAD v1.0, and a vector of scopes for AAD v2.0. The latter consist of a URL or a GUID, along with a path that designates the scope. If a v2.0 scope doesn't have a path, \code{get_azure_token} will append the \code{/.default} path with a warning. A special scope is \code{offline_access}, which requests a refresh token from AAD along with the access token: without this scope, you will have to reauthenticate if you want to refresh the token.
+The \code{resource} arg should be a single URL or GUID for AAD v1.0. For AAD v2.0, it should be a vector of \emph{scopes}, where each scope consists of a URL or GUID along with a path that designates the type of access requested. If a v2.0 scope doesn't have a path, \code{get_azure_token} will append the \code{/.default} path with a warning. A special scope is \code{offline_access}, which requests a refresh token from AAD along with the access token: without this scope, you will have to reauthenticate if you want to refresh the token.
 
 For B2C logins, the \code{aad_host} argument can be a full URL including the tenant and arbitrary path components, but excluding the specific endpoint.
 
@@ -172,6 +172,13 @@ token1 <- get_azure_token("https://management.azure.com/", "mytenant", "app_id")
 
 # same request to AAD v2.0, along with a refresh token
 token2 <- get_azure_token(c("https://management.azure.com/.default", "offline_access"),
+    "mytenant", "app_id", version=2)
+
+# requesting multiple scopes (Microsoft Graph) with AAD 2.0
+tok <- get_azure_token(c("https://graph.microsoft.com/User.Read.All",
+                         "https://graph.microsoft.com/User.ReadWrite.All",
+                         "https://graph.microsoft.com/Directory.ReadWrite.All",
+                         "offline_access"),
     "mytenant", "app_id", version=2)
 
 

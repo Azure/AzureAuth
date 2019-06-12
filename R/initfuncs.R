@@ -38,7 +38,7 @@ init_devcode <- function()
     # contact devicecode endpoint to get code
     dev_uri <- private$aad_endpoint("devicecode")
     body <- private$build_access_body(list(client_id=self$client$client_id))
-    
+
     res <- httr::POST(dev_uri, body=body, encode="form")
     creds <- process_aad_response(res)
 

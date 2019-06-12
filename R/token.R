@@ -20,7 +20,7 @@
 #'
 #' `get_managed_token` is a specialised function to acquire tokens for a _managed identity_. This is an Azure service, such as a VM or container, that has been assigned its own identity and can be granted access permissions like a regular user. The advantage of managed identities over the other authentication methods (see below) is that you don't have to store a secret password, which improves security. Note that `get_managed_token` can only be used from within the managed identity itself.
 #'
-#' The `resource` arg should be a single URL or GUID for AAD v1.0, and a vector of scopes for AAD v2.0. The latter consist of a URL or a GUID, along with a path that designates the scope. If a v2.0 scope doesn't have a path, `get_azure_token` will append the `/.default` path with a warning. A special scope is `offline_access`, which requests a refresh token from AAD along with the access token: without this scope, you will have to reauthenticate if you want to refresh the token.
+#' The `resource` arg should be a single URL or GUID for AAD v1.0. For AAD v2.0, it should be a vector of _scopes_, where each scope consists of a URL or GUID along with a path that designates the type of access requested. If a v2.0 scope doesn't have a path, `get_azure_token` will append the `/.default` path with a warning. A special scope is `offline_access`, which requests a refresh token from AAD along with the access token: without this scope, you will have to reauthenticate if you want to refresh the token.
 #'
 #' For B2C logins, the `aad_host` argument can be a full URL including the tenant and arbitrary path components, but excluding the specific endpoint.
 #'
@@ -32,11 +32,11 @@
 #'
 #' @section Authentication methods:
 #' 1. Using the **authorization_code** method is a multi-step process. First, `get_azure_token` opens a login window in your browser, where you can enter your AAD credentials. In the background, it loads the [httpuv](https://github.com/rstudio/httpuv) package to listen on a local port. Once you have logged in, the AAD server redirects your browser to a local URL that contains an authorization code. `get_azure_token` retrieves this authorization code and sends it to the AAD access endpoint, which returns the OAuth token.
-#' 
+#'
 #' 2. The **device_code** method is similar in concept to authorization_code, but is meant for situations where you are unable to browse the Internet -- for example if you don't have a browser installed or your computer has input constraints. First, `get_azure_token` contacts the AAD devicecode endpoint, which responds with a login URL and an access code. You then visit the URL and enter the code, possibly using a different computer. Meanwhile, `get_azure_token` polls the AAD access endpoint for a token, which is provided once you have entered the code.
-#' 
+#'
 #' 3. The **client_credentials** method is much simpler than the above methods, requiring only one step. `get_azure_token` contacts the access endpoint, passing it either the app secret or the certificate assertion (which you supply in the `password` or `certificate` argument respectively). Once the credentials are verified, the endpoint returns the token. This is the method typically used by service accounts.
-#' 
+#'
 #' 4. The **resource_owner** method also requires only one step. In this method, `get_azure_token` passes your (personal) username and password to the AAD access endpoint, which validates your credentials and returns the token.
 #'
 #' 5. The **on_behalf_of** method is used to authenticate with an Azure resource by passing a token obtained beforehand. It is mostly used by intermediate apps to authenticate for users. In particular, you can use this method to obtain tokens for multiple resources, while only requiring the user to authenticate once: see the examples below.
@@ -52,7 +52,7 @@
 #' - The name of a PEM or PFX file, containing _both_ the private key and the public certificate.
 #' - A certificate object from the AzureKeyVault package, representing a cert stored in the Key Vault service.
 #' - A call to the `cert_assertion()` function to customise details of the requested token, eg the duration, expiry date, custom claims, etc. See the examples below.
-#' 
+#'
 #' @section Caching:
 #' AzureAuth differs from httr in its handling of token caching in a number of ways. First, caching is based on all the inputs to `get_azure_token` as listed above. Second, it defines its own directory for cached tokens, using the rappdirs package. On recent Windows versions, this will usually be in the location `C:\\Users\\(username)\\AppData\\Local\\AzureR`. On Linux, it will be in `~/.config/AzureR`, and on MacOS, it will be in `~/Library/Application Support/AzureR`. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).
 #'
@@ -64,7 +64,7 @@
 #'
 #' @section Value:
 #' For `get_azure_token`, an object of class either `AzureTokenV1` or `AzureTokenV2` depending on whether the token is for AAD v1.0 or v2.0. For `list_azure_tokens`, a list of such objects retrieved from disk.
-#' 
+#'
 #' @seealso
 #' [AzureToken], [httr::oauth2.0_token], [httr::Token], [cert_assertion]
 #'
@@ -112,6 +112,13 @@
 #'
 #' # same request to AAD v2.0, along with a refresh token
 #' token2 <- get_azure_token(c("https://management.azure.com/.default", "offline_access"),
+#'     "mytenant", "app_id", version=2)
+#'
+#' # requesting multiple scopes (Microsoft Graph) with AAD 2.0
+#' tok <- get_azure_token(c("https://graph.microsoft.com/User.Read.All",
+#'                          "https://graph.microsoft.com/User.ReadWrite.All",
+#'                          "https://graph.microsoft.com/Directory.ReadWrite.All",
+#'                          "offline_access"),
 #'     "mytenant", "app_id", version=2)
 #'
 #'
