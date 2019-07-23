@@ -6,9 +6,6 @@ init_authcode <- function()
     if(!requireNamespace("httpuv", quietly=TRUE))
         stop("httpuv package must be installed to use authorization_code method", call.=FALSE)
 
-    # browse to authorization endpoint to get code
-    auth_uri <- httr::parse_url(private$aad_endpoint("authorize"))
-
     opts <- utils::modifyList(list(
         client_id=self$client$client_id,
         response_type="code",
@@ -20,14 +17,14 @@ init_authcode <- function()
         state=paste0(sample(letters, 20, TRUE), collapse="") # random nonce
     ), self$authorize_args)
 
-    auth_uri$query <- opts
-    redirect <- httr::parse_url(opts$redirect_uri)
-    host <- if(redirect$hostname == "localhost") "127.0.0.1" else redirect$hostname
-    code <- listen_for_authcode(auth_uri, host, redirect$port)
+    auth_uri <- aad_authorize_uri(private$aad_endpoint("authorize"), .params=opts)
+
+    redirect <- auth_uri$query$redirect_uri
+    code <- listen_for_authcode(auth_uri, redirect)
 
     # contact token endpoint for token
     access_uri <- private$aad_endpoint("token")
-    body <- c(self$client, code=code, redirect_uri=opts$redirect_uri, self$token_args)
+    body <- c(self$client, code=code, redirect_uri=redirect, self$token_args)
 
     httr::POST(access_uri, body=body, encode="form")
 }
@@ -85,8 +82,12 @@ init_managed <- function()
 }
 
 
-listen_for_authcode <- function(url, localhost="127.0.0.1", localport=1410)
+listen_for_authcode <- function(remote_url, local_url)
 {
+    local_url <- httr::parse_url(local_url)
+    localhost <- if(local_url$hostname == "localhost") "127.0.0.1" else local_url$hostname
+    localport <- local_url$port
+
     # based on httr::oauth_listener
     info <- NULL
     listen <- function(env)
@@ -106,7 +107,7 @@ listen_for_authcode <- function(url, localhost="127.0.0.1", localport=1410)
     on.exit(httpuv::stopServer(server))
 
     message("Waiting for authentication in browser...\nPress Esc/Ctrl + C to abort")
-    httr::BROWSE(url)
+    httr::BROWSE(remote_url)
 
     while(is.null(info))
     {

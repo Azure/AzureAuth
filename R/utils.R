@@ -82,18 +82,6 @@ aad_request_credentials <- function(app, password, username, certificate, auth_t
 }
 
 
-normalize_aad_version <- function(v)
-{
-    if(v == "v1.0")
-        v <- 1
-    else if(v == "v2.0")
-        v <- 2
-    if(!(is.numeric(v) && v %in% c(1, 2)))
-        stop("Invalid AAD version")
-    v
-}
-
-
 process_aad_response <- function(res)
 {
     status <- httr::status_code(res)
@@ -158,3 +146,17 @@ verify_v2_scope <- function(scope)
 }
 
 
+aad_endpoint <- function(aad_host, tenant, version, type)
+{
+    uri <- httr::parse_url(aad_host)
+
+    uri$path <- if(nchar(uri$path) == 0)
+    {
+        if(version == 1)
+            file.path(tenant, "oauth2", type)
+        else file.path(tenant, "oauth2/v2.0", type)
+    }
+    else file.path(uri$path, type)
+
+    structure(httr::build_url(uri), class="aad_endpoint")
+}

@@ -155,6 +155,11 @@ private=list(
         self$credentials <- token$credentials
     },
 
+    aad_endpoint=function(type)
+    {
+        aad_endpoint(self$aad_host, self$tenant, self$version, type)
+    },
+
     # member function to be filled in by initialize()
     initfunc=NULL
 ))
@@ -187,15 +192,6 @@ private=list(
             self$tenant, body$client_id, self$aad_host, self$version)
 
         c(body, self$token_args, resource=self$resource)
-    },
-
-    aad_endpoint=function(type)
-    {
-        uri <- httr::parse_url(self$aad_host)
-        uri$path <- if(nchar(uri$path) == 0)
-            file.path(self$tenant, "oauth2", type)
-        else file.path(uri$path, type)
-        httr::build_url(uri)
     },
 
     norenew_alert=function()
@@ -232,15 +228,6 @@ private=list(
             self$tenant, body$client_id, self$aad_host, self$version)
 
         c(body, self$token_args, scope=paste(self$scope, collapse=" "))
-    },
-
-    aad_endpoint=function(type)
-    {
-        uri <- httr::parse_url(self$aad_host)
-        uri$path <- if(nchar(uri$path) == 0)
-            file.path(self$tenant, "oauth2/v2.0", type)
-        else file.path(uri$path, type)
-        httr::build_url(uri)
     },
 
     norenew_alert=function()
