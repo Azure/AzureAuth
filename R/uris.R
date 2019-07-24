@@ -9,23 +9,23 @@
 #' @return
 #' An object of class `httr::url`, representing the _parsed_ authorization URI. You can call `httr::build_url` on this object to obtain the URI as a text string.
 #' @export
-aad_authorize_uri <- function(endpoint, ...)
+authorize_uri <- function(endpoint, ...)
 {
-    UseMethod("aad_authorize_uri")
+    UseMethod("authorize_uri")
 }
 
 
 #' @export
-aad_authorize_uri.default <- function(endpoint="https://login.microsoftonline.com/", tenant, resource, app,
+authorize_uri.default <- function(endpoint="https://login.microsoftonline.com/", tenant, resource, app,
                                       password=NULL, username=NULL, ..., version=1)
 {
     endpoint <- aad_endpoint(endpoint, normalize_tenant(tenant), normalize_aad_version(version), "authorize")
-    aad_authorize_uri(endpoint, resource, app, password, username, ...)
+    authorize_uri(endpoint, resource, app, password, username, ...)
 }
 
 
 #' @export
-aad_authorize_uri.aad_endpoint <- function(endpoint, resource, app, password=NULL, username=NULL, ...)
+authorize_uri.aad_endpoint <- function(endpoint, resource, app, password=NULL, username=NULL, ...)
 {
     if(!grepl("authorize/?$", endpoint))
         stop("Not an OAuth authorization endpoint", call.=FALSE)
@@ -51,5 +51,49 @@ aad_authorize_uri.aad_endpoint <- function(endpoint, resource, app, password=NUL
     uri <- httr::parse_url(endpoint)
     uri$query <- utils::modifyList(default_opts, opts)
     uri
+}
+
+
+token_uri <- function(endpoint, ...)
+{
+    UseMethod("token_uri")
+}
+
+
+token_uri.default <- function(endpoint="https://login.microsoftonline.com/", tenant, ..., version=1)
+{
+    endpoint <- aad_endpoint(endpoint, normalize_tenant(tenant), normalize_aad_version(version), "token")
+    token_uri(endpoint, resource, app, password, username, ...)
+}
+
+
+token_uri.aad_endpoint <- function(endpoint, ...)
+{
+    if(!grepl("token/?$", endpoint))
+        stop("Not an OAuth token access endpoint", call.=FALSE)
+
+    httr::parse_url(endpoint)
+}
+
+
+devicecode_uri <- function(endpoint, ...)
+{
+    UseMethod("devicecode_uri")
+}
+
+
+devicecode_uri.default <- function(endpoint="https://login.microsoftonline.com/", tenant, ..., version=1)
+{
+    endpoint <- aad_endpoint(endpoint, normalize_tenant(tenant), normalize_aad_version(version), "devicecode")
+    devicecode_uri(endpoint, resource, app, password, username, ...)
+}
+
+
+devicecode_uri.aad_endpoint <- function(endpoint, ...)
+{
+    if(!grepl("devicecode/?$", endpoint))
+        stop("Not an OAuth device code endpoint", call.=FALSE)
+
+    httr::parse_url(endpoint)
 }
 

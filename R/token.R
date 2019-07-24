@@ -159,49 +159,13 @@
 #' @export
 get_azure_token <- function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
                             aad_host="https://login.microsoftonline.com/", version=1,
-                            authorize_args=list(), token_args=list(), on_behalf_of=NULL)
+                            authorize_args=list(), token_args=list(), on_behalf_of=NULL, auth_code=NULL)
 {
     if(normalize_aad_version(version) == 1)
         AzureTokenV1$new(resource, tenant, app, password, username, certificate, auth_type, aad_host,
-                         authorize_args, token_args, on_behalf_of)
+                         authorize_args, token_args, on_behalf_of, auth_code)
     else AzureTokenV2$new(resource, tenant, app, password, username, certificate, auth_type, aad_host,
-                          authorize_args, token_args, on_behalf_of)
-}
-
-
-select_auth_type <- function(password, username, certificate, auth_type, on_behalf_of)
-{
-    if(!is.null(auth_type))
-    {
-        if(!auth_type %in%
-           c("authorization_code", "device_code", "client_credentials", "resource_owner", "on_behalf_of",
-             "managed"))
-            stop("Invalid authentication method")
-        return(auth_type)
-    }
-
-    got_pwd <- !is.null(password)
-    got_user <- !is.null(username)
-    got_cert <- !is.null(certificate)
-
-    if(got_pwd && got_user && !got_cert)
-        "resource_owner"
-    else if(!got_pwd && !got_user && !got_cert)
-    {
-        if(system.file(package="httpuv") == "")
-        {
-            message("httpuv not installed, defaulting to device code authentication")
-            "device_code"
-        }
-        else "authorization_code"
-    }
-    else if((got_pwd && !got_user) || got_cert)
-    {
-        if(is_empty(on_behalf_of))
-            "client_credentials"
-        else "on_behalf_of"
-    }
-    else stop("Can't select authentication method", call.=FALSE)
+                          authorize_args, token_args, on_behalf_of, auth_code)
 }
 
 

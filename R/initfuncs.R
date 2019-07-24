@@ -1,10 +1,7 @@
-init_authcode <- function()
+init_authcode <- function(code=NULL)
 {
     stopifnot(is.list(self$token_args))
     stopifnot(is.list(self$authorize_args))
-
-    if(!requireNamespace("httpuv", quietly=TRUE))
-        stop("httpuv package must be installed to use authorization_code method", call.=FALSE)
 
     opts <- utils::modifyList(list(
         endpoint=private$aad_endpoint("authorize"),
@@ -14,10 +11,16 @@ init_authcode <- function()
         username=self$client$login_hint
     ), self$authorize_args)
 
-    auth_uri <- do.call(aad_authorize_uri, opts)
-
+    auth_uri <- do.call(authorize_uri, opts)
     redirect <- auth_uri$query$redirect_uri
-    code <- listen_for_authcode(auth_uri, redirect)
+
+    if(is.null(code))
+    {
+        if(!requireNamespace("httpuv", quietly=TRUE))
+            stop("httpuv package must be installed to use authorization_code method", call.=FALSE)
+
+        code <- listen_for_authcode(auth_uri, redirect)
+    }
 
     # contact token endpoint for token
     access_uri <- private$aad_endpoint("token")
@@ -152,3 +155,4 @@ poll_for_token <- function(url, body, interval, period)
     message("Authentication complete.")
     res
 }
+

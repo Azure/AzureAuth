@@ -1,3 +1,41 @@
+select_auth_type <- function(password, username, certificate, auth_type, on_behalf_of, auth_code=NULL)
+{
+    if(!is.null(auth_type))
+    {
+        if(!auth_type %in%
+           c("authorization_code", "device_code", "client_credentials", "resource_owner", "on_behalf_of",
+             "managed"))
+            stop("Invalid authentication method")
+        return(auth_type)
+    }
+
+    got_pwd <- !is.null(password)
+    got_user <- !is.null(username)
+    got_cert <- !is.null(certificate)
+
+    if(!is.null(auth_code))
+        "authorization_code"
+    else if(got_pwd && got_user && !got_cert)
+        "resource_owner"
+    else if(!got_pwd && !got_user && !got_cert)
+    {
+        if(system.file(package="httpuv") == "")
+        {
+            message("httpuv not installed, defaulting to device code authentication")
+            "device_code"
+        }
+        else "authorization_code"
+    }
+    else if((got_pwd && !got_user) || got_cert)
+    {
+        if(is_empty(on_behalf_of))
+            "client_credentials"
+        else "on_behalf_of"
+    }
+    else stop("Can't select authentication method", call.=FALSE)
+}
+
+
 aad_request_credentials <- function(app, password, username, certificate, auth_type, on_behalf_of)
 {
     object <- if(auth_type == "on_behalf_of")
