@@ -2,18 +2,30 @@
 % Please edit documentation in R/uris.R
 \name{authorization_uri}
 \alias{authorization_uri}
+\alias{authorization_uri.default}
+\alias{authorization_uri.aad_endpoint}
 \title{Generate URI for the OAuth authorization code flow}
 \usage{
 authorization_uri(endpoint, ...)
+
+
+  \method{authorization_uri}{default}(endpoint = "https://login.microsoftonline.com/",
+  tenant, resource, app, password = NULL, username = NULL, ...,
+  version = 1)
+
+\method{authorization_uri}{aad_endpoint}(endpoint, resource, app,
+  password = NULL, username = NULL, ...)
 }
 \arguments{
 \item{endpoint}{The base URL for the Azure Active Directory login endpoint, or an \code{aad_endpoint} object.}
 
 \item{...}{Named arguments that will be added to the authorization URI as query parameters.}
 
-\item{tenant}{Your tenant. This can be a name ("myaadtenant"), a fully qualified domain name ("myaadtenant.onmicrosoft.com" or "mycompanyname.com"), or a GUID.}
+\item{tenant, resource, app}{See the corresponding arguments for \link{get_azure_token}.}
 
-\item{app}{The client/app ID to use to authenticate with.}
+\item{password}{A client secret to be sent to the authorization endpoint, if the app requires it. Note that this is \emph{not} your personal account password.}
+
+\item{username}{An optional login hint to be sent to the authorization endpoint.}
 
 \item{version}{The AAD version, either 1 or 2.}
 }
@@ -22,4 +34,7 @@ An object of class \code{httr::url}, representing the \emph{parsed} authorizatio
 }
 \description{
 Generate URI for the OAuth authorization code flow
+}
+\details{
+This function is mainly for use in embedded scenarios such as where AzureAuth is called from within a Shiny web app. In this case, the first stage of the authorization code flow (obtaining the code) must be handled separately from the second stage (using the code to obtain the token). The \code{authorization_uri} function returns the URI for obtaining the code, which can be set as a redirect from within a Shiny app's UI component.
 }

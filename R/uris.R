@@ -1,10 +1,14 @@
 #' Generate URI for the OAuth authorization code flow
 #'
 #' @param endpoint The base URL for the Azure Active Directory login endpoint, or an `aad_endpoint` object.
-#' @param tenant Your tenant. This can be a name ("myaadtenant"), a fully qualified domain name ("myaadtenant.onmicrosoft.com" or "mycompanyname.com"), or a GUID.
-#' @param app The client/app ID to use to authenticate with.
+#' @param tenant,resource,app See the corresponding arguments for [get_azure_token].
+#' @param password A client secret to be sent to the authorization endpoint, if the app requires it. Note that this is _not_ your personal account password.
+#' @param username An optional login hint to be sent to the authorization endpoint.
 #' @param version The AAD version, either 1 or 2.
 #' @param ... Named arguments that will be added to the authorization URI as query parameters.
+#'
+#' @details
+#' This function is mainly for use in embedded scenarios such as where AzureAuth is called from within a Shiny web app. In this case, the first stage of the authorization code flow (obtaining the code) must be handled separately from the second stage (using the code to obtain the token). The `authorization_uri` function returns the URI for obtaining the code, which can be set as a redirect from within a Shiny app's UI component.
 #'
 #' @return
 #' An object of class `httr::url`, representing the _parsed_ authorization URI. You can call `httr::build_url` on this object to obtain the URI as a text string.
@@ -15,6 +19,7 @@ authorization_uri <- function(endpoint, ...)
 }
 
 
+#' @rdname authorization_uri
 #' @export
 authorization_uri.default <- function(endpoint="https://login.microsoftonline.com/", tenant, resource, app,
                                       password=NULL, username=NULL, ..., version=1)
@@ -24,6 +29,7 @@ authorization_uri.default <- function(endpoint="https://login.microsoftonline.co
 }
 
 
+#' @rdname authorization_uri
 #' @export
 authorization_uri.aad_endpoint <- function(endpoint, resource, app, password=NULL, username=NULL, ...)
 {
@@ -53,47 +59,4 @@ authorization_uri.aad_endpoint <- function(endpoint, resource, app, password=NUL
     uri
 }
 
-
-token_uri <- function(endpoint, ...)
-{
-    UseMethod("token_uri")
-}
-
-
-token_uri.default <- function(endpoint="https://login.microsoftonline.com/", tenant, ..., version=1)
-{
-    endpoint <- aad_endpoint(endpoint, normalize_tenant(tenant), normalize_aad_version(version), "token")
-    token_uri(endpoint, resource, app, password, username, ...)
-}
-
-
-token_uri.aad_endpoint <- function(endpoint, ...)
-{
-    if(!grepl("token/?$", endpoint))
-        stop("Not an OAuth token access endpoint", call.=FALSE)
-
-    httr::parse_url(endpoint)
-}
-
-
-devicecode_uri <- function(endpoint, ...)
-{
-    UseMethod("devicecode_uri")
-}
-
-
-devicecode_uri.default <- function(endpoint="https://login.microsoftonline.com/", tenant, ..., version=1)
-{
-    endpoint <- aad_endpoint(endpoint, normalize_tenant(tenant), normalize_aad_version(version), "devicecode")
-    devicecode_uri(endpoint, resource, app, password, username, ...)
-}
-
-
-devicecode_uri.aad_endpoint <- function(endpoint, ...)
-{
-    if(!grepl("devicecode/?$", endpoint))
-        stop("Not an OAuth device code endpoint", call.=FALSE)
-
-    httr::parse_url(endpoint)
-}
 
