@@ -5,13 +5,13 @@ init_authcode <- function(code=NULL)
 
     opts <- utils::modifyList(list(
         endpoint=private$aad_endpoint("authorize"),
-        resource=self$resource,
+        resource=if(self$version == 1) self$resource else self$scope,
         app=self$client$client_id,
         password=self$client$client_secret,
         username=self$client$login_hint
     ), self$authorize_args)
 
-    auth_uri <- do.call(authorize_uri, opts)
+    auth_uri <- do.call(authorization_uri, opts)
     redirect <- auth_uri$query$redirect_uri
 
     if(is.null(code))

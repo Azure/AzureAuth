@@ -34,7 +34,7 @@ cert_assertion("mycert.pem", custom_data="some text")
 cert <- AzureKeyVault::key_vault("myvault")$certificates$get("mycert")
 cert_assertion(cert, duration=2*3600)
 
-} 
+}
 }
 \seealso{
 \link{get_azure_token}

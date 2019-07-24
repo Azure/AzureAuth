@@ -17,7 +17,8 @@ get_managed_token(resource, token_args = list())
 get_azure_token(resource, tenant, app, password = NULL,
   username = NULL, certificate = NULL, auth_type = NULL,
   aad_host = "https://login.microsoftonline.com/", version = 1,
-  authorize_args = list(), token_args = list(), on_behalf_of = NULL)
+  authorize_args = list(), token_args = list(), on_behalf_of = NULL,
+  auth_code = NULL)
 
 delete_azure_token(resource, tenant, app, password = NULL,
   username = NULL, certificate = NULL, auth_type = NULL,
@@ -64,6 +65,8 @@ is_azure_v2_token(object)
 \item{authorize_args}{An optional list of further parameters for the AAD authorization endpoint. These will be included in the request URI as query parameters. Only used if \code{auth_type="authorization_code"}.}
 
 \item{on_behalf_of}{For the on-behalf-of authentication type, a token. This should be either an AzureToken object, or a string containing the JWT-encoded token itself.}
+
+\item{auth_code}{For the \code{authorization_code} flow, the code. This is mainly for use in embedded scenarios such as within a Shiny web app, where acquiring the code is separated from using it to obtain a token.}
 
 \item{hash}{The MD5 hash of this token, computed from the above inputs. Used by \code{delete_azure_token} to identify a cached token to delete.}
 
