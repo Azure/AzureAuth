@@ -7,17 +7,14 @@ init_authcode <- function()
         stop("httpuv package must be installed to use authorization_code method", call.=FALSE)
 
     opts <- utils::modifyList(list(
-        client_id=self$client$client_id,
-        response_type="code",
-        redirect_uri="http://localhost:1410/",
+        endpoint=private$aad_endpoint("authorize"),
         resource=self$resource,
-        scope=paste(self$scope, collapse=" "),
-        client_secret=self$client$client_secret,
-        login_hint=self$client$login_hint,
-        state=paste0(sample(letters, 20, TRUE), collapse="") # random nonce
+        app=self$client$client_id,
+        password=self$client$client_secret,
+        username=self$client$login_hint
     ), self$authorize_args)
 
-    auth_uri <- aad_authorize_uri(private$aad_endpoint("authorize"), .params=opts)
+    auth_uri <- do.call(aad_authorize_uri, opts)
 
     redirect <- auth_uri$query$redirect_uri
     code <- listen_for_authcode(auth_uri, redirect)
