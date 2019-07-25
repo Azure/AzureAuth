@@ -4,6 +4,7 @@
 * Add `use_cache` argument to `get_azure_token` and `get_managed_token`, which controls whether to cache tokens. Set this to FALSE to skip reading cached credentials from disk, and to skip saving credentials to the cache.
 * Make `decode_jwt` a generic, with methods for character strings, `AzureToken` objects and `httr::Token` objects.
 * Add `extract_jwt` generic to get the actual token from within an R object, with methods for character strings, `AzureToken` objects and `httr::Token` objects.
+* Fix bug in checking the expiry time for AAD v2.0 tokens.
 
 # AzureAuth 1.1.1
 

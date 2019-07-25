@@ -63,12 +63,12 @@ public=list(
             return(self$refresh())
         }
 
-        # v2.0 endpoint doesn't provide an expires_on field, set it here
-        self$credentials$expires_on <- as.character(floor(as.numeric(Sys.time())))
-
         res <- private$initfunc(list(auth_code=auth_code, device_creds=device_creds))
-        creds <- process_aad_response(res)
-        self$credentials <- utils::modifyList(self$credentials, creds)
+        self$credentials <- process_aad_response(res)
+
+        # v2.0 endpoint doesn't provide an expires_on field, set it here
+        if(is.null(self$credentials$expires_on))
+            self$credentials$expires_on <- as.character(decode_jwt(self$credentials$access_token)$payload$exp)
 
         # notify user if interactive auth and no refresh token
         if(self$auth_type %in% c("authorization_code", "device_code") && is.null(self$credentials$refresh_token))
@@ -110,8 +110,6 @@ public=list(
 
     refresh=function()
     {
-        now <- as.character(floor(as.numeric(Sys.time())))
-
         res <- if(!is.null(self$credentials$refresh_token))
         {
             body <- list(grant_type="refresh_token",
@@ -134,7 +132,9 @@ public=list(
             stop("Unable to refresh token", call.=FALSE)
         }
 
-        self$credentials <- utils::modifyList(list(expires_on=now), creds)
+        self$credentials <- creds
+        if(is.null(self$credentials$expires_on))
+            self$credentials$expires_on <- as.character(decode_jwt(self$credentials$access_token)$payload$exp)
 
         self$cache()
         invisible(self)
