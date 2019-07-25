@@ -1,7 +1,7 @@
 # AzureAuth 1.1.1.9000
 
 * Changes to token acquisition functionality to work inside a Shiny app.
-* Add `use_cache` argument to `get_azure_token`, which controls whether to cache tokens. Set this to FALSE to skip reading cached credentials from disk, and to skip saving credentials to the cache.
+* Add `use_cache` argument to `get_azure_token` and `get_managed_token`, which controls whether to cache tokens. Set this to FALSE to skip reading cached credentials from disk, and to skip saving credentials to the cache.
 
 # AzureAuth 1.1.1
 
