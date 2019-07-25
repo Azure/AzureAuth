@@ -1,19 +1,22 @@
-init_authcode <- function(code=NULL)
+init_authcode <- function(init_args)
 {
     stopifnot(is.list(self$token_args))
     stopifnot(is.list(self$authorize_args))
 
     opts <- utils::modifyList(list(
-        endpoint=private$aad_endpoint("authorize"),
         resource=if(self$version == 1) self$resource else self$scope,
+        tenant=self$tenant,
         app=self$client$client_id,
         password=self$client$client_secret,
-        username=self$client$login_hint
+        username=self$client$login_hint,
+        aad_host=self$aad_host,
+        version=self$version
     ), self$authorize_args)
 
-    auth_uri <- do.call(get_authorization_uri, opts)
-    redirect <- auth_uri$query$redirect_uri
+    auth_uri <- do.call(build_authorization_uri, opts)
+    redirect <- httr::parse_url(auth_uri)$query$redirect_uri
 
+    code <- init_args$auth_code
     if(is.null(code))
     {
         if(!requireNamespace("httpuv", quietly=TRUE))
@@ -23,58 +26,63 @@ init_authcode <- function(code=NULL)
     }
 
     # contact token endpoint for token
-    access_uri <- private$aad_endpoint("token")
+    access_uri <- private$aad_uri("token")
     body <- c(self$client, code=code, redirect_uri=redirect, self$token_args)
 
     httr::POST(access_uri, body=body, encode="form")
 }
 
 
-init_devcode <- function()
+init_devcode <- function(init_args)
 {
-    # contact devicecode endpoint to get code
-    dev_uri <- private$aad_endpoint("devicecode")
-    body <- private$build_access_body(list(client_id=self$client$client_id))
-
-    res <- httr::POST(dev_uri, body=body, encode="form")
-    creds <- process_aad_response(res)
-
-    # tell user to enter the code
-    cat(creds$message, "\n")
+    code <- init_args$device_code
+    if(is.null(code))
+    {
+        code <- request_device_code(
+            if(self$version == 1) self$resource else self$scope,
+            tenant=self$tenant,
+            app=self$client$client_id,
+            aad_host=self$aad_host,
+            version=self$version
+        )
+        cat(code$message, "\n")
+    }
+    print(code)
 
     # poll token endpoint for token
-    access_uri <- private$aad_endpoint("token")
-    body <- c(self$client, code=creds$device_code)
+    access_uri <- private$aad_uri("token")
+    body <- c(self$client, code=code$device_code)
+    print(body)
 
-    poll_for_token(access_uri, body, creds$interval, creds$expires_in)
+    poll_for_token(access_uri, body, code$interval, code$expires_in)
 }
 
 
-init_clientcred <- function()
+init_clientcred <- function(init_args)
 {
     # contact token endpoint directly with client credentials
-    uri <- private$aad_endpoint("token")
+    uri <- private$aad_uri("token")
     body <- private$build_access_body()
 
     httr::POST(uri, body=body, encode="form")
 }
 
 
-init_resowner <- function()
+init_resowner <- function(init_args)
 {
     # contact token endpoint directly with resource owner username/password
-    uri <- private$aad_endpoint("token")
+    uri <- private$aad_uri("token")
     body <- private$build_access_body()
 
     httr::POST(uri, body=body, encode="form")
 }
 
 
-init_managed <- function()
+init_managed <- function(init_args)
 {
     stopifnot(is.list(self$token_args))
 
-    uri <- private$aad_endpoint("token")
+    uri <- private$aad_uri("token")
     query <- utils::modifyList(self$token_args,
         list(`api-version`=getOption("azure_imds_version"), resource=self$resource))
 

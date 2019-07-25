@@ -151,9 +151,10 @@ verify_v2_scope <- function(scope)
 }
 
 
-aad_endpoint <- function(aad_host, tenant, version, type)
+aad_uri <- function(aad_host, tenant, version, type, query=list())
 {
     uri <- httr::parse_url(aad_host)
+    uri$query <- query
 
     uri$path <- if(nchar(uri$path) == 0)
     {
@@ -163,5 +164,5 @@ aad_endpoint <- function(aad_host, tenant, version, type)
     }
     else file.path(uri$path, type)
 
-    structure(httr::build_url(uri), class=c(paste0("aad_endpoint_v", version), "aad_endpoint"))
+    httr::build_url(uri)
 }

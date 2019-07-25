@@ -29,7 +29,7 @@ public=list(
     initialize=function(tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
                         aad_host="https://login.microsoftonline.com/",
                         authorize_args=list(), token_args=list(),
-                        use_cache=TRUE, on_behalf_of=NULL, auth_code=NULL, show_devicecode_prompt=NULL)
+                        use_cache=TRUE, on_behalf_of=NULL, auth_code=NULL, device_code=NULL)
     {
         # fail if this constructor is called directly
         if(is.null(self$version))
@@ -66,7 +66,7 @@ public=list(
         # v2.0 endpoint doesn't provide an expires_on field, set it here
         self$credentials$expires_on <- as.character(floor(as.numeric(Sys.time())))
 
-        res <- if(is.null(auth_code)) private$initfunc() else private$initfunc(auth_code)
+        res <- private$initfunc(list(auth_code=auth_code, device_code=device_code))
         creds <- process_aad_response(res)
         self$credentials <- utils::modifyList(self$credentials, creds)
 
@@ -122,7 +122,7 @@ public=list(
                 refresh_token=self$credentials$refresh_token
             )
 
-            uri <- private$aad_endpoint("token")
+            uri <- private$aad_uri("token")
             httr::POST(uri, body=body, encode="form")
         }
         else private$initfunc() # reauthenticate if no refresh token
@@ -157,9 +157,9 @@ private=list(
         self$credentials <- token$credentials
     },
 
-    aad_endpoint=function(type)
+    aad_uri=function(type, ...)
     {
-        aad_endpoint(self$aad_host, self$tenant, self$version, type)
+        aad_uri(self$aad_host, self$tenant, self$version, type, list(...))
     },
 
     # member function to be filled in by initialize()
