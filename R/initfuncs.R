@@ -11,7 +11,7 @@ init_authcode <- function(code=NULL)
         username=self$client$login_hint
     ), self$authorize_args)
 
-    auth_uri <- do.call(authorization_uri, opts)
+    auth_uri <- do.call(get_authorization_uri, opts)
     redirect <- auth_uri$query$redirect_uri
 
     if(is.null(code))

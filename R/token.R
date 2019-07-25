@@ -13,8 +13,10 @@
 #' @param version The AAD version, either 1 or 2.
 #' @param authorize_args An optional list of further parameters for the AAD authorization endpoint. These will be included in the request URI as query parameters. Only used if `auth_type="authorization_code"`.
 #' @param token_args An optional list of further parameters for the token endpoint. These will be included in the body of the request for `get_azure_token`, or as URI query parameters for `get_managed_token`.
+#' @param use_cache If TRUE and cached credentials exist, use them instead of obtaining a new token.
 #' @param on_behalf_of For the on-behalf-of authentication type, a token. This should be either an AzureToken object, or a string containing the JWT-encoded token itself.
-#' @param auth_code For the `authorization_code` flow, the code. This is mainly for use in embedded scenarios such as within a Shiny web app, where acquiring the code is separated from using it to obtain a token.
+#' @param auth_code For the `authorization_code` flow, the code. This is mainly for use in embedded scenarios such as within a Shiny web app, where acquiring the code is separated from using it to obtain a token. Only used if `auth_type == "authorization_code"`.
+#' @param show_devicecode_prompt Whether to show the device code prompt. Only used if `auth_type == "device_code"`.
 #'
 #' @details
 #' `get_azure_token` does much the same thing as [httr::oauth2.0_token()], but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. `delete_azure_token` deletes a cached token, and `list_azure_tokens` lists currently cached tokens.
@@ -160,13 +162,14 @@
 #' @export
 get_azure_token <- function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
                             aad_host="https://login.microsoftonline.com/", version=1,
-                            authorize_args=list(), token_args=list(), on_behalf_of=NULL, auth_code=NULL)
+                            authorize_args=list(), token_args=list(),
+                            use_cache=TRUE, on_behalf_of=NULL, auth_code=NULL, show_devicecode_prompt=NULL)
 {
     if(normalize_aad_version(version) == 1)
         AzureTokenV1$new(resource, tenant, app, password, username, certificate, auth_type, aad_host,
-                         authorize_args, token_args, on_behalf_of, auth_code)
+                         authorize_args, token_args, use_cache, on_behalf_of, auth_code, show_devicecode_prompt)
     else AzureTokenV2$new(resource, tenant, app, password, username, certificate, auth_type, aad_host,
-                          authorize_args, token_args, on_behalf_of, auth_code)
+                          authorize_args, token_args, use_cache, on_behalf_of, auth_code, show_devicecode_prompt)
 }
 
 

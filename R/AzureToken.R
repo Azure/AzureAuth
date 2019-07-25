@@ -28,7 +28,8 @@ public=list(
 
     initialize=function(tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
                         aad_host="https://login.microsoftonline.com/",
-                        authorize_args=list(), token_args=list(), on_behalf_of=NULL, auth_code=NULL)
+                        authorize_args=list(), token_args=list(),
+                        use_cache=TRUE, on_behalf_of=NULL, auth_code=NULL, show_devicecode_prompt=NULL)
     {
         # fail if this constructor is called directly
         if(is.null(self$version))
@@ -55,7 +56,7 @@ public=list(
         environment(private$initfunc) <- parent.env(environment())
 
         tokenfile <- file.path(AzureR_dir(), self$hash())
-        if(file.exists(tokenfile))
+        if(use_cache && file.exists(tokenfile))
         {
             message("Loading cached token")
             private$load_from_cache(tokenfile)
@@ -67,14 +68,15 @@ public=list(
 
         res <- if(is.null(auth_code)) private$initfunc() else private$initfunc(auth_code)
         creds <- process_aad_response(res)
-
         self$credentials <- utils::modifyList(self$credentials, creds)
 
         # notify user if interactive auth and no refresh token
         if(self$auth_type %in% c("authorization_code", "device_code") && is.null(self$credentials$refresh_token))
             private$norenew_alert()
 
-        self$cache()
+        if(use_cache)
+            self$cache()
+
         self
     },
 
