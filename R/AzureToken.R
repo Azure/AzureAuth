@@ -125,7 +125,7 @@ public=list(
             uri <- private$aad_uri("token")
             httr::POST(uri, body=body, encode="form")
         }
-        else private$initfunc() # reauthenticate if no refresh token
+        else private$initfunc(NULL) # reauthenticate if no refresh token (cannot reuse any supplied creds)
 
         creds <- try(process_aad_response(res))
         if(inherits(creds, "try-error"))
