@@ -29,7 +29,7 @@ public=list(
     initialize=function(tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
                         aad_host="https://login.microsoftonline.com/",
                         authorize_args=list(), token_args=list(),
-                        use_cache=TRUE, on_behalf_of=NULL, auth_code=NULL, device_code=NULL)
+                        use_cache=TRUE, on_behalf_of=NULL, auth_code=NULL, device_creds=NULL)
     {
         # fail if this constructor is called directly
         if(is.null(self$version))
@@ -66,7 +66,7 @@ public=list(
         # v2.0 endpoint doesn't provide an expires_on field, set it here
         self$credentials$expires_on <- as.character(floor(as.numeric(Sys.time())))
 
-        res <- private$initfunc(list(auth_code=auth_code, device_code=device_code))
+        res <- private$initfunc(list(auth_code=auth_code, device_creds=device_creds))
         creds <- process_aad_response(res)
         self$credentials <- utils::modifyList(self$credentials, creds)
 

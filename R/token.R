@@ -9,14 +9,14 @@
 #' @param username Your AAD username, if using the resource owner grant. See 'Details' below.
 #' @param certificate A file containing the certificate for authenticating with, an Azure Key Vault certificate object, or a call to the `cert_assertion` function to build a client assertion with a certificate. See 'Certificate authentication' below.
 #' @param auth_type The authentication type. See 'Details' below.
-#' @param aad_host URL for your AAD host. For the public Azure cloud, this is `https://login.microsoftonline.com/`. Change this if you are using a government or private cloud. Can also be a full URL, eg `https://mydomain.b2clogin.com/mydomain/other/path/names/oauth2`.
+#' @param aad_host URL for your AAD host. For the public Azure cloud, this is `https://login.microsoftonline.com/`. Change this if you are using a government or private cloud. Can also be a full URL, eg `https://mydomain.b2clogin.com/mydomain/other/path/names/oauth2` (this is relevant mainly for Azure B2C logins).
 #' @param version The AAD version, either 1 or 2.
 #' @param authorize_args An optional list of further parameters for the AAD authorization endpoint. These will be included in the request URI as query parameters. Only used if `auth_type="authorization_code"`.
 #' @param token_args An optional list of further parameters for the token endpoint. These will be included in the body of the request for `get_azure_token`, or as URI query parameters for `get_managed_token`.
-#' @param use_cache If TRUE and cached credentials exist, use them instead of obtaining a new token.
+#' @param use_cache If TRUE and cached credentials exist, use them instead of obtaining a new token. Set this to FALSE to bypass the cache.
 #' @param on_behalf_of For the on-behalf-of authentication type, a token. This should be either an AzureToken object, or a string containing the JWT-encoded token itself.
-#' @param auth_code For the `authorization_code` flow, the code. This is mainly for use in embedded scenarios such as within a Shiny web app, where acquiring the code is separated from using it to obtain a token. Only used if `auth_type == "authorization_code"`.
-#' @param device_code For the `device_code` flow, the device code used to verify the session between the client and the server. Only used if `auth_type == "device_code"`.
+#' @param auth_code For the `authorization_code` flow, the code. Only used if `auth_type == "authorization_code"`.
+#' @param device_creds For the `device_code` flow, the device credentials used to verify the session between the client and the server. Only used if `auth_type == "device_code"`.
 #'
 #' @details
 #' `get_azure_token` does much the same thing as [httr::oauth2.0_token()], but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. `delete_azure_token` deletes a cached token, and `list_azure_tokens` lists currently cached tokens.
@@ -25,11 +25,9 @@
 #'
 #' The `resource` arg should be a single URL or GUID for AAD v1.0. For AAD v2.0, it should be a vector of _scopes_, where each scope consists of a URL or GUID along with a path that designates the type of access requested. If a v2.0 scope doesn't have a path, `get_azure_token` will append the `/.default` path with a warning. A special scope is `offline_access`, which requests a refresh token from AAD along with the access token: without this scope, you will have to reauthenticate if you want to refresh the token.
 #'
-#' For B2C logins, the `aad_host` argument can be a full URL including the tenant and arbitrary path components, but excluding the specific endpoint.
+#' The `auth_code` and `device_creds` arguments are intended for use in embedded scenarios, eg when AzureAuth is loaded from within a Shiny web app. They enable the flow authorization step to be separated from the token acquisition step, which is necessary when acquiring a token within a web app. You can generally ignore these arguments when using AzureAuth interactively or as part of an R script.
 #'
-#' `token_hash` computes the MD5 hash of its arguments. This is used by AzureAuth to identify tokens for caching purposes.
-#'
-#' Note that tokens are only cached if you allowed AzureAuth to create a data directory at package startup.
+#' `token_hash` computes the MD5 hash of its arguments. This is used by AzureAuth to identify tokens for caching purposes. Note that tokens are only cached if you allowed AzureAuth to create a data directory at package startup.
 #'
 #' One particular use of the `authorize_args` argument is to specify a different redirect URI to the default; see the examples below.
 #'
@@ -69,7 +67,8 @@
 #' For `get_azure_token`, an object of class either `AzureTokenV1` or `AzureTokenV2` depending on whether the token is for AAD v1.0 or v2.0. For `list_azure_tokens`, a list of such objects retrieved from disk.
 #'
 #' @seealso
-#' [AzureToken], [httr::oauth2.0_token], [httr::Token], [cert_assertion]
+#' [AzureToken], [httr::oauth2.0_token], [httr::Token], [cert_assertion],
+#' [build_authorization_uri], [get_device_creds]
 #'
 #' [Azure Active Directory for developers](https://docs.microsoft.com/en-us/azure/active-directory/develop/),
 #' [Device code flow on OAuth.com](https://www.oauth.com/oauth2-servers/device-flow/token-request/),
@@ -99,9 +98,9 @@
 #' tok0 <- get_azure_token("serviceapp_id", tenant="mytenant", app="clientapp_id",
 #'     auth_type="authorization_code")
 #' # ...then get tokens for each resource (Resource Manager and MS Graph) with on_behalf_of
-#' tok1 <- get_azure_token("https://management.azure.com/", tenant="mytenant," app="serviceapp_id",
+#' tok1 <- get_azure_token("https://management.azure.com/", tenant="mytenant", app="serviceapp_id",
 #'     password="serviceapp_secret", on_behalf_of=tok0)
-#' tok2 <- get_azure_token("https://graph.microsoft.com/", tenant="mytenant," app="serviceapp_id",
+#' tok2 <- get_azure_token("https://graph.microsoft.com/", tenant="mytenant", app="serviceapp_id",
 #'     password="serviceapp_secret", on_behalf_of=tok0)
 #'
 #'
@@ -152,24 +151,43 @@
 #'
 #' # get a token valid for 2 hours (default is 1 hour)
 #' get_azure_token("https://management.azure.com/", "mytenant", "app_id",
-#'     certificate=cert_assertion("mycert.pem", duration=2*3600)
+#'     certificate=cert_assertion("mycert.pem", duration=2*3600))
 #'
 #'
 #' # get a token from within a managed service identity (VM, container or service)
 #' get_managed_token("https://management.azure.com/")
+#'
+#'
+#' ## obtaining an authorization code separately to acquiring the token
+#' # first, get the authorization URI
+#' auth_uri <- build_authorization_uri("https://management.azure.com/", "mytenant", "app_id")
+#' # browsing to the URI will log you in and redirect to another URI containing the auth code
+#' browseURL(auth_uri)
+#' # use the code to acquire the token
+#' get_azure_token("https://management.azure.com/", "mytenant", "app_id",
+#'     auth_code="code-from-redirect")
+#'
+#'
+#' # obtaining device credentials separately to acquiring the token
+#' creds <- get_device_creds("https://management.azure.com/", "mytenant", "app_id")
+#' # login instructions: go to this site in your browser and enter the code
+#' creds$message
+#' # use the creds to acquire the token
+#' get_azure_token("https://management.azure.com/", "mytenant", "app_id",
+#'     auth_type="device_code", device_creds=creds)
 #'
 #' }
 #' @export
 get_azure_token <- function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
                             aad_host="https://login.microsoftonline.com/", version=1,
                             authorize_args=list(), token_args=list(),
-                            use_cache=TRUE, on_behalf_of=NULL, auth_code=NULL, device_code=NULL)
+                            use_cache=TRUE, on_behalf_of=NULL, auth_code=NULL, device_creds=NULL)
 {
     if(normalize_aad_version(version) == 1)
         AzureTokenV1$new(resource, tenant, app, password, username, certificate, auth_type, aad_host,
-                         authorize_args, token_args, use_cache, on_behalf_of, auth_code, device_code)
+                         authorize_args, token_args, use_cache, on_behalf_of, auth_code, device_creds)
     else AzureTokenV2$new(resource, tenant, app, password, username, certificate, auth_type, aad_host,
-                          authorize_args, token_args, use_cache, on_behalf_of, auth_code, device_code)
+                          authorize_args, token_args, use_cache, on_behalf_of, auth_code, device_creds)
 }
 
 

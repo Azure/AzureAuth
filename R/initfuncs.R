@@ -35,24 +35,24 @@ init_authcode <- function(init_args)
 
 init_devcode <- function(init_args)
 {
-    code <- init_args$device_code
-    if(is.null(code))
+    creds <- init_args$device_creds
+    if(is.null(creds))
     {
-        code <- request_device_code(
+        creds <- get_device_creds(
             if(self$version == 1) self$resource else self$scope,
             tenant=self$tenant,
             app=self$client$client_id,
             aad_host=self$aad_host,
             version=self$version
         )
-        cat(code$message, "\n")
+        cat(creds$message, "\n")
     }
 
     # poll token endpoint for token
     access_uri <- private$aad_uri("token")
-    body <- c(self$client, code=code$device_code)
+    body <- c(self$client, code=creds$device_code)
 
-    poll_for_token(access_uri, body, code$interval, code$expires_in)
+    poll_for_token(access_uri, body, creds$interval, creds$expires_in)
 }
 
 
