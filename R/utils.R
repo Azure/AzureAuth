@@ -1,4 +1,4 @@
-select_auth_type <- function(password, username, certificate, auth_type, on_behalf_of, auth_code=NULL)
+select_auth_type <- function(password, username, certificate, auth_type, on_behalf_of)
 {
     if(!is.null(auth_type))
     {
@@ -13,9 +13,7 @@ select_auth_type <- function(password, username, certificate, auth_type, on_beha
     got_user <- !is.null(username)
     got_cert <- !is.null(certificate)
 
-    if(!is.null(auth_code))
-        "authorization_code"
-    else if(got_pwd && got_user && !got_cert)
+    if(got_pwd && got_user && !got_cert)
         "resource_owner"
     else if(!got_pwd && !got_user && !got_cert)
     {

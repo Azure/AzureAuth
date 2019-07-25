@@ -37,7 +37,7 @@ public=list(
 
         self$aad_host <- aad_host
         self$tenant <- normalize_tenant(tenant)
-        self$auth_type <- select_auth_type(password, username, certificate, auth_type, on_behalf_of, auth_code)
+        self$auth_type <- select_auth_type(password, username, certificate, auth_type, on_behalf_of)
 
         self$client <- aad_request_credentials(app, password, username, certificate, self$auth_type, on_behalf_of)
 
