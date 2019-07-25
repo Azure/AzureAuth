@@ -47,12 +47,10 @@ init_devcode <- function(init_args)
         )
         cat(code$message, "\n")
     }
-    print(code)
 
     # poll token endpoint for token
     access_uri <- private$aad_uri("token")
     body <- c(self$client, code=code$device_code)
-    print(body)
 
     poll_for_token(access_uri, body, code$interval, code$expires_in)
 }
