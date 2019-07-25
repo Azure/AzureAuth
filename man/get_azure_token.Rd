@@ -12,7 +12,7 @@
 \alias{is_azure_v2_token}
 \title{Manage Azure Active Directory OAuth 2.0 tokens}
 \usage{
-get_managed_token(resource, token_args = list())
+get_managed_token(resource, token_args = list(), use_cache = TRUE)
 
 get_azure_token(resource, tenant, app, password = NULL,
   username = NULL, certificate = NULL, auth_type = NULL,
@@ -46,6 +46,8 @@ is_azure_v2_token(object)
 
 \item{token_args}{An optional list of further parameters for the token endpoint. These will be included in the body of the request for \code{get_azure_token}, or as URI query parameters for \code{get_managed_token}.}
 
+\item{use_cache}{If TRUE and cached credentials exist, use them instead of obtaining a new token.}
+
 \item{tenant}{Your tenant. This can be a name ("myaadtenant"), a fully qualified domain name ("myaadtenant.onmicrosoft.com" or "mycompanyname.com"), or a GUID.}
 
 \item{app}{The client/app ID to use to authenticate with.}
@@ -63,8 +65,6 @@ is_azure_v2_token(object)
 \item{version}{The AAD version, either 1 or 2.}
 
 \item{authorize_args}{An optional list of further parameters for the AAD authorization endpoint. These will be included in the request URI as query parameters. Only used if \code{auth_type="authorization_code"}.}
-
-\item{use_cache}{If TRUE and cached credentials exist, use them instead of obtaining a new token.}
 
 \item{on_behalf_of}{For the on-behalf-of authentication type, a token. This should be either an AzureToken object, or a string containing the JWT-encoded token itself.}
 
