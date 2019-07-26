@@ -38,7 +38,7 @@ For \code{get_device_creds}, a list containing the following components:
 Standalone OAuth authorization functions
 }
 \details{
-These functions is mainly for use in embedded scenarios, such as within a Shiny web app. In this case, the interactive authentication flows (authorization code and device code) need to be split up so that the authorization step is handled separately from the token acquisition step. You should not need to use these functions inside a regular R session, or when executing an R batch script.
+These functions are mainly for use in embedded scenarios, such as within a Shiny web app. In this case, the interactive authentication flows (authorization code and device code) need to be split up so that the authorization step is handled separately from the token acquisition step. You should not need to use these functions inside a regular R session, or when executing an R batch script.
 }
 \examples{
 build_authorization_uri("https://myresource", "mytenant", "app_id",

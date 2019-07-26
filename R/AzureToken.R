@@ -5,7 +5,7 @@
 #' @docType class
 #' @section Methods:
 #' - `refresh`: Refreshes the token. For expired tokens without an associated refresh token, refreshing really means requesting a new token.
-#' - `validate`: Checks if the token is still valid. If there is no associated refresh token, this just checks if the current time is less than the token's expiry time.
+#' - `validate`: Checks if the token has not yet expired. Note that a token may be invalid for reasons other than having expired, eg if it is revoked on the server.
 #' - `hash`: Computes an MD5 hash on the input fields of the object. Used internally for identification purposes when caching.
 #' - `cache`: Stores the token on disk for use in future sessions.
 #'

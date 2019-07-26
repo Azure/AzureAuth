@@ -6,7 +6,7 @@
 #' @param ... Named arguments that will be added to the authorization URI as query parameters.
 #'
 #' @details
-#' These functions is mainly for use in embedded scenarios, such as within a Shiny web app. In this case, the interactive authentication flows (authorization code and device code) need to be split up so that the authorization step is handled separately from the token acquisition step. You should not need to use these functions inside a regular R session, or when executing an R batch script.
+#' These functions are mainly for use in embedded scenarios, such as within a Shiny web app. In this case, the interactive authentication flows (authorization code and device code) need to be split up so that the authorization step is handled separately from the token acquisition step. You should not need to use these functions inside a regular R session, or when executing an R batch script.
 #'
 #' @return
 #' For `build_authorization_uri`, the authorization URI as a string. This can be set as a redirect from within a Shiny app's UI component.

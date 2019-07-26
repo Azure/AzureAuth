@@ -168,7 +168,8 @@
 #'     auth_code="code-from-redirect")
 #'
 #'
-#' # obtaining device credentials separately to acquiring the token
+#' ## obtaining device credentials separately to acquiring the token
+#' # first, contact the authorization endpoint to get the user and device codes
 #' creds <- get_device_creds("https://management.azure.com/", "mytenant", "app_id")
 #' # login instructions: go to this site in your browser and enter the code
 #' creds$message
