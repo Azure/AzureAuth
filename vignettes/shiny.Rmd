@@ -24,7 +24,7 @@ app <- "your-app-id-here"
 
 # set this to the site URL of your app once it is deployed
 # this must also be the redirect for your registered app in Azure Active Directory
-redirect <- "http://localhost:1410"
+redirect <- "http://localhost:8100"
 
 options(shiny.port=as.numeric(httr::parse_url(redirect)$port))
 
@@ -60,5 +60,5 @@ server <- function(input, output, session)
 shinyApp(ui_func, server)
 ```
 
-Note that this process is only necessary within a web app, and only when using an interactive authentication flow. In a normal R session, or when using the client credentials flow, you should be able to call `get_azure_token` directly.
+Note that this process is only necessary within a web app, and only when using an interactive authentication flow. In a normal R session, or when using the client credentials or resource owner grant flows, you can simply call `get_azure_token` directly.
 
