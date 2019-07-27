@@ -30,8 +30,7 @@ options(shiny.port=as.numeric(httr::parse_url(redirect)$port))
 
 # replace this with your app's regular UI
 ui <- fluidPage(
-    verbatimTextOutput("token"),
-    verbatimTextOutput("res")
+    verbatimTextOutput("token")
 )
 
 ui_func <- function(req)
@@ -56,10 +55,6 @@ server <- function(input, output, session)
                              use_cache=FALSE, auth_code=opts$code)
 
     output$token <- renderPrint(token)
-    output$res <- renderPrint(AzureRMR::az_rm$new(token=token)$
-        list_subscriptions()[[1]]$
-        list_resource_groups()
-    )
 }
 
 shinyApp(ui_func, server)
