@@ -1,33 +1,36 @@
-#' Decode info in a token (which is a JWT object)
-#'
-#' @param token A string representing the encoded token.
-#'
-#' @details
-#' An OAuth token is a _JSON Web Token_, which is a set of base64URL-encoded JSON objects containing the token credentials along with an optional (opaque) verification signature. `decode_jwt` decodes the credentials into an R object so they can be viewed.
-#'
-#' Note that `decode_jwt` does not touch the token signature or attempt to verify the credentials. You should not rely on the decoded information without verifying it independently. Passing the token itself to Azure is safe, as Azure will carry out its own verification procedure.
-#'
-#' @return
-#' A list containing up to 3 components: `header`, `payload` and `signature`.
-#'
-#' @seealso
-#' [jwt.io](https://jwt.io), the main JWT informational site
-#'
-#' [jwt.ms](https://jwt.ms), Microsoft site to decode and explain JWTs
-#'
-#' [JWT Wikipedia entry](https://en.wikipedia.org/wiki/JSON_Web_Token)
-#' @export
-decode_jwt <- function(token)
+select_auth_type <- function(password, username, certificate, auth_type, on_behalf_of)
 {
-    token <- as.list(strsplit(token, "\\.")[[1]])
-    token[1:2] <- lapply(token[1:2], function(x)
-        jsonlite::fromJSON(rawToChar(jose::base64url_decode(x))))
+    if(!is.null(auth_type))
+    {
+        if(!auth_type %in%
+           c("authorization_code", "device_code", "client_credentials", "resource_owner", "on_behalf_of",
+             "managed"))
+            stop("Invalid authentication method")
+        return(auth_type)
+    }
 
-    names(token)[1:2] <- c("header", "payload")
-    if(length(token) > 2)
-        names(token)[3] <- "signature"
+    got_pwd <- !is.null(password)
+    got_user <- !is.null(username)
+    got_cert <- !is.null(certificate)
 
-    token
+    if(got_pwd && got_user && !got_cert)
+        "resource_owner"
+    else if(!got_pwd && !got_user && !got_cert)
+    {
+        if(system.file(package="httpuv") == "")
+        {
+            message("httpuv not installed, defaulting to device code authentication")
+            "device_code"
+        }
+        else "authorization_code"
+    }
+    else if((got_pwd && !got_user) || got_cert)
+    {
+        if(is_empty(on_behalf_of))
+            "client_credentials"
+        else "on_behalf_of"
+    }
+    else stop("Can't select authentication method", call.=FALSE)
 }
 
 
@@ -79,18 +82,6 @@ aad_request_credentials <- function(app, password, username, certificate, auth_t
     }
 
     object
-}
-
-
-normalize_aad_version <- function(v)
-{
-    if(v == "v1.0")
-        v <- 1
-    else if(v == "v2.0")
-        v <- 2
-    if(!(is.numeric(v) && v %in% c(1, 2)))
-        stop("Invalid AAD version")
-    v
 }
 
 
@@ -158,3 +149,18 @@ verify_v2_scope <- function(scope)
 }
 
 
+aad_uri <- function(aad_host, tenant, version, type, query=list())
+{
+    uri <- httr::parse_url(aad_host)
+    uri$query <- query
+
+    uri$path <- if(nchar(uri$path) == 0)
+    {
+        if(version == 1)
+            file.path(tenant, "oauth2", type)
+        else file.path(tenant, "oauth2/v2.0", type)
+    }
+    else file.path(uri$path, type)
+
+    httr::build_url(uri)
+}

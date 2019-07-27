@@ -21,7 +21,7 @@ Azure OAuth 2.0 token classes, with an interface based on the \link[httr:Token2.
 
 \itemize{
 \item \code{refresh}: Refreshes the token. For expired tokens without an associated refresh token, refreshing really means requesting a new token.
-\item \code{validate}: Checks if the token is still valid. If there is no associated refresh token, this just checks if the current time is less than the token's expiry time.
+\item \code{validate}: Checks if the token has not yet expired. Note that a token may be invalid for reasons other than having expired, eg if it is revoked on the server.
 \item \code{hash}: Computes an MD5 hash on the input fields of the object. Used internally for identification purposes when caching.
 \item \code{cache}: Stores the token on disk for use in future sessions.
 }

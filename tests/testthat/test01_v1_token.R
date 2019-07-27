@@ -130,3 +130,19 @@ test_that("Certificate authentication works",
     tok <- get_azure_token(res, tenant, cert_app, certificate=cert_file)
     expect_true(is_azure_token(tok))
 })
+
+
+test_that("Standalone auth works",
+{
+    res <- "https://management.azure.com/"
+
+    auth_uri <- build_authorization_uri(res, tenant, native_app)
+    code <- AzureAuth:::listen_for_authcode(auth_uri, "http://localhost:1410")
+    tok <- get_azure_token(res, tenant, native_app, auth_code=code, use_cache=FALSE)
+    expect_identical(tok$hash(), aut_hash)
+
+    creds <- get_device_creds(res, tenant, native_app)
+    cat(creds$message, "\n")
+    tok2 <- get_azure_token(res, tenant, native_app, auth_type="device_code", device_creds=creds, use_cache=FALSE)
+    expect_identical(tok2$hash(), dev_hash)
+})

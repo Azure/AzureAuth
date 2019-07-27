@@ -1,3 +1,11 @@
+# AzureAuth 1.2.0
+
+* Changes to token acquisition code to better integrate with Shiny. Use the `build_authorization_uri` and `get_device_creds` functions to initiate the authorization step from within a Shiny web app. `get_azure_token` has new `auth_code` and `device_creds` arguments for passing in authorization details obtained separately. See the "Authenticating from Shiny" vignette for a skeleton example app.
+* Add `use_cache` argument to `get_azure_token` and `get_managed_token`, which controls whether to cache tokens. Set this to FALSE to skip reading cached credentials from disk, and to skip saving credentials to the cache.
+* Make `decode_jwt` a generic, with methods for character strings, `AzureToken` objects and `httr::Token` objects.
+* Add `extract_jwt` generic to get the actual token from within an R object, with methods for character strings, `AzureToken` objects and `httr::Token` objects.
+* Fix bug in checking the expiry time for AAD v2.0 tokens.
+
 # AzureAuth 1.1.1
 
 * New `get_managed_token` function to obtain a token for a managed identity. Note this only works within a VM, service or container to which an identity has been assigned.

@@ -23,8 +23,8 @@
 #' # using a cert stored in Azure Key Vault
 #' cert <- AzureKeyVault::key_vault("myvault")$certificates$get("mycert")
 #' cert_assertion(cert, duration=2*3600)
-#' 
-#' } 
+#'
+#' }
 #' @export
 cert_assertion <- function(certificate, duration=3600, signature_size=256, ...)
 {

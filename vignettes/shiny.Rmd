@@ -1,0 +1,64 @@
+---
+title: "Authenticating from Shiny"
+author: Hong Ooi
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Shiny}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{utf8}
+---
+
+Because a Shiny app has separate UI and server components, the interactive authentication flows require some changes. In particular, the authorization step (logging in to Azure) has to be conducted separately from the token acquisition step.
+
+AzureAuth provides the `build_authorization_uri` function to facilitate this separation. You call this function to obtain a URI that you browse to in order to login to Azure. Once you have logged in, Azure will return an authorization code as part of a redirect.
+
+Here is a skeleton Shiny app that demonstrates its use. The UI calls `build_authorization_uri`, and then redirects your browser to that location. When you have logged in, the server captures the authorization code and calls `get_azure_token` to obtain the token.
+
+```r
+library(AzureAuth)
+library(shiny)
+
+resource <- "https://management.azure.com"
+tenant <- "your-tenant-here"
+app <- "your-app-id-here"
+
+# set this to the site URL of your app once it is deployed
+# this must also be the redirect for your registered app in Azure Active Directory
+redirect <- "http://localhost:8100"
+
+options(shiny.port=as.numeric(httr::parse_url(redirect)$port))
+
+# replace this with your app's regular UI
+ui <- fluidPage(
+    verbatimTextOutput("token")
+)
+
+ui_func <- function(req)
+{
+    opts <- parseQueryString(req$QUERY_STRING)
+    if(is.null(opts$code))
+    {
+        auth_uri <- build_authorization_uri(resource, tenant, app, redirect_uri=redirect)
+        redir_js <- sprintf("location.replace(\"%s\");", auth_uri)
+        tags$script(HTML(redir_js))
+    }
+    else ui
+}
+
+server <- function(input, output, session)
+{
+    opts <- parseQueryString(isolate(session$clientData$url_search))
+    if(is.null(opts$code))
+        return()
+
+    token <- get_azure_token(resource, tenant, app, authorize_args=list(redirect_uri=redirect),
+                             use_cache=FALSE, auth_code=opts$code)
+
+    output$token <- renderPrint(token)
+}
+
+shinyApp(ui_func, server)
+```
+
+Note that this process is only necessary within a web app, and only when using an interactive authentication flow. In a normal R session, or when using the client credentials or resource owner grant flows, you can simply call `get_azure_token` directly.
+

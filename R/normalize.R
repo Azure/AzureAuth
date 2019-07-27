@@ -47,6 +47,9 @@
 #' @rdname guid
 normalize_tenant <- function(tenant)
 {
+    if(!is.character(tenant))
+        stop("Tenant must be a character string", call.=FALSE)
+
     tenant <- tolower(tenant)
 
     # check if supplied a guid; if not, check if a fqdn;
@@ -87,3 +90,16 @@ is_guid <- function(x)
     grepl("^\\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}}$", x) ||
     grepl("^\\([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\)$", x)
 }
+
+
+normalize_aad_version <- function(v)
+{
+    if(v == "v1.0")
+        v <- 1
+    else if(v == "v2.0")
+        v <- 2
+    if(!(is.numeric(v) && v %in% c(1, 2)))
+        stop("Invalid AAD version")
+    v
+}
+

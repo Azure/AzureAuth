@@ -1,6 +1,6 @@
 Package: AzureAuth
 Title: Authentication Services for Azure Active Directory
-Version: 1.1.1
+Version: 1.2.0
 Authors@R: c(
     person("Hong", "Ooi", , "hongooi@microsoft.com", role = c("aut", "cre")),
     person("httr development team", role="ctb", comment="Original OAuth listener code"),
@@ -26,6 +26,7 @@ Imports:
 Suggests:
     knitr,
     testthat,
-    httpuv
+    httpuv,
+    shiny
 Roxygen: list(markdown=TRUE)
 RoxygenNote: 6.1.1

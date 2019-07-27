@@ -9,7 +9,7 @@ format_auth_header <- function(token)
     stopifnot(is_azure_token(token))
     expiry <- as.POSIXct(as.numeric(token$credentials$expires_on), origin="1970-01-01")
     obtained <- expiry - as.numeric(token$credentials$expires_in)
-    
+
     if(is_azure_v1_token(token))
     {
         version <- "v1.0"

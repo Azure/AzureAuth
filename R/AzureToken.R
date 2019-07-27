@@ -5,7 +5,7 @@
 #' @docType class
 #' @section Methods:
 #' - `refresh`: Refreshes the token. For expired tokens without an associated refresh token, refreshing really means requesting a new token.
-#' - `validate`: Checks if the token is still valid. If there is no associated refresh token, this just checks if the current time is less than the token's expiry time.
+#' - `validate`: Checks if the token has not yet expired. Note that a token may be invalid for reasons other than having expired, eg if it is revoked on the server.
 #' - `hash`: Computes an MD5 hash on the input fields of the object. Used internally for identification purposes when caching.
 #' - `cache`: Stores the token on disk for use in future sessions.
 #'
@@ -28,7 +28,8 @@ public=list(
 
     initialize=function(tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
                         aad_host="https://login.microsoftonline.com/",
-                        authorize_args=list(), token_args=list(), on_behalf_of=NULL)
+                        authorize_args=list(), token_args=list(),
+                        use_cache=TRUE, on_behalf_of=NULL, auth_code=NULL, device_creds=NULL)
     {
         # fail if this constructor is called directly
         if(is.null(self$version))
@@ -55,26 +56,27 @@ public=list(
         environment(private$initfunc) <- parent.env(environment())
 
         tokenfile <- file.path(AzureR_dir(), self$hash())
-        if(file.exists(tokenfile))
+        if(use_cache && file.exists(tokenfile))
         {
             message("Loading cached token")
             private$load_from_cache(tokenfile)
             return(self$refresh())
         }
 
+        res <- private$initfunc(list(auth_code=auth_code, device_creds=device_creds))
+        self$credentials <- process_aad_response(res)
+
         # v2.0 endpoint doesn't provide an expires_on field, set it here
-        self$credentials$expires_on <- as.character(floor(as.numeric(Sys.time())))
-
-        res <- private$initfunc()
-        creds <- process_aad_response(res)
-
-        self$credentials <- utils::modifyList(self$credentials, creds)
+        if(is.null(self$credentials$expires_on))
+            self$credentials$expires_on <- as.character(decode_jwt(self$credentials$access_token)$payload$exp)
 
         # notify user if interactive auth and no refresh token
         if(self$auth_type %in% c("authorization_code", "device_code") && is.null(self$credentials$refresh_token))
             private$norenew_alert()
 
-        self$cache()
+        if(use_cache)
+            self$cache()
+
         self
     },
 
@@ -108,8 +110,6 @@ public=list(
 
     refresh=function()
     {
-        now <- as.character(floor(as.numeric(Sys.time())))
-
         res <- if(!is.null(self$credentials$refresh_token))
         {
             body <- list(grant_type="refresh_token",
@@ -120,10 +120,10 @@ public=list(
                 refresh_token=self$credentials$refresh_token
             )
 
-            uri <- private$aad_endpoint("token")
+            uri <- private$aad_uri("token")
             httr::POST(uri, body=body, encode="form")
         }
-        else private$initfunc() # reauthenticate if no refresh token
+        else private$initfunc(NULL) # reauthenticate if no refresh token (cannot reuse any supplied creds)
 
         creds <- try(process_aad_response(res))
         if(inherits(creds, "try-error"))
@@ -132,7 +132,9 @@ public=list(
             stop("Unable to refresh token", call.=FALSE)
         }
 
-        self$credentials <- utils::modifyList(list(expires_on=now), creds)
+        self$credentials <- creds
+        if(is.null(self$credentials$expires_on))
+            self$credentials$expires_on <- as.character(decode_jwt(self$credentials$access_token)$payload$exp)
 
         self$cache()
         invisible(self)
@@ -153,6 +155,11 @@ private=list(
         if(!is_azure_token(token))
             stop("Invalid or corrupted cached token", call.=FALSE)
         self$credentials <- token$credentials
+    },
+
+    aad_uri=function(type, ...)
+    {
+        aad_uri(self$aad_host, self$tenant, self$version, type, list(...))
     },
 
     # member function to be filled in by initialize()
@@ -189,15 +196,6 @@ private=list(
         c(body, self$token_args, resource=self$resource)
     },
 
-    aad_endpoint=function(type)
-    {
-        uri <- httr::parse_url(self$aad_host)
-        uri$path <- if(nchar(uri$path) == 0)
-            file.path(self$tenant, "oauth2", type)
-        else file.path(uri$path, type)
-        httr::build_url(uri)
-    },
-
     norenew_alert=function()
     {
         message("Server did not provide a refresh token: please reauthenticate to refresh.")
@@ -232,15 +230,6 @@ private=list(
             self$tenant, body$client_id, self$aad_host, self$version)
 
         c(body, self$token_args, scope=paste(self$scope, collapse=" "))
-    },
-
-    aad_endpoint=function(type)
-    {
-        uri <- httr::parse_url(self$aad_host)
-        uri$path <- if(nchar(uri$path) == 0)
-            file.path(self$tenant, "oauth2/v2.0", type)
-        else file.path(uri$path, type)
-        httr::build_url(uri)
     },
 
     norenew_alert=function()
