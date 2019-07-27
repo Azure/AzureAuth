@@ -10,9 +10,9 @@ vignette: >
 
 Because a Shiny app has separate UI and server components, the interactive authentication flows require some changes. In particular, the authorization step (logging in to Azure) has to be conducted separately from the token acquisition step.
 
-AzureAuth provides the `build_authorization_uri` function to facilitate this separation. You call this function to obtain a URI that you browse to in order to login to Azure. Once you have authenticated, Azure will redirect to a new URI containing the authorization code that Shiny can capture.
+AzureAuth provides the `build_authorization_uri` function to facilitate this separation. You call this function to obtain a URI that you browse to in order to login to Azure. Once you have logged in, Azure will return an authorization code as part of a redirect.
 
-Here is a skeleton Shiny app that demonstrates its use.
+Here is a skeleton Shiny app that demonstrates its use. The UI calls `build_authorization_uri`, and then redirects your browser to that location. When you have logged in, the server captures the authorization code and calls `get_azure_token` to obtain the token.
 
 ```r
 library(AzureAuth)
@@ -59,3 +59,6 @@ server <- function(input, output, session)
 
 shinyApp(ui_func, server)
 ```
+
+Note that this process is only necessary within a web app, and only when using an interactive authentication flow. In a normal R session, or when using the client credentials flow, you should be able to call `get_azure_token` directly.
+
