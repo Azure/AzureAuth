@@ -101,7 +101,7 @@ get_managed_token("myresource")
 
 ### Inside a web app
 
-Using the interactive flows (authorization_code and device_code) from within a Shiny app requires separating the authorization (logging in to Azure) step from the token acquisition step. For this purpose, AzureAuth provides the `build_authorization_uri` and `get_device_creds` functions. You can use these from within your app to carry out the authorization, and then pass the resulting credentials to `get_azure_token` itself.
+Using the interactive flows (authorization_code and device_code) from within a Shiny app requires separating the authorization (logging in to Azure) step from the token acquisition step. For this purpose, AzureAuth provides the `build_authorization_uri` and `get_device_creds` functions. You can use these from within your app to carry out the authorization, and then pass the resulting credentials to `get_azure_token` itself. See the "Authenticating from Shiny" vignette for an example app.
 
 ## Acknowledgements
 
