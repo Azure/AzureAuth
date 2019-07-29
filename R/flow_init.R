@@ -25,8 +25,24 @@
 #'
 #' \dontrun{
 #'
-#' # contacts the server to get details for a device code login
-#' get_device_creds("https://myresource", "mytenant", "app_id")
+#' ## obtaining an authorization code separately to acquiring the token
+#' # first, get the authorization URI
+#' auth_uri <- build_authorization_uri("https://management.azure.com/", "mytenant", "app_id")
+#' # browsing to the URI will log you in and redirect to another URI containing the auth code
+#' browseURL(auth_uri)
+#' # use the code to acquire the token
+#' get_azure_token("https://management.azure.com/", "mytenant", "app_id",
+#'     auth_code="code-from-redirect")
+#'
+#'
+#' ## obtaining device credentials separately to acquiring the token
+#' # first, contact the authorization endpoint to get the user and device codes
+#' creds <- get_device_creds("https://management.azure.com/", "mytenant", "app_id")
+#' # print the login instructions
+#' creds$message
+#' # use the creds to acquire the token
+#' get_azure_token("https://management.azure.com/", "mytenant", "app_id",
+#'     auth_type="device_code", device_creds=creds)
 #'
 #' }
 #' @rdname authorization

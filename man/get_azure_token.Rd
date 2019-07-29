@@ -88,7 +88,7 @@ Use these functions to authenticate with Azure Active Directory (AAD).
 
 The \code{resource} arg should be a single URL or GUID for AAD v1.0. For AAD v2.0, it should be a vector of \emph{scopes}, where each scope consists of a URL or GUID along with a path that designates the type of access requested. If a v2.0 scope doesn't have a path, \code{get_azure_token} will append the \code{/.default} path with a warning. A special scope is \code{offline_access}, which requests a refresh token from AAD along with the access token: without this scope, you will have to reauthenticate if you want to refresh the token.
 
-The \code{auth_code} and \code{device_creds} arguments are intended for use in embedded scenarios, eg when AzureAuth is loaded from within a Shiny web app. They enable the flow authorization step to be separated from the token acquisition step, which is necessary when acquiring a token within a web app. You can generally ignore these arguments when using AzureAuth interactively or as part of an R script.
+The \code{auth_code} and \code{device_creds} arguments are intended for use in embedded scenarios, eg when AzureAuth is loaded from within a Shiny web app. They enable the flow authorization step to be separated from the token acquisition step, which is necessary within an app; you can generally ignore these arguments when using AzureAuth interactively or as part of an R script. See the help for \link{build_authorization_uri} for examples on their use.
 
 \code{token_hash} computes the MD5 hash of its arguments. This is used by AzureAuth to identify tokens for caching purposes. Note that tokens are only cached if you allowed AzureAuth to create a data directory at package startup.
 
@@ -219,26 +219,6 @@ get_azure_token("https://management.azure.com/", "mytenant", "app_id",
 
 # get a token from within a managed service identity (VM, container or service)
 get_managed_token("https://management.azure.com/")
-
-
-## obtaining an authorization code separately to acquiring the token
-# first, get the authorization URI
-auth_uri <- build_authorization_uri("https://management.azure.com/", "mytenant", "app_id")
-# browsing to the URI will log you in and redirect to another URI containing the auth code
-browseURL(auth_uri)
-# use the code to acquire the token
-get_azure_token("https://management.azure.com/", "mytenant", "app_id",
-    auth_code="code-from-redirect")
-
-
-## obtaining device credentials separately to acquiring the token
-# first, contact the authorization endpoint to get the user and device codes
-creds <- get_device_creds("https://management.azure.com/", "mytenant", "app_id")
-# login instructions: go to this site in your browser and enter the code
-creds$message
-# use the creds to acquire the token
-get_azure_token("https://management.azure.com/", "mytenant", "app_id",
-    auth_type="device_code", device_creds=creds)
 
 }
 }
