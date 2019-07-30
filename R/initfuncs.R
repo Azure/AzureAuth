@@ -84,7 +84,12 @@ init_managed <- function(init_args)
     query <- utils::modifyList(self$token_args,
         list(`api-version`=getOption("azure_imds_version"), resource=self$resource))
 
-    httr::GET(uri, httr::add_headers(metadata="true"), query=query)
+    secret <- Sys.getenv("MSI_SECRET")
+    headers <- if(secret == "")
+        httr::add_headers(secret=secret)
+    else httr::add_headers(metadata="true")
+
+    httr::GET(uri, headers, query=query)
 }
 
 
