@@ -1,4 +1,4 @@
-# AzureAuth
+# AzureAuth <a href="https://github.com/Azure/AzureR"><img src="man/figures/logo.png" align="right" /></a>
 
 [![CRAN](https://www.r-pkg.org/badges/version/AzureAuth)](https://cran.r-project.org/package=AzureAuth)
 ![Downloads](https://cranlogs.r-pkg.org/badges/AzureAuth)
