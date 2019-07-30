@@ -5,6 +5,7 @@
 * Make `decode_jwt` a generic, with methods for character strings, `AzureToken` objects and `httr::Token` objects.
 * Add `extract_jwt` generic to get the actual token from within an R object, with methods for character strings, `AzureToken` objects and `httr::Token` objects.
 * Fix bug in checking the expiry time for AAD v2.0 tokens.
+* Extend `get_managed_token` to work from within Azure Functions.
 
 # AzureAuth 1.1.1
 
