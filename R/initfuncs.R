@@ -85,7 +85,7 @@ init_managed <- function(init_args)
         list(`api-version`=getOption("azure_imds_version"), resource=self$resource))
 
     secret <- Sys.getenv("MSI_SECRET")
-    headers <- if(secret == "")
+    headers <- if(secret != "")
         httr::add_headers(secret=secret)
     else httr::add_headers(metadata="true")
 
