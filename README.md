@@ -1,8 +1,8 @@
-# AzureAuth
+# AzureAuth <img src="man/figures/logo.png" align="right" width=150 />
 
 [![CRAN](https://www.r-pkg.org/badges/version/AzureAuth)](https://cran.r-project.org/package=AzureAuth)
 ![Downloads](https://cranlogs.r-pkg.org/badges/AzureAuth)
-[![Travis Build Status](https://travis-ci.org/Azure/AzureAuth.png?branch=master)](https://travis-ci.org/Azure/AzureAuth)
+[![Travis Build Status](https://travis-ci.org/Azure/AzureAuth.svg?branch=master)](https://travis-ci.org/Azure/AzureAuth)
 
 AzureAuth provides [Azure Active Directory](https://docs.microsoft.com/azure/active-directory/develop/) (AAD) authentication functionality for R users of Microsoft's Azure cloud. Use this package to obtain OAuth 2.0 tokens for Azure services including Azure Resource Manager, Azure Storage and others. Both AAD v1.0 and v2.0 are supported.
 
@@ -108,5 +108,5 @@ Using the interactive flows (authorization_code and device_code) from within a S
 The AzureAuth interface is based on the OAuth framework in the [httr](https://github.com/r-lib/httr) package, customised and streamlined for Azure. It is an independent implementation of OAuth, but benefited greatly from the work done by Hadley Wickham and the rest of the httr development team.
 
 ----
-[![cloudyr project logo](https://i.imgur.com/JHS98Y7.png)](https://github.com/cloudyr)
+<p align="center"><a href="https://github.com/Azure/AzureR"><img src="https://github.com/Azure/AzureR/raw/master/images/logo2.png" width=800 /></a></p>
 
