@@ -7,7 +7,6 @@ init_authcode <- function(init_args)
         resource=if(self$version == 1) self$resource else self$scope,
         tenant=self$tenant,
         app=self$client$client_id,
-        password=self$client$client_secret,
         username=self$client$login_hint,
         aad_host=self$aad_host,
         version=self$version

@@ -7,9 +7,11 @@ password <- Sys.getenv("AZ_TEST_PASSWORD")
 native_app <- Sys.getenv("AZ_TEST_NATIVE_APP_ID")
 cert_app <- Sys.getenv("AZ_TEST_CERT_APP_ID")
 cert_file <- Sys.getenv("AZ_TEST_CERT_FILE")
+web_app <- Sys.getenv("AZ_TEST_WEB_APP_ID")
+web_app_pwd <- Sys.getenv("AZ_TEST_WEB_APP_PASSWORD")
 
 if(tenant == "" || app == "" || username == "" || password == "" || native_app == "" ||
-   cert_app == "" || cert_file == "")
+   cert_app == "" || cert_file == "" || web_app == "" || web_app_pwd == "")
     skip("Authentication tests skipped: ARM credentials not set")
 
 aut_hash <- Sys.getenv("AZ_TEST_AUT_HASH2")
@@ -199,4 +201,20 @@ test_that("Standalone auth works",
     tok2 <- get_azure_token(res, tenant, native_app, auth_type="device_code", version=2, device_creds=creds,
         use_cache=FALSE)
     expect_identical(tok2$hash(), dev_hash)
+})
+
+
+test_that("Webapp authentication works",
+{
+    res <- "https://management.azure.com/.default"
+
+    tok <- get_azure_token(res, tenant, web_app, password=web_app_pwd, auth_type="authorization_code", version=2)
+    expect_true(is_azure_token(tok))
+
+    tok2 <- get_azure_token(res, tenant, web_app, password=web_app_pwd, version=2)  # client credentials
+    expect_true(is_azure_token(tok2))
+    expect_identical(tok2$auth_type, "client_credentials")
+
+    # web app expects client secret
+    expect_error(get_azure_token(res, tenant, web_app, version=2))
 })

@@ -55,7 +55,6 @@ build_authorization_uri <- function(resource, tenant, app, password=NULL, userna
         client_id=app,
         response_type="code",
         redirect_uri="http://localhost:1410/",
-        client_secret=password,
         login_hint=username,
         state=paste0(sample(letters, 20, TRUE), collapse="") # random nonce
     )
