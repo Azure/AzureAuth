@@ -12,18 +12,21 @@ select_auth_type <- function(password, username, certificate, auth_type, on_beha
     got_pwd <- !is.null(password)
     got_user <- !is.null(username)
     got_cert <- !is.null(certificate)
+    got_httpuv <- system.file(package="httpuv") != ""
 
     if(got_pwd && got_user && !got_cert)
         "resource_owner"
     else if(!got_pwd && !got_user && !got_cert)
     {
-        if(system.file(package="httpuv") == "")
+        if(!got_httpuv)
         {
             message("httpuv not installed, defaulting to device code authentication")
             "device_code"
         }
         else "authorization_code"
     }
+    else if(!got_pwd && !got_cert && got_user && got_httpuv)
+        "authorization_code"
     else if((got_pwd && !got_user) || got_cert)
     {
         if(is_empty(on_behalf_of))
