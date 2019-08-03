@@ -1,7 +1,6 @@
 #' Standalone OAuth authorization functions
 #'
 #' @param resource,tenant,app,aad_host,version See the corresponding arguments for [get_azure_token].
-#' @param password For `build_authorization_uri`, a client secret to be sent to the authorization endpoint, if the app requires it. Note that this is _not_ your personal account password.
 #' @param username For `build_authorization_uri`, an optional login hint to be sent to the authorization endpoint.
 #' @param ... Named arguments that will be added to the authorization URI as query parameters.
 #'
@@ -47,7 +46,7 @@
 #' }
 #' @rdname authorization
 #' @export
-build_authorization_uri <- function(resource, tenant, app, password=NULL, username=NULL, ...,
+build_authorization_uri <- function(resource, tenant, app, username=NULL, ...,
                                     aad_host="https://login.microsoftonline.com/", version=1)
 {
     version <- normalize_aad_version(version)

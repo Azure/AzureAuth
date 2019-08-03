@@ -5,8 +5,7 @@
 \alias{get_device_creds}
 \title{Standalone OAuth authorization functions}
 \usage{
-build_authorization_uri(resource, tenant, app, password = NULL,
-  username = NULL, ...,
+build_authorization_uri(resource, tenant, app, username = NULL, ...,
   aad_host = "https://login.microsoftonline.com/", version = 1)
 
 get_device_creds(resource, tenant, app,
@@ -14,8 +13,6 @@ get_device_creds(resource, tenant, app,
 }
 \arguments{
 \item{resource, tenant, app, aad_host, version}{See the corresponding arguments for \link{get_azure_token}.}
-
-\item{password}{For \code{build_authorization_uri}, a client secret to be sent to the authorization endpoint, if the app requires it. Note that this is \emph{not} your personal account password.}
 
 \item{username}{For \code{build_authorization_uri}, an optional login hint to be sent to the authorization endpoint.}
 
