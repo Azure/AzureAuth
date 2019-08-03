@@ -27,6 +27,8 @@ Suggests:
     knitr,
     testthat,
     httpuv,
-    shiny
+    shiny,
+    AzureRMR,
+    AzureGraph
 Roxygen: list(markdown=TRUE)
 RoxygenNote: 6.1.1
