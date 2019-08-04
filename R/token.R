@@ -54,6 +54,11 @@
 #' - A certificate object from the AzureKeyVault package, representing a cert stored in the Key Vault service.
 #' - A call to the `cert_assertion()` function to customise details of the requested token, eg the duration, expiry date, custom claims, etc. See the examples below.
 #'
+#' @section OpenID Connect:
+#' `get_azure_token` can be used to obtain ID tokens along with regular OAuth access tokens, when using an interactive authentication flow (authorization_code or device_code). The behaviour depends on the AAD version:
+#' - AAD v1.0 will return an ID token as well as the access token by default. You don't have to do anything extra.
+#' - Unlike AAD v1.0, AAD v2.0 does not return an ID token by default. To get a token, specify `openid` as a scope.
+#'
 #' @section Caching:
 #' AzureAuth differs from httr in its handling of token caching in a number of ways. First, caching is based on all the inputs to `get_azure_token` as listed above. Second, it defines its own directory for cached tokens, using the rappdirs package. On recent Windows versions, this will usually be in the location `C:\\Users\\(username)\\AppData\\Local\\AzureR`. On Linux, it will be in `~/.config/AzureR`, and on MacOS, it will be in `~/Library/Application Support/AzureR`. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).
 #'
@@ -154,7 +159,17 @@
 #'     certificate=cert_assertion("mycert.pem", duration=2*3600))
 #'
 #'
-#' # get a token from within a managed service identity (VM, container or service)
+#' # ID token with AAD v1.0
+#' # if you only want an ID token, set the resource to blank ("")
+#' tok <- get_azure_token("", "mytenant", "app_id")
+#' tok$credentials$id_token
+#'
+#' # ID token with AAD v2.0
+#' tok2 <- get_azure_token(c("openid", "offline_access"), "mytenant", "app_id")
+#' tok2$credentials$id_token
+#'
+#'
+#' # get a token from within a managed identity (VM, container or service)
 #' get_managed_token("https://management.azure.com/")
 #'
 #' }
