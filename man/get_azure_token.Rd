@@ -232,7 +232,7 @@ tok <- get_azure_token("", "mytenant", "app_id")
 tok$credentials$id_token
 
 # ID token with AAD v2.0
-tok2 <- get_azure_token(c("openid", "offline_access"), "mytenant", "app_id")
+tok2 <- get_azure_token(c("openid", "offline_access"), "mytenant", "app_id", version=2)
 tok2$credentials$id_token
 
 
