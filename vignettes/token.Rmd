@@ -112,6 +112,24 @@ get_azure_token("myresource", "mytenant", "app_id",
                 password="client_secret", on_behalf_of=token)
 ```
 
+## OpenID Connect
+
+You can also use `get_azure_token` to obtain ID tokens, in addition to access tokens.
+
+With AAD v1.0, using an interactive authentication flow (authorization_code or device_code) will return an ID token by default -- you don't have to do anything extra. The token will be in the `credentials$id_token` component of the returned object.
+
+AAD v2.0 does not return an ID token by default, but you can get one by specifying `openid` as a scope. Again, this applies only to interactive authentication.
+
+```r
+# ID token with AAD v1.0
+# if you only want an ID token, set the resource to blank ("")
+tok <- get_azure_token("", "mytenant", "app_id")
+tok$credentials$id_token
+
+# ID token with AAD v2.0
+tok2 <- get_azure_token(c("openid", "offline_access"), "mytenant", "app_id", version=2)
+tok2$credentials$id_token
+```
 
 ## Caching
 
