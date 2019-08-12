@@ -18,7 +18,7 @@
 #' [JWT Wikipedia entry](https://en.wikipedia.org/wiki/JSON_Web_Token)
 #' @rdname jwt
 #' @export
-decode_jwt <- function(token)
+decode_jwt <- function(token, ...)
 {
     UseMethod("decode_jwt")
 }
@@ -26,23 +26,25 @@ decode_jwt <- function(token)
 
 #' @rdname jwt
 #' @export
-decode_jwt.AzureToken <- function(token)
+decode_jwt.AzureToken <- function(token, type=c("access", "id"), ...)
 {
-    decode_jwt(token$credentials$access_token)
+    type <- match.arg(type)
+    decode_jwt(token$credentials[[paste0(type, "_token")]])
 }
 
 
 #' @rdname jwt
 #' @export
-decode_jwt.Token <- function(token)
+decode_jwt.Token <- function(token, type=c("access", "id"), ...)
 {
-    decode_jwt(token$credentials$access_token)
+    type <- match.arg(type)
+    decode_jwt(token$credentials[[paste0(type, "_token")]])
 }
 
 
 #' @rdname jwt
 #' @export
-decode_jwt.character <- function(token)
+decode_jwt.character <- function(token, ...)
 {
     token <- as.list(strsplit(token, "\\.")[[1]])
     token[1:2] <- lapply(token[1:2], function(x)
@@ -58,7 +60,7 @@ decode_jwt.character <- function(token)
 
 #' @rdname jwt
 #' @export
-extract_jwt <- function(token)
+extract_jwt <- function(token, ...)
 {
     UseMethod("extract_jwt")
 }
@@ -66,23 +68,25 @@ extract_jwt <- function(token)
 
 #' @rdname jwt
 #' @export
-extract_jwt.AzureToken <- function(token)
+extract_jwt.AzureToken <- function(token, type=c("access", "id"), ...)
 {
-    token$credentials$access_token
+    type <- match.arg(type)
+    token$credentials[[paste0(type, "_token")]]
 }
 
 
 #' @rdname jwt
 #' @export
-extract_jwt.Token <- function(token)
+extract_jwt.Token <- function(token, type=c("access", "id"), ...)
 {
-    token$credentials$access_token
+    type <- match.arg(type)
+    token$credentials[[paste0(type, "_token")]]
 }
 
 
 #' @rdname jwt
 #' @export
-extract_jwt.character <- function(token)
+extract_jwt.character <- function(token, ...)
 {
     token
 }
