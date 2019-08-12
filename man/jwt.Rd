@@ -11,24 +11,28 @@
 \alias{extract_jwt.character}
 \title{Get raw access token (which is a JWT object)}
 \usage{
-decode_jwt(token)
+decode_jwt(token, ...)
 
-\method{decode_jwt}{AzureToken}(token)
+\method{decode_jwt}{AzureToken}(token, type = c("access", "id"), ...)
 
-\method{decode_jwt}{Token}(token)
+\method{decode_jwt}{Token}(token, type = c("access", "id"), ...)
 
-\method{decode_jwt}{character}(token)
+\method{decode_jwt}{character}(token, ...)
 
-extract_jwt(token)
+extract_jwt(token, ...)
 
-\method{extract_jwt}{AzureToken}(token)
+\method{extract_jwt}{AzureToken}(token, type = c("access", "id"), ...)
 
-\method{extract_jwt}{Token}(token)
+\method{extract_jwt}{Token}(token, type = c("access", "id"), ...)
 
-\method{extract_jwt}{character}(token)
+\method{extract_jwt}{character}(token, ...)
 }
 \arguments{
 \item{token}{A token object. This can be an object of class \code{AzureToken}, of class \code{httr::Token}, or a character string containing the encoded token.}
+
+\item{...}{Other arguments passed to methods.}
+
+\item{type}{For the \code{AzureToken} and \code{httr::Token} methods, the token to decode/retrieve: either the access token or ID token.}
 }
 \value{
 For \code{extract_jwt}, the character string containing the encoded token, suitable for including in a HTTP query. For \code{decode_jwt}, a list containing up to 3 components: \code{header}, \code{payload} and \code{signature}.

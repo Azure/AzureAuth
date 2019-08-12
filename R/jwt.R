@@ -1,6 +1,8 @@
 #' Get raw access token (which is a JWT object)
 #'
 #' @param token A token object. This can be an object of class `AzureToken`, of class `httr::Token`, or a character string containing the encoded token.
+#' @param type For the `AzureToken` and `httr::Token` methods, the token to decode/retrieve: either the access token or ID token.
+#' @param ... Other arguments passed to methods.
 #'
 #' @details
 #' An OAuth token is a _JSON Web Token_, which is a set of base64URL-encoded JSON objects containing the token credentials along with an optional (opaque) verification signature. `decode_jwt` decodes the credentials into an R object so they can be viewed. `extract_jwt` extracts the credentials from an R object of class `AzureToken` or `httr::Token`.
