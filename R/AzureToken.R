@@ -18,6 +18,9 @@ AzureToken <- R6::R6Class("AzureToken",
 
 public=list(
 
+    version=NULL,
+    resource=NULL,
+    scope=NULL,
     aad_host=NULL,
     tenant=NULL,
     auth_type=NULL,
@@ -26,14 +29,15 @@ public=list(
     token_args=NULL,
     credentials=list(), # returned token details from host
 
-    initialize=function(tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
-                        aad_host="https://login.microsoftonline.com/",
+    initialize=function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL,
+                        aad_host="https://login.microsoftonline.com/", version=1,
                         authorize_args=list(), token_args=list(),
                         use_cache=TRUE, on_behalf_of=NULL, auth_code=NULL, device_creds=NULL)
     {
-        # fail if this constructor is called directly
-        if(is.null(self$version))
-            stop("Do not call this constructor directly; use get_azure_token() instead")
+        self$version <- normalize_aad_version(version)
+        if(self$version == 1)
+            self$resource <- resource
+        else self$scope <- sapply(resource, verify_v2_scope, USE.NAMES=FALSE)
 
         self$aad_host <- aad_host
         self$tenant <- normalize_tenant(tenant)
@@ -44,17 +48,6 @@ public=list(
         self$authorize_args <- authorize_args
         self$token_args <- token_args
 
-        # set the "real" init method based on auth type
-        private$initfunc <- switch(self$auth_type,
-            authorization_code=init_authcode,
-            device_code=init_devcode,
-            client_credentials=init_clientcred,
-            on_behalf_of=init_clientcred,
-            resource_owner=init_resowner,
-            managed=init_managed
-        )
-        environment(private$initfunc) <- parent.env(environment())
-
         tokenfile <- file.path(AzureR_dir(), self$hash())
         if(use_cache && file.exists(tokenfile))
         {
@@ -62,22 +55,6 @@ public=list(
             private$load_from_cache(tokenfile)
             return(self$refresh())
         }
-
-        res <- private$initfunc(list(auth_code=auth_code, device_creds=device_creds))
-        self$credentials <- process_aad_response(res)
-
-        # v2.0 endpoint doesn't provide an expires_on field, set it here
-        if(is.null(self$credentials$expires_on))
-            self$credentials$expires_on <- as.character(decode_jwt(self$credentials$access_token)$payload$exp)
-
-        # notify user if interactive auth and no refresh token
-        if(self$auth_type %in% c("authorization_code", "device_code") && is.null(self$credentials$refresh_token))
-            private$norenew_alert()
-
-        if(use_cache)
-            self$cache()
-
-        self
     },
 
     cache=function()
@@ -162,8 +139,10 @@ private=list(
         aad_uri(self$aad_host, self$tenant, self$version, type, list(...))
     },
 
-    # member function to be filled in by initialize()
-    initfunc=NULL
+    initfunc=function(init_args)
+    {
+        stop("Do not call this constructor directly; use get_azure_token() instead")
+    }
 ))
 
 

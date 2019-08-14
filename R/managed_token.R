@@ -2,8 +2,6 @@
 #' @export
 get_managed_token <- function(resource, token_args=list(), use_cache=TRUE)
 {
-    auth_type <- "managed"
     aad_host <- Sys.getenv("MSI_ENDPOINT", "http://169.254.169.254/metadata/identity/oauth2")
-    AzureTokenV1$new(resource, tenant="common", app=NULL, auth_type=auth_type, aad_host=aad_host, token_args=token_args,
-                     use_cache=use_cache)
+    AzureTokenManaged$new(resource, token_args=token_args, use_cache=use_cache)
 }

@@ -179,11 +179,61 @@ get_azure_token <- function(resource, tenant, app, password=NULL, username=NULL,
                             authorize_args=list(), token_args=list(),
                             use_cache=TRUE, on_behalf_of=NULL, auth_code=NULL, device_creds=NULL)
 {
-    if(normalize_aad_version(version) == 1)
-        AzureTokenV1$new(resource, tenant, app, password, username, certificate, auth_type, aad_host,
-                         authorize_args, token_args, use_cache, on_behalf_of, auth_code, device_creds)
-    else AzureTokenV2$new(resource, tenant, app, password, username, certificate, auth_type, aad_host,
-                          authorize_args, token_args, use_cache, on_behalf_of, auth_code, device_creds)
+    auth_type <- select_auth_type(password, username, certificate, auth_type, on_behalf_of)
+
+    switch(auth_type,
+        authorization_code=AzureTokenAuthCode$new(
+            resource=resource,
+            tenant=tenant,
+            app=app,
+            password=password,
+            username=username,
+            certificate=certificate,
+            aad_host=aad_host,
+            version=version,
+            authorize_args=authorize_args,
+            token_args=token_args,
+            use_cache=use_cache,
+            auth_code=auth_code
+        ),
+        device_code=AzureTokenDeviceCode$new(
+            resource=resource,
+            tenant=tenant,
+            app=app,
+            password=password,
+            username=username,
+            certificate=certificate,
+            aad_host=aad_host,
+            version=version,
+            token_args=token_args,
+            use_cache=use_cache,
+            device_creds=device_creds
+        ),
+        client_credentials=, on_behalf_of=AzureTokenClientCreds$new(
+            resource=resource,
+            tenant=tenant,
+            app=app,
+            password=password,
+            certificate=certificate,
+            aad_host=aad_host,
+            version=version,
+            token_args=token_args,
+            use_cache=use_cache,
+            device_creds=device_creds
+        ),
+        resource_owner=AzureTokenResowner$new(
+            resource=resource,
+            tenant=tenant,
+            app=app,
+            password=password,
+            username=username,
+            aad_host=aad_host,
+            version=version,
+            token_args=token_args,
+            use_cache=use_cache
+        ),
+        stop("Unknown authentication method ", auth_type, call.=FALSE)
+    )
 }
 
 
