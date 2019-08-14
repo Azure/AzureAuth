@@ -157,6 +157,8 @@ public=list(
 
     initialize=function(resource, ...)
     {
+        if(length(resource) != 1)
+            stop("Resource for Azure Active Directory v1.0 token must be a single string", call.=FALSE)
         self$resource <- resource
         super$initialize(...)
     }

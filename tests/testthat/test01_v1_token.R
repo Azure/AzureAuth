@@ -75,6 +75,9 @@ test_that("v1.0 simple authentication works",
     expect_true(is_azure_token(dev_tok2))
     expect_identical(dev_tok2$hash(), dev_hash)
 
+    # resource must be a single string
+    expect_error(get_azure_token(c("res", "openid"), tenant, native_app))
+
     expect_null(delete_azure_token(res, tenant, native_app, auth_type="authorization_code", confirm=FALSE))
     expect_null(delete_azure_token(res, tenant, app, password=password, confirm=FALSE))
     expect_null(delete_azure_token(res, tenant, native_app, auth_type="device_code", confirm=FALSE))
