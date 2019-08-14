@@ -31,6 +31,8 @@ if(!interactive())
 
 test_that("JWT functions work",
 {
+    suppressWarnings(file.remove(dir(AzureR_dir(), full.names=TRUE)))
+
     res <- "https://management.azure.com/"
     tok <- get_azure_token(res, tenant, native_app)
 
@@ -45,6 +47,7 @@ test_that("JWT functions work",
 
     decoded_id <- decode_jwt(tok, "id")
     expect_type(decoded_id, "list")
+    # v1.0 ID token from token endpoint is unsigned
     expect_identical(names(decoded_id), c("header", "payload"))
 
     extracted_id <- extract_jwt(tok, "id")
