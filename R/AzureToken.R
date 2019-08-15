@@ -55,6 +55,8 @@ public=list(
             private$load_from_cache(tokenfile)
             return(self$refresh())
         }
+
+        private$initfunc(init_args)
     },
 
     cache=function()

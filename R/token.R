@@ -181,59 +181,35 @@ get_azure_token <- function(resource, tenant, app, password=NULL, username=NULL,
 {
     auth_type <- select_auth_type(password, username, certificate, auth_type, on_behalf_of)
 
-    switch(auth_type,
-        authorization_code=AzureTokenAuthCode$new(
-            resource=resource,
-            tenant=tenant,
-            app=app,
-            password=password,
-            username=username,
-            certificate=certificate,
-            aad_host=aad_host,
-            version=version,
-            authorize_args=authorize_args,
-            token_args=token_args,
-            use_cache=use_cache,
-            auth_code=auth_code
-        ),
-        device_code=AzureTokenDeviceCode$new(
-            resource=resource,
-            tenant=tenant,
-            app=app,
-            password=password,
-            username=username,
-            certificate=certificate,
-            aad_host=aad_host,
-            version=version,
-            token_args=token_args,
-            use_cache=use_cache,
-            device_creds=device_creds
-        ),
-        client_credentials=, on_behalf_of=AzureTokenClientCreds$new(
-            resource=resource,
-            tenant=tenant,
-            app=app,
-            password=password,
-            certificate=certificate,
-            aad_host=aad_host,
-            version=version,
-            token_args=token_args,
-            use_cache=use_cache,
-            device_creds=device_creds
-        ),
-        resource_owner=AzureTokenResowner$new(
-            resource=resource,
-            tenant=tenant,
-            app=app,
-            password=password,
-            username=username,
-            aad_host=aad_host,
-            version=version,
-            token_args=token_args,
-            use_cache=use_cache
-        ),
-        stop("Unknown authentication method ", auth_type, call.=FALSE)
+    main_args <- list(
+        resource=resource,
+        tenant=tenant,
+        app=app,
+        password=password,
+        username=username,
+        certificate=certificate,
+        aad_host=aad_host,
+        version=version,
+        token_args=token_args,
+        use_cache=use_cache
     )
+    init_args <- c(main_args, switch(auth_type,
+        authorization_code=
+            list(authorize_args=authorize_args, auth_code=auth_code),
+        device_code=
+            list(device_creds=device_creds),
+        client_creds=, on_behalf_of=, resource_owner=
+            NULL,
+        stop("Unknown authentication method ", auth_type, call.=FALSE)
+    ))
+    generator <- switch(auth_type,
+        authorization_code=AzureTokenAuthCode,
+        device_code=AzureTokenDeviceCode,
+        client_creds=, on_behalf_of=AzureTokenClientCreds,
+        resource_owner=AzureTokenResowner,
+        stop("Unknown authentication method ", auth_type, call.=FALSE))
+
+    do.call(generator$new, init_args)
 }
 
 

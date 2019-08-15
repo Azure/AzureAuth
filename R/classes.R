@@ -2,11 +2,9 @@ AzureTokenAuthCode <- R6::R6Class("AzureTokenAuthCode", inherit=AzureToken,
 
 public=list(
 
-    initialize=function(..., auth_code=NULL)
+    initialize=function(..., authorize_args=list(), auth_code=NULL)
     {
         super$initialize(...)
-
-        private$initfunc(auth_code)
 
         # v2.0 endpoint doesn't provide an expires_on field, set it here
         if(is.null(self$credentials$expires_on))
