@@ -2,13 +2,11 @@ variables:
 - group: GH
 - name: R_LIBS_USER
   value: '$(Agent.BuildDirectory)/R/library'
-- name: containerImage
-  value: 'rocker/rstudio:latest'
 
 pool:
   vmImage: 'ubuntu-latest'
 
-container: $[variables['containerImage']]
+container: $[variables['rockerImage']]
 
 steps:
 - bash: |
@@ -18,14 +16,14 @@ steps:
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
 - bash: |
-    echo 'options(repos = "https://cloud.r-project.org")' > ~/.Rprofile
+    echo "options(repos = '$(cranRepo)')" > ~/.Rprofile
     echo ".libPaths(c('$R_LIBS_USER', .libPaths()))" >> ~/.Rprofile
-    mkdir -p $(R_LIBS_USER)
+    mkdir -p $R_LIBS_USER
   displayName: 'Setup R library directory'
 
 - task: CacheBeta@0
   inputs:
-    key: ./DESCRIPTION | "$(containerImage)"
+    key: ./DESCRIPTION | "$(rockerImage)" | "$(cranRepo)"
     path: $(R_LIBS_USER)
   displayName: 'Caching packages'
 
@@ -54,4 +52,3 @@ steps:
     git push
   displayName: 'Update Cloudyr drat'
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-  
