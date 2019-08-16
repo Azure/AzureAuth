@@ -2,19 +2,26 @@ AzureTokenAuthCode <- R6::R6Class("AzureTokenAuthCode", inherit=AzureToken,
 
 public=list(
 
-    initialize=function(..., authorize_args=list(), auth_code=NULL)
-    {
-        super$initialize(...)
+    authorize_args=NULL,
 
-        # v2.0 endpoint doesn't provide an expires_on field, set it here
-        if(is.null(self$credentials$expires_on))
-            self$credentials$expires_on <- as.character(decode_jwt(self$credentials$access_token)$payload$exp)
+    initialize=function(common_args, authorize_args, auth_code)
+    {
+        self$auth_type <- "authorization_code"
+        self$authorize_args <- authorize_args
+
+        do.call(super$initialize, common_args)
+        if(is.null(self$credentials))
+        {
+            res <- private$initfunc(auth_code)
+            self$credentials <- process_aad_response(res)
+        }
+        private$set_expiry_time()
 
         # notify user if no refresh token
         if(is.null(self$credentials$refresh_token))
-            private$norenew_alert()
+            norenew_alert(self$version)
 
-        if(use_cache)
+        if(private$use_cache)
             self$cache()
 
         self
@@ -23,7 +30,7 @@ public=list(
 
 private=list(
 
-    initfunc=function(init_args)
+    initfunc=function(code=NULL)
     {
         stopifnot(is.list(self$token_args))
         stopifnot(is.list(self$authorize_args))
@@ -40,7 +47,6 @@ private=list(
         auth_uri <- do.call(build_authorization_uri, opts)
         redirect <- httr::parse_url(auth_uri)$query$redirect_uri
 
-        code <- init_args$auth_code
         if(is.null(code))
         {
             if(!requireNamespace("httpuv", quietly=TRUE))
@@ -53,8 +59,7 @@ private=list(
         access_uri <- private$aad_uri("token")
         body <- c(self$client, code=code, redirect_uri=redirect, self$token_args)
 
-        res <- httr::POST(access_uri, body=body, encode="form")
-        self$credentials <- process_aad_response(res)
+        httr::POST(access_uri, body=body, encode="form")
     }
 ))
 
@@ -82,8 +87,7 @@ private=list(
         access_uri <- private$aad_uri("token")
         body <- c(self$client, code=creds$device_code)
 
-        res <- poll_for_token(access_uri, body, creds$interval, creds$expires_in)
-        self$credentials <- process_aad_response(res)
+        poll_for_token(access_uri, body, creds$interval, creds$expires_in)
     }
 ))
 
@@ -97,8 +101,7 @@ private=list(
         uri <- private$aad_uri("token")
         body <- private$build_access_body()
 
-        res <- httr::POST(uri, body=body, encode="form")
-        self$credentials <- process_aad_response(res)
+        httr::POST(uri, body=body, encode="form")
     }
 ))
 
@@ -112,8 +115,7 @@ private=list(
         uri <- private$aad_uri("token")
         body <- private$build_access_body()
 
-        res <- httr::POST(uri, body=body, encode="form")
-        self$credentials <- process_aad_response(res)
+        httr::POST(uri, body=body, encode="form")
     }
 ))
 
@@ -134,7 +136,15 @@ private=list(
             httr::add_headers(secret=secret)
         else httr::add_headers(metadata="true")
 
-        res <- httr::GET(uri, headers, query=query)
-        self$credentials <- process_aad_response(res)
+        httr::GET(uri, headers, query=query)
     }
 ))
+
+
+norenew_alert <- function(version)
+{
+    if(version == 1)
+        message("Server did not provide a refresh token: please reauthenticate to refresh.")
+    else message("Server did not provide a refresh token: you will have to reauthenticate to refresh.\n",
+                "Add the 'offline_access' scope to obtain a refresh token.")
+}

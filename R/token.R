@@ -5,7 +5,7 @@
 #' @param resource For AAD v1.0, the URL of your resource host, or a GUID. For AAD v2.0, a character vector of scopes, each consisting of a URL or GUID along with a path designating the access scope. See 'Details' below.
 #' @param tenant Your tenant. This can be a name ("myaadtenant"), a fully qualified domain name ("myaadtenant.onmicrosoft.com" or "mycompanyname.com"), or a GUID.
 #' @param app The client/app ID to use to authenticate with.
-#' @param password The password, either for the app, or your username if supplied. See 'Details' below.
+#' @param password For most authentication flows, this is the password for the _app_ where needed, also known as the client secret. For the resource owner grant, this is your personal account password. See 'Details' below.
 #' @param username Your AAD username, if using the resource owner grant. See 'Details' below.
 #' @param certificate A file containing the certificate for authenticating with, an Azure Key Vault certificate object, or a call to the `cert_assertion` function to build a client assertion with a certificate. See 'Certificate authentication' below.
 #' @param auth_type The authentication type. See 'Details' below.
@@ -181,7 +181,7 @@ get_azure_token <- function(resource, tenant, app, password=NULL, username=NULL,
 {
     auth_type <- select_auth_type(password, username, certificate, auth_type, on_behalf_of)
 
-    main_args <- list(
+    common_args <- list(
         resource=resource,
         tenant=tenant,
         app=app,
@@ -193,23 +193,19 @@ get_azure_token <- function(resource, tenant, app, password=NULL, username=NULL,
         token_args=token_args,
         use_cache=use_cache
     )
-    init_args <- c(main_args, switch(auth_type,
-        authorization_code=
-            list(authorize_args=authorize_args, auth_code=auth_code),
-        device_code=
-            list(device_creds=device_creds),
-        client_creds=, on_behalf_of=, resource_owner=
-            NULL,
-        stop("Unknown authentication method ", auth_type, call.=FALSE)
-    ))
-    generator <- switch(auth_type,
-        authorization_code=AzureTokenAuthCode,
-        device_code=AzureTokenDeviceCode,
-        client_creds=, on_behalf_of=AzureTokenClientCreds,
-        resource_owner=AzureTokenResowner,
-        stop("Unknown authentication method ", auth_type, call.=FALSE))
 
-    do.call(generator$new, init_args)
+    switch(auth_type,
+        authorization_code=
+            AzureTokenAuthCode$new(common_args, authorize_args, auth_code),
+        device_code=
+            AzureTokenDeviceCode$new(common_args, device_creds),
+        client_creds=
+            AzureTokenClientCreds$new(common_args),
+        on_behalf_of=
+            AzureTokenClientCreds$new(common_args, on_behalf_of),
+        resource_owner=
+            AzureTokenResowner$new(common_args),
+        stop("Unknown authentication method ", auth_type, call.=FALSE))
 }
 
 
