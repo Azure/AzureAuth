@@ -125,8 +125,8 @@ OAuth tokens can be authenticated via an SSL/TLS certificate, which is considere
 
 \code{get_azure_token} can be used to obtain ID tokens along with regular OAuth access tokens, when using an interactive authentication flow (authorization_code or device_code). The behaviour depends on the AAD version:
 \itemize{
-\item AAD v1.0 will return an ID token as well as the access token by default. You don't have to do anything extra.
-\item Unlike AAD v1.0, AAD v2.0 does not return an ID token by default. To get a token, specify \code{openid} as a scope.
+\item AAD v1.0 will return an ID token as well as the access token by default; you don't have to do anything extra. However, AAD v1.0 will not \emph{refresh} the ID token when it expires; you must reauthenticate to get a new one. To ensure you don't pull the cached version of the credentials, specify \code{use_cache=FALSE} in the calls to \code{get_azure_token}.
+\item Unlike AAD v1.0, AAD v2.0 does not return an ID token by default. To get a token, specify \code{openid} as a scope. On the other hand it \emph{does} refresh the ID token, so bypassing the cache is not needed.
 }
 }
 
@@ -228,7 +228,7 @@ get_azure_token("https://management.azure.com/", "mytenant", "app_id",
 
 # ID token with AAD v1.0
 # if you only want an ID token, set the resource to blank ("")
-tok <- get_azure_token("", "mytenant", "app_id")
+tok <- get_azure_token("", "mytenant", "app_id", use_cache=FALSE)
 tok$credentials$id_token
 
 # ID token with AAD v2.0

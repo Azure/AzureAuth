@@ -56,8 +56,8 @@
 #'
 #' @section OpenID Connect:
 #' `get_azure_token` can be used to obtain ID tokens along with regular OAuth access tokens, when using an interactive authentication flow (authorization_code or device_code). The behaviour depends on the AAD version:
-#' - AAD v1.0 will return an ID token as well as the access token by default. You don't have to do anything extra.
-#' - Unlike AAD v1.0, AAD v2.0 does not return an ID token by default. To get a token, specify `openid` as a scope.
+#' - AAD v1.0 will return an ID token as well as the access token by default; you don't have to do anything extra. However, AAD v1.0 will not _refresh_ the ID token when it expires; you must reauthenticate to get a new one. To ensure you don't pull the cached version of the credentials, specify `use_cache=FALSE` in the calls to `get_azure_token`.
+#' - Unlike AAD v1.0, AAD v2.0 does not return an ID token by default. To get a token, specify `openid` as a scope. On the other hand it _does_ refresh the ID token, so bypassing the cache is not needed.
 #'
 #' @section Caching:
 #' AzureAuth differs from httr in its handling of token caching in a number of ways. First, caching is based on all the inputs to `get_azure_token` as listed above. Second, it defines its own directory for cached tokens, using the rappdirs package. On recent Windows versions, this will usually be in the location `C:\\Users\\(username)\\AppData\\Local\\AzureR`. On Linux, it will be in `~/.config/AzureR`, and on MacOS, it will be in `~/Library/Application Support/AzureR`. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).
@@ -161,7 +161,7 @@
 #'
 #' # ID token with AAD v1.0
 #' # if you only want an ID token, set the resource to blank ("")
-#' tok <- get_azure_token("", "mytenant", "app_id")
+#' tok <- get_azure_token("", "mytenant", "app_id", use_cache=FALSE)
 #' tok$credentials$id_token
 #'
 #' # ID token with AAD v2.0
