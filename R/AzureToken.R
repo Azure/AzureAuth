@@ -49,6 +49,7 @@ public=list(
         self$tenant <- normalize_tenant(tenant)
         self$client <- aad_request_credentials(app, password, username, certificate, self$auth_type, on_behalf_of)
         self$token_args <- token_args
+        private$use_cache <- use_cache
 
         private$use_cache <- use_cache
         if(use_cache)
