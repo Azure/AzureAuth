@@ -43,6 +43,7 @@ public=list(
 
         self$authorize_args <- authorize_args
         self$token_args <- token_args
+        private$use_cache <- use_cache
 
         # set the "real" init method based on auth type
         private$initfunc <- switch(self$auth_type,
@@ -136,7 +137,8 @@ public=list(
         if(is.null(self$credentials$expires_on))
             self$credentials$expires_on <- as.character(decode_jwt(self$credentials$access_token)$payload$exp)
 
-        self$cache()
+        if(private$use_cache)
+            self$cache()
         invisible(self)
     },
 
@@ -148,6 +150,8 @@ public=list(
 ),
 
 private=list(
+
+    use_cache=NULL,
 
     load_from_cache=function(file)
     {
