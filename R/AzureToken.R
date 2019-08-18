@@ -31,7 +31,7 @@ public=list(
     initialize=function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL,
                         aad_host="https://login.microsoftonline.com/", version=1,
                         authorize_args=list(), token_args=list(),
-                        use_cache=TRUE, on_behalf_of=NULL, auth_code=NULL, device_creds=NULL)
+                        use_cache=TRUE, on_behalf_of=NULL, auth_info=NULL)
     {
         if(is.null(self$auth_type))
             stop("Do not call this constructor directly; use get_azure_token() instead")
@@ -47,13 +47,21 @@ public=list(
 
         self$aad_host <- aad_host
         self$tenant <- normalize_tenant(tenant)
-        self$client <- aad_request_credentials(app, password, username, certificate, self$auth_type, on_behalf_of)
         self$token_args <- token_args
         private$use_cache <- use_cache
+
+        private$set_request_credentials(app=app, password=password, username=username, certificate=certificate)
 
         private$use_cache <- use_cache
         if(use_cache)
             private$load_cached_credentials()
+
+        if(is.null(self$credentials))
+        {
+            res <- private$initfunc(auth_info)
+            self$credentials <- process_aad_response(res)
+        }
+        private$set_expiry_time()
     },
 
     cache=function()
@@ -167,6 +175,60 @@ private=list(
             self$tenant, body$client_id, self$aad_host, self$version)
 
         c(body, self$token_args, scope=paste(self$scope, collapse=" "))
+    },
+
+    set_request_credentials=function(app, password, username, certificate, auth_type, on_behalf_of)
+    {
+        # only set the credentials once
+        if(!is.null(self$client))
+            return()
+
+        object <- if(auth_type == "on_behalf_of")
+            list(client_id=app, grant_type="urn:ietf:params:oauth:grant-type:jwt-bearer")
+        else list(client_id=app, grant_type=auth_type)
+
+        if(auth_type == "resource_owner")
+        {
+            if(is.null(username) && is.null(password))
+                stop("Must provide a username and password for resource_owner grant", call.=FALSE)
+            object$grant_type <- "password"
+            object$username <- username
+            object$password <- password
+        }
+        else if(auth_type %in% c("client_credentials", "on_behalf_of"))
+        {
+            if(!is.null(password))
+                object$client_secret <- password
+            else if(!is.null(certificate))
+            {
+                object$client_assertion_type <- "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+                object$client_assertion <- certificate  # not actual assertion: will be replaced later
+            }
+            else stop("Must provide either a client secret or certificate for client_credentials or on_behalf_of grant",
+                      call.=FALSE)
+
+            if(auth_type == "on_behalf_of")
+            {
+                if(is_empty(on_behalf_of))
+                    stop("Must provide an Azure token for on_behalf_of grant", call.=FALSE)
+
+                object$requested_token_use <- "on_behalf_of"
+                object$assertion <- if(is_azure_token(on_behalf_of))
+                    on_behalf_of$credentials$access_token
+                else as.character(on_behalf_of)
+            }
+        }
+        else if(auth_type == "authorization_code")
+        {
+            if(!is.null(password) && !is.null(username))
+                stop("Cannot provide both a username and secret with authorization_code method", call.=FALSE)
+            if(!is.null(username))
+                object$login_hint <- username
+            if(!is.null(password))
+                object$client_secret <- password
+        }
+
+        self$client <- object
     }
 ))
 

@@ -8,14 +8,7 @@ public=list(
     {
         self$auth_type <- "authorization_code"
         self$authorize_args <- authorize_args
-
-        do.call(super$initialize, common_args)
-        if(is.null(self$credentials))
-        {
-            res <- private$initfunc(auth_code)
-            self$credentials <- process_aad_response(res)
-        }
-        private$set_expiry_time()
+        do.call(super$initialize, c(common_args, auth_info=auth_code))
 
         # notify user if no refresh token
         if(is.null(self$credentials$refresh_token))
@@ -60,17 +53,48 @@ private=list(
         body <- c(self$client, code=code, redirect_uri=redirect, self$token_args)
 
         httr::POST(access_uri, body=body, encode="form")
+    },
+
+    set_request_credentials=function(password, username, ...)
+    {
+        object <- list(client_id=app, grant_type=auth_type)
+
+        if(!is.null(password) && !is.null(username))
+            stop("Cannot provide both a username and secret with authorization_code method", call.=FALSE)
+        if(!is.null(username))
+            object$login_hint <- username
+        if(!is.null(password))
+            object$client_secret <- password
+
+        self$client <- object
     }
 ))
 
 
 AzureTokenDeviceCode <- R6::R6Class("AzureTokenDeviceCode", inherit=AzureToken,
 
+public=list(
+
+    initialize=function(common_args, device_creds)
+    {
+        self$auth_type <- "device_code"
+        do.call(super$initialize, c(common_args, auth_info=device_creds))
+
+        # notify user if no refresh token
+        if(is.null(self$credentials$refresh_token))
+            norenew_alert(self$version)
+
+        if(private$use_cache)
+            self$cache()
+
+        self
+    }
+),
+
 private=list(
 
-    initfunc=function(init_args)
+    initfunc=function(creds=NULL)
     {
-        creds <- init_args$device_creds
         if(is.null(creds))
         {
             creds <- get_device_creds(
@@ -93,6 +117,23 @@ private=list(
 
 
 AzureTokenClientCreds <- R6::R6Class("AzureTokenClientCreds", inherit=AzureToken,
+
+public=list(
+
+    initialize=function(common_args, on_behalf_of=NULL)
+    {
+        self$auth_type <- if(is.null(on_behalf_of))
+            "authorization_code"
+        else "on_behalf_of"
+
+        do.call(super$initialize, common_args)
+
+        if(private$use_cache)
+            self$cache()
+
+        self
+    }
+),
 
 private=list(
     initfunc=function(init_args)
