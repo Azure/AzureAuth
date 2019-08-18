@@ -331,7 +331,7 @@ is_azure_token <- function(object)
 #' @export
 is_azure_v1_token <- function(object)
 {
-    is_azure_token(object) && inherits(object, "AzureTokenV1")
+    is_azure_token(object) && object$version == 1
 }
 
 
@@ -339,5 +339,5 @@ is_azure_v1_token <- function(object)
 #' @export
 is_azure_v2_token <- function(object)
 {
-    is_azure_token(object) && inherits(object, "AzureTokenV2")
+    is_azure_token(object) && object$version == 2
 }

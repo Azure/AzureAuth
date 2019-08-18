@@ -16,9 +16,6 @@ public=list(
         if(is.null(self$credentials$refresh_token))
             norenew_alert(self$version)
 
-        if(private$use_cache)
-            self$cache()
-
         self
     }
 ),
@@ -86,9 +83,6 @@ public=list(
         if(is.null(self$credentials$refresh_token))
             norenew_alert(self$version)
 
-        if(private$use_cache)
-            self$cache()
-
         self
     }
 ),
@@ -134,14 +128,12 @@ public=list(
             private$set_request_credentials(app, password, certificate))
         do.call(super$initialize, common_args)
 
-        if(private$use_cache)
-            self$cache()
-
         self
     }
 ),
 
 private=list(
+
     initfunc=function(init_args)
     {
         # contact token endpoint directly with client credentials
@@ -181,14 +173,12 @@ public=list(
             private$set_request_credentials(app, password, certificate, on_behalf_of))
         do.call(super$initialize, common_args)
 
-        if(private$use_cache)
-            self$cache()
-
         self
     }
 ),
 
 private=list(
+
     initfunc=function(init_args)
     {
         # contact token endpoint directly with client credentials
@@ -234,14 +224,12 @@ public=list(
             private$set_request_credentials(app, password, username))
         do.call(super$initialize, common_args)
 
-        if(private$use_cache)
-            self$cache()
-
         self
     }
 ),
 
 private=list(
+
     initfunc=function(init_args)
     {
         # contact token endpoint directly with resource owner username/password
@@ -268,7 +256,18 @@ private=list(
 
 AzureTokenManaged <- R6::R6Class("AzureTokenManaged", inherit=AzureToken,
 
+public=list(
+
+    initialize=function(resource, aad_host, token_args, use_cache)
+    {
+        self$auth_type <- "managed"
+        super$initialize(resource, tenant="common", aad_host=aad_host, token_args=token_args, use_cache=use_cache)
+        self
+    }
+),
+
 private=list(
+
     initfunc=function(init_args)
     {
         stopifnot(is.list(self$token_args))
