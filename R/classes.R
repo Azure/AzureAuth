@@ -8,6 +8,8 @@ public=list(
     {
         self$auth_type <- "authorization_code"
         self$authorize_args <- authorize_args
+        with(common_args,
+            private$set_request_credentials(app, password, username))
         do.call(super$initialize, c(common_args, auth_info=auth_code))
 
         # notify user if no refresh token
@@ -55,12 +57,10 @@ private=list(
         httr::POST(access_uri, body=body, encode="form")
     },
 
-    set_request_credentials=function(password, username, ...)
+    set_request_credentials=function(app, password, username)
     {
-        object <- list(client_id=app, grant_type=auth_type)
+        object <- list(client_id=app, grant_type="authorization_code")
 
-        if(!is.null(password) && !is.null(username))
-            stop("Cannot provide both a username and secret with authorization_code method", call.=FALSE)
         if(!is.null(username))
             object$login_hint <- username
         if(!is.null(password))
@@ -78,6 +78,8 @@ public=list(
     initialize=function(common_args, device_creds)
     {
         self$auth_type <- "device_code"
+        with(common_args,
+            private$set_request_credentials(app))
         do.call(super$initialize, c(common_args, auth_info=device_creds))
 
         # notify user if no refresh token
@@ -112,6 +114,11 @@ private=list(
         body <- c(self$client, code=creds$device_code)
 
         poll_for_token(access_uri, body, creds$interval, creds$expires_in)
+    },
+
+    set_request_credentials=function(app)
+    {
+        self$client <- list(client_id=app, grant_type="device_code")
     }
 ))
 
@@ -120,12 +127,11 @@ AzureTokenClientCreds <- R6::R6Class("AzureTokenClientCreds", inherit=AzureToken
 
 public=list(
 
-    initialize=function(common_args, on_behalf_of=NULL)
+    initialize=function(common_args)
     {
-        self$auth_type <- if(is.null(on_behalf_of))
-            "authorization_code"
-        else "on_behalf_of"
-
+        self$auth_type <- "client_credentials"
+        with(common_args,
+            private$set_request_credentials(app, password, certificate))
         do.call(super$initialize, common_args)
 
         if(private$use_cache)
@@ -143,11 +149,97 @@ private=list(
         body <- private$build_access_body()
 
         httr::POST(uri, body=body, encode="form")
+    },
+
+    set_request_credentials=function(app, password, certificate)
+    {
+        object <- list(client_id=app, grant_type="client_credentials")
+
+        if(!is.null(password))
+            object$client_secret <- password
+        else if(!is.null(certificate))
+        {
+            object$client_assertion_type <- "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+            object$client_assertion <- certificate  # not actual assertion: will be replaced later
+        }
+        else stop("Must provide either a client secret or certificate for client_credentials grant",
+                  call.=FALSE)
+
+        self$client <- object
     }
 ))
 
 
-AzureTokenResowner <- R6::R6Class("AzureTokenResowner", inherit=AzureToken,
+AzureTokenOnBehalfOf <- R6::R6Class("AzureTokenOnBehalfOf", inherit=AzureToken,
+
+public=list(
+
+    initialize=function(common_args, on_behalf_of)
+    {
+        self$auth_type <- "on_behalf_of"
+        with(common_args,
+            private$set_request_credentials(app, password, certificate, on_behalf_of))
+        do.call(super$initialize, common_args)
+
+        if(private$use_cache)
+            self$cache()
+
+        self
+    }
+),
+
+private=list(
+    initfunc=function(init_args)
+    {
+        # contact token endpoint directly with client credentials
+        uri <- private$aad_uri("token")
+        body <- private$build_access_body()
+
+        httr::POST(uri, body=body, encode="form")
+    },
+
+    set_request_credentials=function(app, password, certificate, on_behalf_of)
+    {
+        if(is_empty(on_behalf_of))
+            stop("Must provide an Azure token for on_behalf_of grant", call.=FALSE)
+
+        object <- list(client_id=app, grant_type="urn:ietf:params:oauth:grant-type:jwt-bearer")
+
+        if(!is.null(password))
+            object$client_secret <- password
+        else if(!is.null(certificate))
+        {
+            object$client_assertion_type <- "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+            object$client_assertion <- certificate  # not actual assertion: will be replaced later
+        }
+        else stop("Must provide either a client secret or certificate for on_behalf_of grant",
+                  call.=FALSE)
+
+        object$requested_token_use <- "on_behalf_of"
+        object$assertion <- extract_jwt(on_behalf_of)
+
+        self$client <- object
+    }
+))
+
+
+AzureTokenResOwner <- R6::R6Class("AzureTokenResOwner", inherit=AzureToken,
+
+public=list(
+
+    initialize=function(common_args)
+    {
+        self$auth_type <- "resource_owner"
+        with(common_args,
+            private$set_request_credentials(app, password, username))
+        do.call(super$initialize, common_args)
+
+        if(private$use_cache)
+            self$cache()
+
+        self
+    }
+),
 
 private=list(
     initfunc=function(init_args)
@@ -157,6 +249,19 @@ private=list(
         body <- private$build_access_body()
 
         httr::POST(uri, body=body, encode="form")
+    },
+
+    set_request_credentials=function(app, password, username)
+    {
+        object <- list(client_id=app, grant_type="password")
+
+        if(is.null(username) && is.null(password))
+            stop("Must provide a username and password for resource_owner grant", call.=FALSE)
+
+        object$username <- username
+        object$password <- password
+
+        self$client <- object
     }
 ))
 

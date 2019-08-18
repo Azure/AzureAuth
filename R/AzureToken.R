@@ -33,7 +33,7 @@ public=list(
                         authorize_args=list(), token_args=list(),
                         use_cache=TRUE, on_behalf_of=NULL, auth_info=NULL)
     {
-        if(is.null(self$auth_type))
+        if(is.null(private$initfunc))
             stop("Do not call this constructor directly; use get_azure_token() instead")
 
         self$version <- normalize_aad_version(version)
@@ -49,8 +49,6 @@ public=list(
         self$tenant <- normalize_tenant(tenant)
         self$token_args <- token_args
         private$use_cache <- use_cache
-
-        private$set_request_credentials(app=app, password=password, username=username, certificate=certificate)
 
         private$use_cache <- use_cache
         if(use_cache)
