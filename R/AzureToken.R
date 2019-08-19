@@ -12,7 +12,7 @@
 #' @seealso
 #' [get_azure_token], [httr::Token]
 #'
-#' @format An R6 object representing an Azure Active Directory token and its associated credentials. The `AzureTokenV1` class is for AAD v1.0 tokens, and the `AzureTokenV2` class is for AAD v2.0 tokens. Objects of the AzureToken class should not be created directly.
+#' @format An R6 object representing an Azure Active Directory token and its associated credentials. `AzureToken` is the base class, and the others inherit from it.
 #' @export
 AzureToken <- R6::R6Class("AzureToken",
 

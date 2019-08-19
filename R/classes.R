@@ -1,3 +1,5 @@
+#' @rdname AzureToken
+#' @export
 AzureTokenAuthCode <- R6::R6Class("AzureTokenAuthCode", inherit=AzureToken,
 
 public=list(
@@ -64,6 +66,8 @@ private=list(
 ))
 
 
+#' @rdname AzureToken
+#' @export
 AzureTokenDeviceCode <- R6::R6Class("AzureTokenDeviceCode", inherit=AzureToken,
 
 public=list(
@@ -111,6 +115,8 @@ private=list(
 ))
 
 
+#' @rdname AzureToken
+#' @export
 AzureTokenClientCreds <- R6::R6Class("AzureTokenClientCreds", inherit=AzureToken,
 
 public=list(
@@ -154,6 +160,8 @@ private=list(
 ))
 
 
+#' @rdname AzureToken
+#' @export
 AzureTokenOnBehalfOf <- R6::R6Class("AzureTokenOnBehalfOf", inherit=AzureToken,
 
 public=list(
@@ -203,6 +211,8 @@ private=list(
 ))
 
 
+#' @rdname AzureToken
+#' @export
 AzureTokenResOwner <- R6::R6Class("AzureTokenResOwner", inherit=AzureToken,
 
 public=list(
@@ -242,6 +252,8 @@ private=list(
 ))
 
 
+#' @rdname AzureToken
+#' @export
 AzureTokenManaged <- R6::R6Class("AzureTokenManaged", inherit=AzureToken,
 
 public=list(
