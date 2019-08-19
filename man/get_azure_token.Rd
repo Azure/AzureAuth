@@ -52,7 +52,7 @@ is_azure_v2_token(object)
 
 \item{app}{The client/app ID to use to authenticate with.}
 
-\item{password}{The password, either for the app, or your username if supplied. See 'Details' below.}
+\item{password}{For most authentication flows, this is the password for the \emph{app} where needed, also known as the client secret. For the resource owner grant, this is your personal account password. See 'Details' below.}
 
 \item{username}{Your AAD username, if using the resource owner grant. See 'Details' below.}
 

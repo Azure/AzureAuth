@@ -2,21 +2,17 @@ AzureTokenAuthCode <- R6::R6Class("AzureTokenAuthCode", inherit=AzureToken,
 
 public=list(
 
-    authorize_args=NULL,
-
     initialize=function(common_args, authorize_args, auth_code)
     {
         self$auth_type <- "authorization_code"
         self$authorize_args <- authorize_args
         with(common_args,
             private$set_request_credentials(app, password, username))
-        do.call(super$initialize, c(common_args, auth_info=auth_code))
+        do.call(super$initialize, c(common_args, list(auth_info=auth_code)))
 
         # notify user if no refresh token
-        if(is.null(self$credentials$refresh_token))
+        if(!is.null(self$credentials) && is.null(self$credentials$refresh_token))
             norenew_alert(self$version)
-
-        self
     }
 ),
 
@@ -77,13 +73,11 @@ public=list(
         self$auth_type <- "device_code"
         with(common_args,
             private$set_request_credentials(app))
-        do.call(super$initialize, c(common_args, auth_info=device_creds))
+        do.call(super$initialize, c(common_args, list(auth_info=device_creds)))
 
         # notify user if no refresh token
-        if(is.null(self$credentials$refresh_token))
+        if(!is.null(self$credentials) && is.null(self$credentials$refresh_token))
             norenew_alert(self$version)
-
-        self
     }
 ),
 
@@ -127,8 +121,6 @@ public=list(
         with(common_args,
             private$set_request_credentials(app, password, certificate))
         do.call(super$initialize, common_args)
-
-        self
     }
 ),
 
@@ -172,8 +164,6 @@ public=list(
         with(common_args,
             private$set_request_credentials(app, password, certificate, on_behalf_of))
         do.call(super$initialize, common_args)
-
-        self
     }
 ),
 
@@ -223,8 +213,6 @@ public=list(
         with(common_args,
             private$set_request_credentials(app, password, username))
         do.call(super$initialize, common_args)
-
-        self
     }
 ),
 
@@ -262,7 +250,6 @@ public=list(
     {
         self$auth_type <- "managed"
         super$initialize(resource, tenant="common", aad_host=aad_host, token_args=token_args, use_cache=use_cache)
-        self
     }
 ),
 

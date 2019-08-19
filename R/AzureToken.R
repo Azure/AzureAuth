@@ -25,7 +25,8 @@ public=list(
     tenant=NULL,
     auth_type=NULL,
     client=NULL,
-    token_args=NULL,
+    token_args=list(),
+    authorize_args=list(),
     credentials=NULL, # returned token details from host
 
     initialize=function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL,
@@ -50,7 +51,10 @@ public=list(
         self$token_args <- token_args
         private$use_cache <- use_cache
 
-        private$use_cache <- use_cache
+        # use_cache = NA means return dummy object: initialize fields, but don't contact AAD
+        if(is.na(use_cache))
+            return()
+
         if(use_cache)
             private$load_cached_credentials()
 
@@ -175,6 +179,10 @@ private=list(
         body$client_assertion <- build_assertion(body$client_assertion,
             self$tenant, body$client_id, self$aad_host, self$version)
 
-        c(body, self$token_args, scope=paste(self$scope, collapse=" "))
+        c(body, self$token_args,
+            if(self$version == 1)
+                list(resource=self$resource)
+            else list(scope=paste(self$scope, collapse=" "))
+        )
     }))
 

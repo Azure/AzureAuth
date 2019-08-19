@@ -3,16 +3,10 @@
 \docType{class}
 \name{AzureToken}
 \alias{AzureToken}
-\alias{AzureTokenV1}
-\alias{AzureTokenV2}
 \title{Azure OAuth authentication}
 \format{An R6 object representing an Azure Active Directory token and its associated credentials. The \code{AzureTokenV1} class is for AAD v1.0 tokens, and the \code{AzureTokenV2} class is for AAD v2.0 tokens. Objects of the AzureToken class should not be created directly.}
 \usage{
 AzureToken
-
-AzureTokenV1
-
-AzureTokenV2
 }
 \description{
 Azure OAuth 2.0 token classes, with an interface based on the \link[httr:Token2.0]{Token2.0 class} in httr. Rather than calling the initialization methods directly, tokens should be created via \code{\link[=get_azure_token]{get_azure_token()}}.

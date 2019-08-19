@@ -278,23 +278,21 @@ token_hash <- function(resource, tenant, app, password=NULL, username=NULL, cert
                        aad_host="https://login.microsoftonline.com/", version=1,
                        authorize_args=list(), token_args=list(), on_behalf_of=NULL)
 {
-    # reconstruct the hash for the token object from the inputs
-    version <- normalize_aad_version(version)
-    tenant <- normalize_tenant(tenant)
-    auth_type <- select_auth_type(password, username, certificate, auth_type, on_behalf_of)
-    client <- aad_request_credentials(app, password, username, certificate, auth_type, on_behalf_of)
-
-    if(version == 1)
-        scope <- NULL
-    else
-    {
-        # ignore warnings about invalid scopes when computing hash
-        scope <- suppressWarnings(sapply(resource, verify_v2_scope, USE.NAMES=FALSE))
-        resource <- NULL
-    }
-
-    token_hash_internal(version, aad_host, tenant, auth_type, client, resource, scope,
-                        authorize_args, token_args)
+    object <- get_azure_token(
+        resource=resource,
+        tenant=tenant,
+        app=app,
+        password=password,
+        username=username,
+        certificate=certificate,
+        auth_type=auth_type,
+        aad_host=aad_host,
+        version=version,
+        authorize_args=authorize_args,
+        token_args=token_args,
+        on_behalf_of=on_behalf_of, use_cache=NA
+    )
+    object$hash()
 }
 
 
