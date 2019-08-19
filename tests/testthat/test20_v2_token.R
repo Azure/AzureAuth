@@ -34,19 +34,23 @@ test_that("v2.0 simple authentication works",
     suppressWarnings(file.remove(dir(AzureR_dir(), full.names=TRUE)))
 
     res <- "https://management.azure.com/.default"
+    resbase <- "https://management.azure.com"
 
     # obtain new tokens
     aut_tok <- get_azure_token(res, tenant, native_app, auth_type="authorization_code", version=2)
     expect_true(is_azure_token(aut_tok))
     expect_identical(aut_tok$hash(), aut_hash)
+    expect_identical(resbase, decode_jwt(aut_tok)$payload$aud)
 
     ccd_tok <- get_azure_token(res, tenant, app, password=password, version=2)
     expect_true(is_azure_token(ccd_tok))
     expect_identical(ccd_tok$hash(), ccd_hash)
+    expect_identical(resbase, decode_jwt(ccd_tok)$payload$aud)
 
     dev_tok <- get_azure_token(res, tenant, native_app, auth_type="device_code", version=2)
     expect_true(is_azure_token(dev_tok))
     expect_identical(dev_tok$hash(), dev_hash)
+    expect_identical(resbase, decode_jwt(dev_tok)$payload$aud)
 
     aut_expire <- as.numeric(aut_tok$credentials$expires_on)
     ccd_expire <- as.numeric(ccd_tok$credentials$expires_on)
@@ -74,12 +78,15 @@ test_that("v2.0 refresh with offline scope works",
 {
     res <- "https://management.azure.com/.default"
     res2 <- "offline_access"
+    resbase <- "https://management.azure.com"
 
     aut_tok <- get_azure_token(c(res, res2), tenant, native_app, auth_type="authorization_code", version=2)
     expect_true(!is_empty(aut_tok$credentials$refresh_token))
+    expect_identical(resbase, decode_jwt(aut_tok)$payload$aud)
 
     dev_tok <- get_azure_token(c(res, res2), tenant, native_app, auth_type="device_code", version=2)
     expect_true(!is_empty(dev_tok$credentials$refresh_token))
+    expect_identical(resbase, decode_jwt(dev_tok)$payload$aud)
 
     aut_expire <- as.numeric(aut_tok$credentials$expires_on)
     dev_expire <- as.numeric(dev_tok$credentials$expires_on)

@@ -34,9 +34,11 @@ if(!interactive())
 test_that("Providing optional args works",
 {
     res <- "https://management.azure.com/.default"
+    resbase <- "https://management.azure.com"
 
     aut_tok <- get_azure_token(res, tenant, native_app, username=username, auth_type="authorization_code", version=2)
     expect_true(is_azure_token(aut_tok))
+    expect_identical(resbase, decode_jwt(aut_tok)$payload$aud)
 
     # cannot provide both username and pwd with authcode
     expect_error(
@@ -58,6 +60,7 @@ test_that("Providing multiple scopes works",
 
     aut_tok <- get_azure_token(scopes, tenant, native_app, auth_type="authorization_code", version=2)
     expect_true(is_azure_token(aut_tok))
+    expect_identical("https://graph.microsoft.com", decode_jwt(aut_tok)$payload$aud)
 })
 
 
@@ -76,9 +79,11 @@ test_that("Providing path in aad_host works",
 {
     res <- "https://management.azure.com/.default"
     aad_url <- file.path("https://login.microsoftonline.com", normalize_tenant(tenant), "oauth2/v2.0")
+    resbase <- "https://management.azure.com"
 
     tok <- get_azure_token(res, tenant, app, password=password, aad_host=aad_url, version=2)
     expect_true(is_azure_token(tok))
+    expect_identical(resbase, decode_jwt(tok)$payload$aud)
 })
 
 
@@ -95,6 +100,7 @@ test_that("On-behalf-of flow works",
 
     tok1 <- get_azure_token("https://graph.microsoft.com/.default", tenant, app, password, on_behalf_of=tok0, version=2)
     expect_true(is_azure_token(tok1))
+    expect_identical("https://graph.microsoft.com", decode_jwt(tok1)$payload$aud)
 
     name1 <- decode_jwt(tok1$credentials$access_token)$payload$name
     expect_identical(name0, name1)
@@ -106,38 +112,46 @@ test_that("On-behalf-of flow works",
 test_that("Certificate authentication works",
 {
     res <- "https://management.azure.com/.default"
+    resbase <- "https://management.azure.com"
     tok <- get_azure_token(res, tenant, cert_app, certificate=cert_file, version=2)
     expect_true(is_azure_token(tok))
+    expect_identical(resbase, decode_jwt(tok)$payload$aud)
 })
 
 
 test_that("Standalone auth works",
 {
     res <- "https://management.azure.com/.default"
+    resbase <- "https://management.azure.com"
 
     auth_uri <- build_authorization_uri(res, tenant, native_app, version=2)
     code <- AzureAuth:::listen_for_authcode(auth_uri, "http://localhost:1410")
     tok <- get_azure_token(res, tenant, native_app, version=2, auth_code=code, use_cache=FALSE)
     expect_identical(tok$hash(), aut_hash)
+    expect_identical(resbase, decode_jwt(tok)$payload$aud)
 
     creds <- get_device_creds(res, tenant, native_app, version=2)
     cat(creds$message, "\n")
     tok2 <- get_azure_token(res, tenant, native_app, auth_type="device_code", version=2, device_creds=creds,
         use_cache=FALSE)
     expect_identical(tok2$hash(), dev_hash)
+    expect_identical(resbase, decode_jwt(tok2)$payload$aud)
 })
 
 
 test_that("Webapp authentication works",
 {
     res <- "https://management.azure.com/.default"
+    resbase <- "https://management.azure.com"
 
     tok <- get_azure_token(res, tenant, web_app, password=web_app_pwd, auth_type="authorization_code", version=2)
     expect_true(is_azure_token(tok))
+    expect_identical(resbase, decode_jwt(tok)$payload$aud)
 
     tok2 <- get_azure_token(res, tenant, web_app, password=web_app_pwd, version=2)  # client credentials
     expect_true(is_azure_token(tok2))
     expect_identical(tok2$auth_type, "client_credentials")
+    expect_identical(resbase, decode_jwt(tok2)$payload$aud)
 
     # web app expects client secret
     expect_error(get_azure_token(res, tenant, web_app, version=2))
@@ -147,9 +161,11 @@ test_that("Webapp authentication works",
 test_that("Resource owner grant works",
 {
     res <- "https://management.azure.com/.default"
+    resbase <- "https://management.azure.com"
 
     tok <- get_azure_token(res, tenant, cli_app, password=userpwd, username=username, auth_type="resource_owner",
         version=2)
     expect_true(is_azure_token(tok))
+    expect_identical(resbase, decode_jwt(tok)$payload$aud)
 })
 

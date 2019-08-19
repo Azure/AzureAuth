@@ -38,14 +38,17 @@ test_that("v1.0 simple authentication works",
     aut_tok <- get_azure_token(res, tenant, native_app, auth_type="authorization_code")
     expect_true(is_azure_token(aut_tok))
     expect_identical(aut_tok$hash(), aut_hash)
+    expect_identical(res, decode_jwt(aut_tok)$payload$aud)
 
     ccd_tok <- get_azure_token(res, tenant, app, password=password)
     expect_true(is_azure_token(ccd_tok))
     expect_identical(ccd_tok$hash(), ccd_hash)
+    expect_identical(res, decode_jwt(ccd_tok)$payload$aud)
 
     dev_tok <- get_azure_token(res, tenant, native_app, auth_type="device_code")
     expect_true(is_azure_token(dev_tok))
     expect_identical(dev_tok$hash(), dev_hash)
+    expect_identical(res, decode_jwt(dev_tok)$payload$aud)
 
     aut_expire <- as.numeric(aut_tok$credentials$expires_on)
     ccd_expire <- as.numeric(ccd_tok$credentials$expires_on)

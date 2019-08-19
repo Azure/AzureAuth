@@ -37,6 +37,7 @@ test_that("Providing optional args works",
     # login hint
     aut_tok <- get_azure_token(res, tenant, native_app, username=username, auth_type="authorization_code")
     expect_true(is_azure_token(aut_tok))
+    expect_identical(res, decode_jwt(aut_tok)$payload$aud)
 
     # cannot provide username and password with authcode
     expect_error(
@@ -54,6 +55,7 @@ test_that("Providing path in aad_host works",
 
     tok <- get_azure_token(res, tenant, app, password=password, aad_host=aad_url)
     expect_true(is_azure_token(tok))
+    expect_identical(res, decode_jwt(tok)$payload$aud)
 })
 
 
@@ -62,13 +64,14 @@ test_that("On-behalf-of flow works",
     tok0 <- get_azure_token(app, tenant, native_app)
     expect_true(is_azure_token(tok0))
 
-    name0 <- decode_jwt(tok0$credentials$access_token)$payload$name
+    name0 <- decode_jwt(tok0)$payload$name
     expect_type(name0, "character")
 
     tok1 <- get_azure_token("https://graph.microsoft.com/", tenant, app, password, on_behalf_of=tok0)
     expect_true(is_azure_token(tok1))
+    expect_identical("https://graph.microsoft.com/", decode_jwt(tok1)$payload$aud)
 
-    name1 <- decode_jwt(tok1$credentials$access_token)$payload$name
+    name1 <- decode_jwt(tok1)$payload$name
     expect_identical(name0, name1)
 
     expect_silent(tok1$refresh())
@@ -80,6 +83,7 @@ test_that("Certificate authentication works",
     res <- "https://management.azure.com/"
     tok <- get_azure_token(res, tenant, cert_app, certificate=cert_file)
     expect_true(is_azure_token(tok))
+    expect_identical(res, decode_jwt(tok)$payload$aud)
 })
 
 
@@ -91,11 +95,13 @@ test_that("Standalone auth works",
     code <- AzureAuth:::listen_for_authcode(auth_uri, "http://localhost:1410")
     tok <- get_azure_token(res, tenant, native_app, auth_code=code, use_cache=FALSE)
     expect_identical(tok$hash(), aut_hash)
+    expect_identical(res, decode_jwt(tok)$payload$aud)
 
     creds <- get_device_creds(res, tenant, native_app)
     cat(creds$message, "\n")
     tok2 <- get_azure_token(res, tenant, native_app, auth_type="device_code", device_creds=creds, use_cache=FALSE)
     expect_identical(tok2$hash(), dev_hash)
+    expect_identical(res, decode_jwt(tok2)$payload$aud)
 })
 
 
@@ -105,10 +111,12 @@ test_that("Webapp authentication works",
 
     tok <- get_azure_token(res, tenant, web_app, password=web_app_pwd, auth_type="authorization_code")
     expect_true(is_azure_token(tok))
+    expect_identical(res, decode_jwt(tok)$payload$aud)
 
     tok2 <- get_azure_token(res, tenant, web_app, password=web_app_pwd)  # client credentials
     expect_true(is_azure_token(tok2))
     expect_identical(tok2$auth_type, "client_credentials")
+    expect_identical(res, decode_jwt(tok2)$payload$aud)
 
     # web app expects client secret
     expect_error(get_azure_token(res, tenant, web_app))
