@@ -1,4 +1,4 @@
-context("v2.0 token")
+context("v2.0 token other")
 
 tenant <- Sys.getenv("AZ_TEST_TENANT_ID")
 app <- Sys.getenv("AZ_TEST_APP_ID")
