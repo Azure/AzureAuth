@@ -40,11 +40,6 @@ test_that("Providing optional args works",
     expect_true(is_azure_token(aut_tok))
     expect_identical(resbase, decode_jwt(aut_tok)$payload$aud)
 
-    # cannot provide both username and pwd with authcode
-    expect_error(
-        get_azure_token(res, tenant, native_app, password=password, username=username, auth_type="authorization_code",
-            version=2))
-
     expect_null(
         delete_azure_token(res, tenant, native_app, username=username, auth_type="authorization_code", version=2,
             confirm=FALSE))

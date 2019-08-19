@@ -39,10 +39,6 @@ test_that("Providing optional args works",
     expect_true(is_azure_token(aut_tok))
     expect_identical(res, decode_jwt(aut_tok)$payload$aud)
 
-    # cannot provide username and password with authcode
-    expect_error(
-        get_azure_token(res, tenant, native_app, password=password, username=username, auth_type="authorization_code"))
-
     expect_null(
         delete_azure_token(res, tenant, native_app, username=username, auth_type="authorization_code", confirm=FALSE))
 })
