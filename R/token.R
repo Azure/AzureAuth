@@ -69,7 +69,9 @@
 #' To delete _all_ cached tokens, use `clean_token_directory`.
 #'
 #' @section Value:
-#' For `get_azure_token`, an object of class either `AzureTokenV1` or `AzureTokenV2` depending on whether the token is for AAD v1.0 or v2.0. For `list_azure_tokens`, a list of such objects retrieved from disk.
+#' For `get_azure_token`, an object inheriting from `AzureToken`. The specific class depends on the authentication flow: `AzureTokenAuthCode`, `AzureTokenDeviceCode`, `AzureTokenClientCreds`, `AzureTokenOnBehalfOf`, `AzureTokenResOwner`. For `get_managed_token`, a similar object of class `AzureTokenManaged`.
+#'
+#' For `list_azure_tokens`, a list of such objects retrieved from disk.
 #'
 #' @seealso
 #' [AzureToken], [httr::oauth2.0_token], [httr::Token], [cert_assertion],
@@ -290,7 +292,8 @@ token_hash <- function(resource, tenant, app, password=NULL, username=NULL, cert
         version=version,
         authorize_args=authorize_args,
         token_args=token_args,
-        on_behalf_of=on_behalf_of, use_cache=NA
+        on_behalf_of=on_behalf_of,
+        use_cache=NA
     )
     object$hash()
 }

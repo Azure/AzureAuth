@@ -143,7 +143,9 @@ To delete \emph{all} cached tokens, use \code{clean_token_directory}.
 
 \section{Value}{
 
-For \code{get_azure_token}, an object of class either \code{AzureTokenV1} or \code{AzureTokenV2} depending on whether the token is for AAD v1.0 or v2.0. For \code{list_azure_tokens}, a list of such objects retrieved from disk.
+For \code{get_azure_token}, an object inheriting from \code{AzureToken}. The specific class depends on the authentication flow: \code{AzureTokenAuthCode}, \code{AzureTokenDeviceCode}, \code{AzureTokenClientCreds}, \code{AzureTokenOnBehalfOf}, \code{AzureTokenResOwner}. For \code{get_managed_token}, a similar object of class \code{AzureTokenManaged}.
+
+For \code{list_azure_tokens}, a list of such objects retrieved from disk.
 }
 
 \examples{
