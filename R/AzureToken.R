@@ -12,73 +12,61 @@
 #' @seealso
 #' [get_azure_token], [httr::Token]
 #'
-#' @format An R6 object representing an Azure Active Directory token and its associated credentials. The `AzureTokenV1` class is for AAD v1.0 tokens, and the `AzureTokenV2` class is for AAD v2.0 tokens. Objects of the AzureToken class should not be created directly.
+#' @format An R6 object representing an Azure Active Directory token and its associated credentials. `AzureToken` is the base class, and the others inherit from it.
 #' @export
 AzureToken <- R6::R6Class("AzureToken",
 
 public=list(
 
+    version=NULL,
+    resource=NULL,
+    scope=NULL,
     aad_host=NULL,
     tenant=NULL,
     auth_type=NULL,
     client=NULL,
-    authorize_args=NULL,
-    token_args=NULL,
-    credentials=list(), # returned token details from host
+    token_args=list(),
+    authorize_args=list(),
+    credentials=NULL, # returned token details from host
 
-    initialize=function(tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
-                        aad_host="https://login.microsoftonline.com/",
+    initialize=function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL,
+                        aad_host="https://login.microsoftonline.com/", version=1,
                         authorize_args=list(), token_args=list(),
-                        use_cache=TRUE, on_behalf_of=NULL, auth_code=NULL, device_creds=NULL)
+                        use_cache=TRUE, auth_info=NULL)
     {
-        # fail if this constructor is called directly
-        if(is.null(self$version))
+        if(is.null(private$initfunc))
             stop("Do not call this constructor directly; use get_azure_token() instead")
+
+        self$version <- normalize_aad_version(version)
+        if(self$version == 1)
+        {
+            if(length(resource) != 1)
+                stop("Resource for Azure Active Directory v1.0 token must be a single string", call.=FALSE)
+            self$resource <- resource
+        }
+        else self$scope <- sapply(resource, verify_v2_scope, USE.NAMES=FALSE)
 
         self$aad_host <- aad_host
         self$tenant <- normalize_tenant(tenant)
-        self$auth_type <- select_auth_type(password, username, certificate, auth_type, on_behalf_of)
-
-        self$client <- aad_request_credentials(app, password, username, certificate, self$auth_type, on_behalf_of)
-
-        self$authorize_args <- authorize_args
         self$token_args <- token_args
         private$use_cache <- use_cache
 
-        # set the "real" init method based on auth type
-        private$initfunc <- switch(self$auth_type,
-            authorization_code=init_authcode,
-            device_code=init_devcode,
-            client_credentials=init_clientcred,
-            on_behalf_of=init_clientcred,
-            resource_owner=init_resowner,
-            managed=init_managed
-        )
-        environment(private$initfunc) <- parent.env(environment())
-
-        tokenfile <- file.path(AzureR_dir(), self$hash())
-        if(use_cache && file.exists(tokenfile))
-        {
-            message("Loading cached token")
-            private$load_from_cache(tokenfile)
-            return(self$refresh())
-        }
-
-        res <- private$initfunc(list(auth_code=auth_code, device_creds=device_creds))
-        self$credentials <- process_aad_response(res)
-
-        # v2.0 endpoint doesn't provide an expires_on field, set it here
-        if(is.null(self$credentials$expires_on))
-            self$credentials$expires_on <- as.character(decode_jwt(self$credentials$access_token)$payload$exp)
-
-        # notify user if interactive auth and no refresh token
-        if(self$auth_type %in% c("authorization_code", "device_code") && is.null(self$credentials$refresh_token))
-            private$norenew_alert()
+        # use_cache = NA means return dummy object: initialize fields, but don't contact AAD
+        if(is.na(use_cache))
+            return()
 
         if(use_cache)
-            self$cache()
+            private$load_cached_credentials()
 
-        self
+        if(is.null(self$credentials))
+        {
+            res <- private$initfunc(auth_info)
+            self$credentials <- process_aad_response(res)
+        }
+        private$set_expiry_time()
+
+        if(private$use_cache)
+            self$cache()
     },
 
     cache=function()
@@ -124,7 +112,7 @@ public=list(
             uri <- private$aad_uri("token")
             httr::POST(uri, body=body, encode="form")
         }
-        else private$initfunc(NULL) # reauthenticate if no refresh token (cannot reuse any supplied creds)
+        else private$initfunc() # reauthenticate if no refresh token (cannot reuse any supplied creds)
 
         creds <- try(process_aad_response(res))
         if(inherits(creds, "try-error"))
@@ -134,8 +122,7 @@ public=list(
         }
 
         self$credentials <- creds
-        if(is.null(self$credentials$expires_on))
-            self$credentials$expires_on <- as.character(decode_jwt(self$credentials$access_token)$payload$exp)
+        private$set_expiry_time()
 
         if(private$use_cache)
             self$cache()
@@ -153,12 +140,30 @@ private=list(
 
     use_cache=NULL,
 
-    load_from_cache=function(file)
+    load_cached_credentials=function()
     {
-        token <- readRDS(file)
+        tokenfile <- file.path(AzureR_dir(), self$hash())
+        if(!file.exists(tokenfile))
+            return(NULL)
+
+        message("Loading cached token")
+        token <- readRDS(tokenfile)
         if(!is_azure_token(token))
+        {
+            file.remove(tokenfile)
             stop("Invalid or corrupted cached token", call.=FALSE)
+        }
+
         self$credentials <- token$credentials
+        if(!self$validate())
+            self$refresh()
+    },
+
+    set_expiry_time=function()
+    {
+        # v2.0 endpoint doesn't provide an expires_on field, set it here
+        if(is.null(self$credentials$expires_on))
+            self$credentials$expires_on <- as.character(decode_jwt(self$credentials$access_token)$payload$exp)
     },
 
     aad_uri=function(type, ...)
@@ -166,31 +171,6 @@ private=list(
         aad_uri(self$aad_host, self$tenant, self$version, type, list(...))
     },
 
-    # member function to be filled in by initialize()
-    initfunc=NULL
-))
-
-
-#' @rdname AzureToken
-#' @export
-AzureTokenV1 <- R6::R6Class("AzureTokenV1", inherit=AzureToken,
-
-public=list(
-
-    version=1, # for compatibility
-    resource=NULL,
-
-    initialize=function(resource, ...)
-    {
-        if(length(resource) != 1)
-            stop("Resource for Azure Active Directory v1.0 token must be a single string", call.=FALSE)
-        self$resource <- resource
-        super$initialize(...)
-    }
-),
-
-private=list(
-
     build_access_body=function(body=self$client)
     {
         stopifnot(is.list(self$token_args))
@@ -199,49 +179,10 @@ private=list(
         body$client_assertion <- build_assertion(body$client_assertion,
             self$tenant, body$client_id, self$aad_host, self$version)
 
-        c(body, self$token_args, resource=self$resource)
-    },
-
-    norenew_alert=function()
-    {
-        message("Server did not provide a refresh token: please reauthenticate to refresh.")
-    }
-))
-
-
-#' @rdname AzureToken
-#' @export
-AzureTokenV2 <- R6::R6Class("AzureTokenV2", inherit=AzureToken,
-
-public=list(
-
-    version=2, # for compatibility
-    scope=NULL,
-
-    initialize=function(resource, ...)
-    {
-        self$scope <- sapply(resource, verify_v2_scope, USE.NAMES=FALSE)
-        super$initialize(...)
-    }
-),
-
-private=list(
-
-    build_access_body=function(body=self$client)
-    {
-        stopifnot(is.list(self$token_args))
-
-        # fill in cert assertion details
-        body$client_assertion <- build_assertion(body$client_assertion,
-            self$tenant, body$client_id, self$aad_host, self$version)
-
-        c(body, self$token_args, scope=paste(self$scope, collapse=" "))
-    },
-
-    norenew_alert=function()
-    {
-        message("Server did not provide a refresh token: you will have to reauthenticate to refresh.\n",
-                "Add the 'offline_access' scope to obtain a refresh token.")
-    }
-))
+        c(body, self$token_args,
+            if(self$version == 1)
+                list(resource=self$resource)
+            else list(scope=paste(self$scope, collapse=" "))
+        )
+    }))
 

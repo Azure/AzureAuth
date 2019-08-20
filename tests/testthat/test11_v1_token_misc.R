@@ -1,4 +1,4 @@
-context("v1.0 token")
+context("v1.0 token other")
 
 tenant <- Sys.getenv("AZ_TEST_TENANT_ID")
 app <- Sys.getenv("AZ_TEST_APP_ID")
@@ -9,9 +9,10 @@ cert_app <- Sys.getenv("AZ_TEST_CERT_APP_ID")
 cert_file <- Sys.getenv("AZ_TEST_CERT_FILE")
 web_app <- Sys.getenv("AZ_TEST_WEB_APP_ID")
 web_app_pwd <- Sys.getenv("AZ_TEST_WEB_APP_PASSWORD")
+userpwd <- Sys.getenv("AZ_TEST_USERPWD")
 
 if(tenant == "" || app == "" || username == "" || password == "" || native_app == "" ||
-   cert_app == "" || cert_file == "" || web_app == "" || web_app_pwd == "")
+   cert_app == "" || cert_file == "" || web_app == "" || web_app_pwd == "" || userpwd == "")
     skip("Authentication tests skipped: ARM credentials not set")
 
 aut_hash <- Sys.getenv("AZ_TEST_AUT_HASH")
@@ -28,60 +29,7 @@ if(system.file(package="httpuv") == "")
 if(!interactive())
     skip("Authentication tests skipped: must be an interactive session")
 
-test_that("v1.0 simple authentication works",
-{
-    suppressWarnings(file.remove(dir(AzureR_dir(), full.names=TRUE)))
-
-    res <- "https://management.azure.com/"
-
-    # obtain new tokens
-    aut_tok <- get_azure_token(res, tenant, native_app, auth_type="authorization_code")
-    expect_true(is_azure_token(aut_tok))
-    expect_identical(aut_tok$hash(), aut_hash)
-
-    ccd_tok <- get_azure_token(res, tenant, app, password=password)
-    expect_true(is_azure_token(ccd_tok))
-    expect_identical(ccd_tok$hash(), ccd_hash)
-
-    dev_tok <- get_azure_token(res, tenant, native_app, auth_type="device_code")
-    expect_true(is_azure_token(dev_tok))
-    expect_identical(dev_tok$hash(), dev_hash)
-
-    aut_expire <- as.numeric(aut_tok$credentials$expires_on)
-    ccd_expire <- as.numeric(ccd_tok$credentials$expires_on)
-    dev_expire <- as.numeric(dev_tok$credentials$expires_on)
-
-    Sys.sleep(2)
-
-    # refresh/reauthenticate
-    aut_tok$refresh()
-    ccd_tok$refresh()
-    dev_tok$refresh()
-
-    expect_true(as.numeric(aut_tok$credentials$expires_on) > aut_expire)
-    expect_true(as.numeric(ccd_tok$credentials$expires_on) > ccd_expire)
-    expect_true(as.numeric(dev_tok$credentials$expires_on) > dev_expire)
-
-    # load cached tokens: should not get repeated login prompts/screens
-    aut_tok2 <- get_azure_token(res, tenant, native_app, auth_type="authorization_code")
-    expect_true(is_azure_token(aut_tok2))
-    expect_identical(aut_tok2$hash(), aut_hash)
-
-    ccd_tok2 <- get_azure_token(res, tenant, app, password=password)
-    expect_true(is_azure_token(ccd_tok2))
-    expect_identical(ccd_tok2$hash(), ccd_hash)
-
-    dev_tok2 <- get_azure_token(res, tenant, native_app, auth_type="device_code")
-    expect_true(is_azure_token(dev_tok2))
-    expect_identical(dev_tok2$hash(), dev_hash)
-
-    # resource must be a single string
-    expect_error(get_azure_token(c("res", "openid"), tenant, native_app))
-
-    expect_null(delete_azure_token(res, tenant, native_app, auth_type="authorization_code", confirm=FALSE))
-    expect_null(delete_azure_token(res, tenant, app, password=password, confirm=FALSE))
-    expect_null(delete_azure_token(res, tenant, native_app, auth_type="device_code", confirm=FALSE))
-})
+suppressWarnings(file.remove(dir(AzureR_dir(), full.names=TRUE)))
 
 
 test_that("Providing optional args works",
@@ -91,10 +39,7 @@ test_that("Providing optional args works",
     # login hint
     aut_tok <- get_azure_token(res, tenant, native_app, username=username, auth_type="authorization_code")
     expect_true(is_azure_token(aut_tok))
-
-    # cannot provide username and password with authcode
-    expect_error(
-        get_azure_token(res, tenant, native_app, password=password, username=username, auth_type="authorization_code"))
+    expect_identical(res, decode_jwt(aut_tok)$payload$aud)
 
     expect_null(
         delete_azure_token(res, tenant, native_app, username=username, auth_type="authorization_code", confirm=FALSE))
@@ -108,6 +53,7 @@ test_that("Providing path in aad_host works",
 
     tok <- get_azure_token(res, tenant, app, password=password, aad_host=aad_url)
     expect_true(is_azure_token(tok))
+    expect_identical(res, decode_jwt(tok)$payload$aud)
 })
 
 
@@ -116,13 +62,14 @@ test_that("On-behalf-of flow works",
     tok0 <- get_azure_token(app, tenant, native_app)
     expect_true(is_azure_token(tok0))
 
-    name0 <- decode_jwt(tok0$credentials$access_token)$payload$name
+    name0 <- decode_jwt(tok0)$payload$name
     expect_type(name0, "character")
 
     tok1 <- get_azure_token("https://graph.microsoft.com/", tenant, app, password, on_behalf_of=tok0)
     expect_true(is_azure_token(tok1))
+    expect_identical("https://graph.microsoft.com/", decode_jwt(tok1)$payload$aud)
 
-    name1 <- decode_jwt(tok1$credentials$access_token)$payload$name
+    name1 <- decode_jwt(tok1)$payload$name
     expect_identical(name0, name1)
 
     expect_silent(tok1$refresh())
@@ -134,6 +81,7 @@ test_that("Certificate authentication works",
     res <- "https://management.azure.com/"
     tok <- get_azure_token(res, tenant, cert_app, certificate=cert_file)
     expect_true(is_azure_token(tok))
+    expect_identical(res, decode_jwt(tok)$payload$aud)
 })
 
 
@@ -145,11 +93,13 @@ test_that("Standalone auth works",
     code <- AzureAuth:::listen_for_authcode(auth_uri, "http://localhost:1410")
     tok <- get_azure_token(res, tenant, native_app, auth_code=code, use_cache=FALSE)
     expect_identical(tok$hash(), aut_hash)
+    expect_identical(res, decode_jwt(tok)$payload$aud)
 
     creds <- get_device_creds(res, tenant, native_app)
     cat(creds$message, "\n")
     tok2 <- get_azure_token(res, tenant, native_app, auth_type="device_code", device_creds=creds, use_cache=FALSE)
     expect_identical(tok2$hash(), dev_hash)
+    expect_identical(res, decode_jwt(tok2)$payload$aud)
 })
 
 
@@ -159,11 +109,28 @@ test_that("Webapp authentication works",
 
     tok <- get_azure_token(res, tenant, web_app, password=web_app_pwd, auth_type="authorization_code")
     expect_true(is_azure_token(tok))
+    expect_identical(res, decode_jwt(tok)$payload$aud)
 
     tok2 <- get_azure_token(res, tenant, web_app, password=web_app_pwd)  # client credentials
     expect_true(is_azure_token(tok2))
     expect_identical(tok2$auth_type, "client_credentials")
+    expect_identical(res, decode_jwt(tok2)$payload$aud)
+
+    tok3 <- get_azure_token(res, tenant, web_app, password=web_app_pwd, username=username,
+        auth_type="authorization_code")
+    expect_true(is_azure_token(tok2))
+    expect_identical(res, decode_jwt(tok3)$payload$aud)
 
     # web app expects client secret
     expect_error(get_azure_token(res, tenant, web_app))
 })
+
+
+test_that("Resource owner grant works",
+{
+    res <- "https://management.azure.com/"
+
+    tok <- get_azure_token(res, tenant, cli_app, password=userpwd, username=username, auth_type="resource_owner")
+    expect_true(is_azure_token(tok))
+})
+

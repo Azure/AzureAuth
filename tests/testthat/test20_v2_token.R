@@ -34,19 +34,23 @@ test_that("v2.0 simple authentication works",
     suppressWarnings(file.remove(dir(AzureR_dir(), full.names=TRUE)))
 
     res <- "https://management.azure.com/.default"
+    resbase <- "https://management.azure.com"
 
     # obtain new tokens
     aut_tok <- get_azure_token(res, tenant, native_app, auth_type="authorization_code", version=2)
     expect_true(is_azure_token(aut_tok))
     expect_identical(aut_tok$hash(), aut_hash)
+    expect_identical(resbase, decode_jwt(aut_tok)$payload$aud)
 
     ccd_tok <- get_azure_token(res, tenant, app, password=password, version=2)
     expect_true(is_azure_token(ccd_tok))
     expect_identical(ccd_tok$hash(), ccd_hash)
+    expect_identical(resbase, decode_jwt(ccd_tok)$payload$aud)
 
     dev_tok <- get_azure_token(res, tenant, native_app, auth_type="device_code", version=2)
     expect_true(is_azure_token(dev_tok))
     expect_identical(dev_tok$hash(), dev_hash)
+    expect_identical(resbase, decode_jwt(dev_tok)$payload$aud)
 
     aut_expire <- as.numeric(aut_tok$credentials$expires_on)
     ccd_expire <- as.numeric(ccd_tok$credentials$expires_on)
@@ -74,12 +78,15 @@ test_that("v2.0 refresh with offline scope works",
 {
     res <- "https://management.azure.com/.default"
     res2 <- "offline_access"
+    resbase <- "https://management.azure.com"
 
     aut_tok <- get_azure_token(c(res, res2), tenant, native_app, auth_type="authorization_code", version=2)
     expect_true(!is_empty(aut_tok$credentials$refresh_token))
+    expect_identical(resbase, decode_jwt(aut_tok)$payload$aud)
 
     dev_tok <- get_azure_token(c(res, res2), tenant, native_app, auth_type="device_code", version=2)
     expect_true(!is_empty(dev_tok$credentials$refresh_token))
+    expect_identical(resbase, decode_jwt(dev_tok)$payload$aud)
 
     aut_expire <- as.numeric(aut_tok$credentials$expires_on)
     dev_expire <- as.numeric(dev_tok$credentials$expires_on)
@@ -105,116 +112,3 @@ test_that("v2.0 refresh with offline scope works",
     expect_null(delete_azure_token(c(res, res2), tenant, native_app, auth_type="device_code", version=2, confirm=FALSE))
 })
 
-
-# should get 1 authcode screen here
-test_that("Providing optional args works",
-{
-    res <- "https://management.azure.com/.default"
-
-    aut_tok <- get_azure_token(res, tenant, native_app, username=username, auth_type="authorization_code", version=2)
-    expect_true(is_azure_token(aut_tok))
-
-    # cannot provide both username and pwd with authcode
-    expect_error(
-        get_azure_token(res, tenant, native_app, password=password, username=username, auth_type="authorization_code",
-            version=2))
-
-    expect_null(
-        delete_azure_token(res, tenant, native_app, username=username, auth_type="authorization_code", version=2,
-            confirm=FALSE))
-})
-
-
-# should get a 'permissions requested' screen here
-test_that("Providing multiple scopes works",
-{
-    scopes <- c(paste0("https://graph.microsoft.com/",
-                     c("User.Read.All", "Directory.Read.All", "Directory.AccessAsUser.All")),
-                "offline_access")
-
-    aut_tok <- get_azure_token(scopes, tenant, native_app, auth_type="authorization_code", version=2)
-    expect_true(is_azure_token(aut_tok))
-})
-
-
-test_that("Dubious requests handled gracefully",
-{
-    badres <- "resource"
-    expect_error(get_azure_token(badres, tenant, app, password=password, version=2))
-
-    nopath <- "https://management.azure.com"
-    expect_warning(tok <- get_azure_token(nopath, tenant, app, password=password, version=2))
-    expect_equal(tok$scope, "https://management.azure.com/.default")
-})
-
-
-test_that("Providing path in aad_host works",
-{
-    res <- "https://management.azure.com/.default"
-    aad_url <- file.path("https://login.microsoftonline.com", normalize_tenant(tenant), "oauth2/v2.0")
-
-    tok <- get_azure_token(res, tenant, app, password=password, aad_host=aad_url, version=2)
-    expect_true(is_azure_token(tok))
-})
-
-
-test_that("On-behalf-of flow works",
-{
-    res <- file.path(app, ".default")
-    res2 <- "offline_access"
-
-    tok0 <- get_azure_token(c(res, res2), tenant, native_app, version=2)
-    expect_true(is_azure_token(tok0))
-
-    name0 <- decode_jwt(tok0$credentials$access_token)$payload$name
-    expect_type(name0, "character")
-
-    tok1 <- get_azure_token("https://graph.microsoft.com/.default", tenant, app, password, on_behalf_of=tok0, version=2)
-    expect_true(is_azure_token(tok1))
-
-    name1 <- decode_jwt(tok1$credentials$access_token)$payload$name
-    expect_identical(name0, name1)
-
-    expect_silent(tok1$refresh())
-})
-
-
-test_that("Certificate authentication works",
-{
-    res <- "https://management.azure.com/.default"
-    tok <- get_azure_token(res, tenant, cert_app, certificate=cert_file, version=2)
-    expect_true(is_azure_token(tok))
-})
-
-
-test_that("Standalone auth works",
-{
-    res <- "https://management.azure.com/.default"
-
-    auth_uri <- build_authorization_uri(res, tenant, native_app, version=2)
-    code <- AzureAuth:::listen_for_authcode(auth_uri, "http://localhost:1410")
-    tok <- get_azure_token(res, tenant, native_app, version=2, auth_code=code, use_cache=FALSE)
-    expect_identical(tok$hash(), aut_hash)
-
-    creds <- get_device_creds(res, tenant, native_app, version=2)
-    cat(creds$message, "\n")
-    tok2 <- get_azure_token(res, tenant, native_app, auth_type="device_code", version=2, device_creds=creds,
-        use_cache=FALSE)
-    expect_identical(tok2$hash(), dev_hash)
-})
-
-
-test_that("Webapp authentication works",
-{
-    res <- "https://management.azure.com/.default"
-
-    tok <- get_azure_token(res, tenant, web_app, password=web_app_pwd, auth_type="authorization_code", version=2)
-    expect_true(is_azure_token(tok))
-
-    tok2 <- get_azure_token(res, tenant, web_app, password=web_app_pwd, version=2)  # client credentials
-    expect_true(is_azure_token(tok2))
-    expect_identical(tok2$auth_type, "client_credentials")
-
-    # web app expects client secret
-    expect_error(get_azure_token(res, tenant, web_app, version=2))
-})

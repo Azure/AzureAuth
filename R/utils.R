@@ -37,57 +37,6 @@ select_auth_type <- function(password, username, certificate, auth_type, on_beha
 }
 
 
-aad_request_credentials <- function(app, password, username, certificate, auth_type, on_behalf_of)
-{
-    object <- if(auth_type == "on_behalf_of")
-        list(client_id=app, grant_type="urn:ietf:params:oauth:grant-type:jwt-bearer")
-    else list(client_id=app, grant_type=auth_type)
-
-    if(auth_type == "resource_owner")
-    {
-        if(is.null(username) && is.null(password))
-            stop("Must provide a username and password for resource_owner grant", call.=FALSE)
-        object$grant_type <- "password"
-        object$username <- username
-        object$password <- password
-    }
-    else if(auth_type %in% c("client_credentials", "on_behalf_of"))
-    {
-        if(!is.null(password))
-            object$client_secret <- password
-        else if(!is.null(certificate))
-        {
-            object$client_assertion_type <- "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
-            object$client_assertion <- certificate  # not actual assertion: will be replaced later
-        }
-        else stop("Must provide either a client secret or certificate for client_credentials or on_behalf_of grant",
-                  call.=FALSE)
-
-        if(auth_type == "on_behalf_of")
-        {
-            if(is_empty(on_behalf_of))
-                stop("Must provide an Azure token for on_behalf_of grant", call.=FALSE)
-
-            object$requested_token_use <- "on_behalf_of"
-            object$assertion <- if(is_azure_token(on_behalf_of))
-                on_behalf_of$credentials$access_token
-            else as.character(on_behalf_of)
-        }
-    }
-    else if(auth_type == "authorization_code")
-    {
-        if(!is.null(password) && !is.null(username))
-            stop("Cannot provide both a username and secret with authorization_code method", call.=FALSE)
-        if(!is.null(username))
-            object$login_hint <- username
-        if(!is.null(password))
-            object$client_secret <- password
-    }
-
-    object
-}
-
-
 process_aad_response <- function(res)
 {
     status <- httr::status_code(res)

@@ -5,7 +5,7 @@
 #' @param resource For AAD v1.0, the URL of your resource host, or a GUID. For AAD v2.0, a character vector of scopes, each consisting of a URL or GUID along with a path designating the access scope. See 'Details' below.
 #' @param tenant Your tenant. This can be a name ("myaadtenant"), a fully qualified domain name ("myaadtenant.onmicrosoft.com" or "mycompanyname.com"), or a GUID.
 #' @param app The client/app ID to use to authenticate with.
-#' @param password The password, either for the app, or your username if supplied. See 'Details' below.
+#' @param password For most authentication flows, this is the password for the _app_ where needed, also known as the client secret. For the resource owner grant, this is your personal account password. See 'Details' below.
 #' @param username Your AAD username, if using the resource owner grant. See 'Details' below.
 #' @param certificate A file containing the certificate for authenticating with, an Azure Key Vault certificate object, or a call to the `cert_assertion` function to build a client assertion with a certificate. See 'Certificate authentication' below.
 #' @param auth_type The authentication type. See 'Details' below.
@@ -57,7 +57,7 @@
 #' @section OpenID Connect:
 #' `get_azure_token` can be used to obtain ID tokens along with regular OAuth access tokens, when using an interactive authentication flow (authorization_code or device_code). The behaviour depends on the AAD version:
 #' - AAD v1.0 will return an ID token as well as the access token by default; you don't have to do anything extra. However, AAD v1.0 will not _refresh_ the ID token when it expires; you must reauthenticate to get a new one. To ensure you don't pull the cached version of the credentials, specify `use_cache=FALSE` in the calls to `get_azure_token`.
-#' - Unlike AAD v1.0, AAD v2.0 does not return an ID token by default. To get a token, specify `openid` as a scope. On the other hand it _does_ refresh the ID token, so bypassing the cache is not needed.
+#' - Unlike AAD v1.0, AAD v2.0 does not return an ID token by default. To get a token, specify `openid` as a scope. On the other hand it _does_ refresh the ID token, so bypassing the cache is not needed. It's recommended to use AAD v2.0 if you only want an ID token; see the examples below.
 #'
 #' @section Caching:
 #' AzureAuth differs from httr in its handling of token caching in a number of ways. First, caching is based on all the inputs to `get_azure_token` as listed above. Second, it defines its own directory for cached tokens, using the rappdirs package. On recent Windows versions, this will usually be in the location `C:\\Users\\(username)\\AppData\\Local\\AzureR`. On Linux, it will be in `~/.config/AzureR`, and on MacOS, it will be in `~/Library/Application Support/AzureR`. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).
@@ -69,7 +69,9 @@
 #' To delete _all_ cached tokens, use `clean_token_directory`.
 #'
 #' @section Value:
-#' For `get_azure_token`, an object of class either `AzureTokenV1` or `AzureTokenV2` depending on whether the token is for AAD v1.0 or v2.0. For `list_azure_tokens`, a list of such objects retrieved from disk.
+#' For `get_azure_token`, an object inheriting from `AzureToken`. The specific class depends on the authentication flow: `AzureTokenAuthCode`, `AzureTokenDeviceCode`, `AzureTokenClientCreds`, `AzureTokenOnBehalfOf`, `AzureTokenResOwner`. For `get_managed_token`, a similar object of class `AzureTokenManaged`.
+#'
+#' For `list_azure_tokens`, a list of such objects retrieved from disk.
 #'
 #' @seealso
 #' [AzureToken], [httr::oauth2.0_token], [httr::Token], [cert_assertion],
@@ -107,6 +109,12 @@
 #'     password="serviceapp_secret", on_behalf_of=tok0)
 #' tok2 <- get_azure_token("https://graph.microsoft.com/", tenant="mytenant", app="serviceapp_id",
 #'     password="serviceapp_secret", on_behalf_of=tok0)
+#'
+#'
+#' # authorization_code flow with app registered in AAD as a web rather than a native client:
+#' # supply the client secret in the password arg
+#' get_azure_token("https://management.azure.com/", "mytenant", "app_id",
+#'     password="app_secret", auth_type="authorization_code")
 #'
 #'
 #' # use a different redirect URI to the default localhost:1410
@@ -162,11 +170,11 @@
 #' # ID token with AAD v1.0
 #' # if you only want an ID token, set the resource to blank ("")
 #' tok <- get_azure_token("", "mytenant", "app_id", use_cache=FALSE)
-#' tok$credentials$id_token
+#' extract_jwt(tok, "id")
 #'
-#' # ID token with AAD v2.0
+#' # ID token with AAD v2.0 (recommended)
 #' tok2 <- get_azure_token(c("openid", "offline_access"), "mytenant", "app_id", version=2)
-#' tok2$credentials$id_token
+#' extract_jwt("id")
 #'
 #'
 #' # get a token from within a managed identity (VM, container or service)
@@ -179,11 +187,33 @@ get_azure_token <- function(resource, tenant, app, password=NULL, username=NULL,
                             authorize_args=list(), token_args=list(),
                             use_cache=TRUE, on_behalf_of=NULL, auth_code=NULL, device_creds=NULL)
 {
-    if(normalize_aad_version(version) == 1)
-        AzureTokenV1$new(resource, tenant, app, password, username, certificate, auth_type, aad_host,
-                         authorize_args, token_args, use_cache, on_behalf_of, auth_code, device_creds)
-    else AzureTokenV2$new(resource, tenant, app, password, username, certificate, auth_type, aad_host,
-                          authorize_args, token_args, use_cache, on_behalf_of, auth_code, device_creds)
+    auth_type <- select_auth_type(password, username, certificate, auth_type, on_behalf_of)
+
+    common_args <- list(
+        resource=resource,
+        tenant=tenant,
+        app=app,
+        password=password,
+        username=username,
+        certificate=certificate,
+        aad_host=aad_host,
+        version=version,
+        token_args=token_args,
+        use_cache=use_cache
+    )
+
+    switch(auth_type,
+        authorization_code=
+            AzureTokenAuthCode$new(common_args, authorize_args, auth_code),
+        device_code=
+            AzureTokenDeviceCode$new(common_args, device_creds),
+        client_credentials=
+            AzureTokenClientCreds$new(common_args),
+        on_behalf_of=
+            AzureTokenOnBehalfOf$new(common_args, on_behalf_of),
+        resource_owner=
+            AzureTokenResOwner$new(common_args),
+        stop("Unknown authentication method ", auth_type, call.=FALSE))
 }
 
 
@@ -256,23 +286,23 @@ token_hash <- function(resource, tenant, app, password=NULL, username=NULL, cert
                        aad_host="https://login.microsoftonline.com/", version=1,
                        authorize_args=list(), token_args=list(), on_behalf_of=NULL)
 {
-    # reconstruct the hash for the token object from the inputs
-    version <- normalize_aad_version(version)
-    tenant <- normalize_tenant(tenant)
-    auth_type <- select_auth_type(password, username, certificate, auth_type, on_behalf_of)
-    client <- aad_request_credentials(app, password, username, certificate, auth_type, on_behalf_of)
-
-    if(version == 1)
-        scope <- NULL
-    else
-    {
-        # ignore warnings about invalid scopes when computing hash
-        scope <- suppressWarnings(sapply(resource, verify_v2_scope, USE.NAMES=FALSE))
-        resource <- NULL
-    }
-
-    token_hash_internal(version, aad_host, tenant, auth_type, client, resource, scope,
-                        authorize_args, token_args)
+    # create dummy object
+    object <- get_azure_token(
+        resource=resource,
+        tenant=tenant,
+        app=app,
+        password=password,
+        username=username,
+        certificate=certificate,
+        auth_type=auth_type,
+        aad_host=aad_host,
+        version=version,
+        authorize_args=authorize_args,
+        token_args=token_args,
+        on_behalf_of=on_behalf_of,
+        use_cache=NA
+    )
+    object$hash()
 }
 
 
@@ -309,7 +339,7 @@ is_azure_token <- function(object)
 #' @export
 is_azure_v1_token <- function(object)
 {
-    is_azure_token(object) && inherits(object, "AzureTokenV1")
+    is_azure_token(object) && object$version == 1
 }
 
 
@@ -317,5 +347,5 @@ is_azure_v1_token <- function(object)
 #' @export
 is_azure_v2_token <- function(object)
 {
-    is_azure_token(object) && inherits(object, "AzureTokenV2")
+    is_azure_token(object) && object$version == 2
 }

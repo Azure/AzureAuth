@@ -107,19 +107,18 @@ Using the interactive flows (authorization_code and device_code) from within a S
 
 You can also use `get_azure_token` to obtain ID tokens, in addition to access tokens.
 
-With AAD v1.0, using an interactive authentication flow (authorization_code or device_code) will return an ID token by default -- you don't have to do anything extra. The token will be in the `credentials$id_token` component of the returned object.
+With AAD v1.0, using an interactive authentication flow (authorization_code or device_code) will return an ID token by default -- you don't have to do anything extra. However, AAD v1.0 will _not_ refresh the ID token when it expires (only the access token). Because of this, specify `use_cache=FALSE` to avoid picking up cached token credentials which may have been refreshed previously.
 
-AAD v2.0 does not return an ID token by default, but you can get one by specifying `openid` as a scope. Again, this applies only to interactive authentication.
+AAD v2.0 does not return an ID token by default, but you can get one by adding the `openid` scope. Again, this applies only to interactive authentication. If you only want an ID token, it's recommended to use AAD v2.0.
 
 ```r
 # ID token with AAD v1.0
-# if you only want an ID token, set the resource to blank ("")
-tok <- get_azure_token("", "mytenant", "app_id")
-tok$credentials$id_token
+tok <- get_azure_token("", "mytenant", "app_id", use_cache=FALSE)
+extract_jwt(tok, "id")
 
-# ID token with AAD v2.0
+# ID token with AAD v2.0 (recommended)
 tok2 <- get_azure_token(c("openid", "offline_access"), "mytenant", "app_id", version=2)
-tok2$credentials$id_token
+extract_jwt(tok, "id")
 ```
 
 ## Acknowledgements

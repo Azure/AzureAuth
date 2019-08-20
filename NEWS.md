@@ -6,6 +6,7 @@
 * Add `extract_jwt` generic to get the actual token from within an R object, with methods for character strings, `AzureToken` objects and `httr::Token` objects.
 * Fix bug in checking the expiry time for AAD v2.0 tokens.
 * Extend `get_managed_token` to work from within Azure Functions.
+* Refactor the underlying classes to represent authentication flows, which have a much greater impact on the program logic than AAD version. In place of `AzureTokenV1` and `AzureTokenV2` classes, there are now `AzureTokenAuthCode`, `AzureTokenDeviceCode`, `AzureTokenClientCreds`, `AzureTokenOnBehalfOf`, `AzureTokenResOwner`, and `AzureTokenManaged`. There should be no user-visible changes in behaviour arising from this.
 
 # AzureAuth 1.1.1
 
