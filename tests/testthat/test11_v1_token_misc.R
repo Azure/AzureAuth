@@ -29,6 +29,8 @@ if(system.file(package="httpuv") == "")
 if(!interactive())
     skip("Authentication tests skipped: must be an interactive session")
 
+suppressWarnings(file.remove(dir(AzureR_dir(), full.names=TRUE)))
+
 
 test_that("Providing optional args works",
 {
@@ -113,6 +115,11 @@ test_that("Webapp authentication works",
     expect_true(is_azure_token(tok2))
     expect_identical(tok2$auth_type, "client_credentials")
     expect_identical(res, decode_jwt(tok2)$payload$aud)
+
+    tok3 <- get_azure_token(res, tenant, web_app, password=web_app_pwd, username=username,
+        auth_type="authorization_code")
+    expect_true(is_azure_token(tok2))
+    expect_identical(res, decode_jwt(tok3)$payload$aud)
 
     # web app expects client secret
     expect_error(get_azure_token(res, tenant, web_app))

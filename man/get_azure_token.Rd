@@ -126,7 +126,7 @@ OAuth tokens can be authenticated via an SSL/TLS certificate, which is considere
 \code{get_azure_token} can be used to obtain ID tokens along with regular OAuth access tokens, when using an interactive authentication flow (authorization_code or device_code). The behaviour depends on the AAD version:
 \itemize{
 \item AAD v1.0 will return an ID token as well as the access token by default; you don't have to do anything extra. However, AAD v1.0 will not \emph{refresh} the ID token when it expires; you must reauthenticate to get a new one. To ensure you don't pull the cached version of the credentials, specify \code{use_cache=FALSE} in the calls to \code{get_azure_token}.
-\item Unlike AAD v1.0, AAD v2.0 does not return an ID token by default. To get a token, specify \code{openid} as a scope. On the other hand it \emph{does} refresh the ID token, so bypassing the cache is not needed.
+\item Unlike AAD v1.0, AAD v2.0 does not return an ID token by default. To get a token, specify \code{openid} as a scope. On the other hand it \emph{does} refresh the ID token, so bypassing the cache is not needed. It's recommended to use AAD v2.0 if you only want an ID token; see the examples below.
 }
 }
 
@@ -176,6 +176,12 @@ tok1 <- get_azure_token("https://management.azure.com/", tenant="mytenant", app=
     password="serviceapp_secret", on_behalf_of=tok0)
 tok2 <- get_azure_token("https://graph.microsoft.com/", tenant="mytenant", app="serviceapp_id",
     password="serviceapp_secret", on_behalf_of=tok0)
+
+
+# authorization_code flow with app registered in AAD as a web rather than a native client:
+# supply the client secret in the password arg
+get_azure_token("https://management.azure.com/", "mytenant", "app_id",
+    password="app_secret", auth_type="authorization_code")
 
 
 # use a different redirect URI to the default localhost:1410
@@ -231,11 +237,11 @@ get_azure_token("https://management.azure.com/", "mytenant", "app_id",
 # ID token with AAD v1.0
 # if you only want an ID token, set the resource to blank ("")
 tok <- get_azure_token("", "mytenant", "app_id", use_cache=FALSE)
-tok$credentials$id_token
+extract_jwt(tok, "id")
 
-# ID token with AAD v2.0
+# ID token with AAD v2.0 (recommended)
 tok2 <- get_azure_token(c("openid", "offline_access"), "mytenant", "app_id", version=2)
-tok2$credentials$id_token
+extract_jwt("id")
 
 
 # get a token from within a managed identity (VM, container or service)
