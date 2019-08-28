@@ -1,3 +1,7 @@
+# AzureAuth 1.2.0.9000
+
+* Pass the resource and scope as explicit parameters to the AAD endpoint when refreshing a token.
+
 # AzureAuth 1.2.0
 
 * Changes to token acquisition code to better integrate with Shiny. Use the `build_authorization_uri` and `get_device_creds` functions to initiate the authorization step from within a Shiny web app. `get_azure_token` has new `auth_code` and `device_creds` arguments for passing in authorization details obtained separately. See the "Authenticating from Shiny" vignette for a skeleton example app.

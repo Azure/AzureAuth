@@ -104,6 +104,8 @@ public=list(
             body <- list(grant_type="refresh_token",
                 client_id=self$client$client_id,
                 client_secret=self$client$client_secret,
+                resource=self$resource,
+                scope=paste_v2_scopes(self$scope),
                 client_assertion=self$client$client_assertion,
                 client_assertion_type=self$client$client_assertion_type,
                 refresh_token=self$credentials$refresh_token
@@ -182,7 +184,8 @@ private=list(
         c(body, self$token_args,
             if(self$version == 1)
                 list(resource=self$resource)
-            else list(scope=paste(self$scope, collapse=" "))
+            else list(scope=paste_v2_scopes(self$scope))
         )
-    }))
+    }
+))
 

@@ -59,7 +59,7 @@ build_authorization_uri <- function(resource, tenant, app, username=NULL, ...,
     )
     default_opts <- if(version == 1)
         c(default_opts, resource=resource)
-    else c(default_opts, scope=paste(resource, collapse=" "))
+    else c(default_opts, scope=paste_v2_scopes(resource))
 
     opts <- utils::modifyList(default_opts, list(...))
 
@@ -75,7 +75,7 @@ get_device_creds <- function(resource, tenant, app, aad_host="https://login.micr
     uri <- aad_uri(aad_host, normalize_tenant(tenant), version, "devicecode")
     body <- if(version == 1)
         list(resource=resource)
-    else list(scope=paste(resource, collapse=" "))
+    else list(scope=paste_v2_scopes(resource))
     body <- c(body, client_id=app)
 
     res <- httr::POST(uri, body=body, encode="form")

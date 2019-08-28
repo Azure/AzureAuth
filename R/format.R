@@ -18,7 +18,7 @@ format_auth_header <- function(token)
     else
     {
         version <- "v2.0"
-        res <- paste("scope", paste(token$scope, collapse=" "))
+        res <- paste("scope", paste_v2_scopes(token$scope))
     }
 
     tenant <- token$tenant

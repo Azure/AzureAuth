@@ -116,3 +116,9 @@ aad_uri <- function(aad_host, tenant, version, type, query=list())
 
     httr::build_url(uri)
 }
+
+
+paste_v2_scopes <- function(scope)
+{
+    paste(scope, collapse=" ")
+}
