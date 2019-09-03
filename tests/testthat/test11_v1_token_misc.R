@@ -134,3 +134,15 @@ test_that("Resource owner grant works",
     expect_true(is_azure_token(tok))
 })
 
+
+test_that("Refreshing with changed resource works",
+{
+    res <- "https://management.azure.com/"
+
+    tok <- get_azure_token(res, tenant, cli_app)
+    expect_identical(res, decode_jwt(tok)$payload$aud)
+
+    tok$resource <- "https://graph.microsoft.com/"
+    tok$refresh()
+    expect_identical("https://graph.microsoft.com/", decode_jwt(tok)$payload$aud)
+})

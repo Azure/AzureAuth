@@ -171,3 +171,17 @@ test_that("Resource owner grant works",
     expect_identical(resbase, decode_jwt(tok)$payload$aud)
 })
 
+
+test_that("Refreshing with changed resource works",
+{
+    res <- "https://management.azure.com/.default"
+    resbase <- "https://management.azure.com"
+    res2 <- "offline_access"
+
+    tok <- get_azure_token(c(res, res2), tenant, cli_app, version=2)
+    expect_identical(resbase, decode_jwt(tok)$payload$aud)
+
+    tok$scope[1] <- "https://graph.microsoft.com/.default"
+    tok$refresh()
+    expect_identical(decode_jwt(tok)$payload$aud, "https://graph.microsoft.com")
+})
