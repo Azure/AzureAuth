@@ -1,4 +1,4 @@
-# AzureAuth 1.2.0.9000
+# AzureAuth 1.2.1
 
 * Pass the resource and scope as explicit parameters to the AAD endpoint when refreshing a token.
 
