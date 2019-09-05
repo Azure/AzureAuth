@@ -7,7 +7,7 @@
 #' @param app The client/app ID to use to authenticate with.
 #' @param password For most authentication flows, this is the password for the _app_ where needed, also known as the client secret. For the resource owner grant, this is your personal account password. See 'Details' below.
 #' @param username Your AAD username, if using the resource owner grant. See 'Details' below.
-#' @param certificate A file containing the certificate for authenticating with, an Azure Key Vault certificate object, or a call to the `cert_assertion` function to build a client assertion with a certificate. See 'Certificate authentication' below.
+#' @param certificate A file containing the certificate for authenticating with (including the private key), an Azure Key Vault certificate object, or a call to the `cert_assertion` function to build a client assertion with a certificate. See 'Certificate authentication' below.
 #' @param auth_type The authentication type. See 'Details' below.
 #' @param aad_host URL for your AAD host. For the public Azure cloud, this is `https://login.microsoftonline.com/`. Change this if you are using a government or private cloud. Can also be a full URL, eg `https://mydomain.b2clogin.com/mydomain/other/path/names/oauth2` (this is relevant mainly for Azure B2C logins).
 #' @param version The AAD version, either 1 or 2.
@@ -57,16 +57,23 @@
 #' @section OpenID Connect:
 #' `get_azure_token` can be used to obtain ID tokens along with regular OAuth access tokens, when using an interactive authentication flow (authorization_code or device_code). The behaviour depends on the AAD version:
 #' - AAD v1.0 will return an ID token as well as the access token by default; you don't have to do anything extra. However, AAD v1.0 will not _refresh_ the ID token when it expires; you must reauthenticate to get a new one. To ensure you don't pull the cached version of the credentials, specify `use_cache=FALSE` in the calls to `get_azure_token`.
-#' - Unlike AAD v1.0, AAD v2.0 does not return an ID token by default. To get a token, specify `openid` as a scope. On the other hand it _does_ refresh the ID token, so bypassing the cache is not needed. It's recommended to use AAD v2.0 if you only want an ID token; see the examples below.
+#' - Unlike AAD v1.0, AAD v2.0 does not return an ID token by default. To get a token, specify `openid` as a scope. On the other hand it _does_ refresh the ID token, so bypassing the cache is not needed. It's recommended to use AAD v2.0 if you only want an ID token.
 #'
 #' @section Caching:
-#' AzureAuth differs from httr in its handling of token caching in a number of ways. First, caching is based on all the inputs to `get_azure_token` as listed above. Second, it defines its own directory for cached tokens, using the rappdirs package. On recent Windows versions, this will usually be in the location `C:\\Users\\(username)\\AppData\\Local\\AzureR`. On Linux, it will be in `~/.config/AzureR`, and on MacOS, it will be in `~/Library/Application Support/AzureR`. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).
+#' AzureAuth caches tokens based on all the inputs to `get_azure_token` as listed above. Tokens are cached in a custom, user-specific directory, created with the rappdirs package. On recent Windows versions, this will usually be in the location `C:\\Users\\(username)\\AppData\\Local\\AzureR`. On Linux, it will be in `~/.config/AzureR`, and on MacOS, it will be in `~/Library/Application Support/AzureR`. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).
 #'
 #' To list all cached tokens on disk, use `list_azure_tokens`. This returns a list of token objects, named according to their MD5 hashes.
 #'
 #' To delete a cached token, use `delete_azure_token`. This takes the same inputs as `get_azure_token`, or you can specify the MD5 hash directly in the `hash` argument.
 #'
 #' To delete _all_ cached tokens, use `clean_token_directory`.
+#'
+#' @section Refreshing:
+#' A token object can be refreshed by calling its `refresh()` method. If the token's credentials contain a refresh token, this is used; otherwise a new access token is obtained by reauthenticating.
+#'
+#' Note that in AAD, a refresh token can be used to obtain an access token for any resource or scope that you have permissions for. Thus, for example, you could use a refresh token issued on a request for `https://management.azure.com` to obtain a new access token for `https://graph.microsoft.com` (assuming you've been granted permission).
+#'
+#' To obtain an access token for a new resource, change the object's `resource` (for an AAD v1.0 token) or `scope` field (for an AAD v2.0 token) before calling `refresh()`. If you _also_ want to retain the token for the old resource, you should call the `clone()` method first to create a copy. See the examples below.
 #'
 #' @section Value:
 #' For `get_azure_token`, an object inheriting from `AzureToken`. The specific class depends on the authentication flow: `AzureTokenAuthCode`, `AzureTokenDeviceCode`, `AzureTokenClientCreds`, `AzureTokenOnBehalfOf`, `AzureTokenResOwner`. For `get_managed_token`, a similar object of class `AzureTokenManaged`.
@@ -130,10 +137,10 @@
 #'     "mytenant", "app_id", version=2)
 #'
 #' # requesting multiple scopes (Microsoft Graph) with AAD 2.0
-#' tok <- get_azure_token(c("https://graph.microsoft.com/User.Read.All",
-#'                          "https://graph.microsoft.com/User.ReadWrite.All",
-#'                          "https://graph.microsoft.com/Directory.ReadWrite.All",
-#'                          "offline_access"),
+#' get_azure_token(c("https://graph.microsoft.com/User.Read.All",
+#'                   "https://graph.microsoft.com/User.ReadWrite.All",
+#'                   "https://graph.microsoft.com/Directory.ReadWrite.All",
+#'                   "offline_access"),
 #'     "mytenant", "app_id", version=2)
 #'
 #'
@@ -179,6 +186,20 @@
 #'
 #' # get a token from within a managed identity (VM, container or service)
 #' get_managed_token("https://management.azure.com/")
+#'
+#'
+#' # use a refresh token from one resource to get an access token for another resource
+#' tok <- get_azure_token("https://myresource", "mytenant", "app_id")
+#' tok2 <- tok$clone()
+#' tok2$resource <- "https://anotherresource"
+#' tok2$refresh()
+#'
+#' # same for AAD v2.0
+#' tok <- get_azure_token(c("https://myresource/.default", "offline_access"),
+#'     "mytenant", "app_id", version=2)
+#' tok2 <- tok$clone()
+#' tok2$scope <- c("https://anotherresource/.default", "offline_access")
+#' tok2$refresh()
 #'
 #' }
 #' @export

@@ -56,7 +56,7 @@ is_azure_v2_token(object)
 
 \item{username}{Your AAD username, if using the resource owner grant. See 'Details' below.}
 
-\item{certificate}{A file containing the certificate for authenticating with, an Azure Key Vault certificate object, or a call to the \code{cert_assertion} function to build a client assertion with a certificate. See 'Certificate authentication' below.}
+\item{certificate}{A file containing the certificate for authenticating with (including the private key), an Azure Key Vault certificate object, or a call to the \code{cert_assertion} function to build a client assertion with a certificate. See 'Certificate authentication' below.}
 
 \item{auth_type}{The authentication type. See 'Details' below.}
 
@@ -126,19 +126,28 @@ OAuth tokens can be authenticated via an SSL/TLS certificate, which is considere
 \code{get_azure_token} can be used to obtain ID tokens along with regular OAuth access tokens, when using an interactive authentication flow (authorization_code or device_code). The behaviour depends on the AAD version:
 \itemize{
 \item AAD v1.0 will return an ID token as well as the access token by default; you don't have to do anything extra. However, AAD v1.0 will not \emph{refresh} the ID token when it expires; you must reauthenticate to get a new one. To ensure you don't pull the cached version of the credentials, specify \code{use_cache=FALSE} in the calls to \code{get_azure_token}.
-\item Unlike AAD v1.0, AAD v2.0 does not return an ID token by default. To get a token, specify \code{openid} as a scope. On the other hand it \emph{does} refresh the ID token, so bypassing the cache is not needed. It's recommended to use AAD v2.0 if you only want an ID token; see the examples below.
+\item Unlike AAD v1.0, AAD v2.0 does not return an ID token by default. To get a token, specify \code{openid} as a scope. On the other hand it \emph{does} refresh the ID token, so bypassing the cache is not needed. It's recommended to use AAD v2.0 if you only want an ID token.
 }
 }
 
 \section{Caching}{
 
-AzureAuth differs from httr in its handling of token caching in a number of ways. First, caching is based on all the inputs to \code{get_azure_token} as listed above. Second, it defines its own directory for cached tokens, using the rappdirs package. On recent Windows versions, this will usually be in the location \code{C:\\Users\\(username)\\AppData\\Local\\AzureR}. On Linux, it will be in \code{~/.config/AzureR}, and on MacOS, it will be in \code{~/Library/Application Support/AzureR}. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).
+AzureAuth caches tokens based on all the inputs to \code{get_azure_token} as listed above. Tokens are cached in a custom, user-specific directory, created with the rappdirs package. On recent Windows versions, this will usually be in the location \code{C:\\Users\\(username)\\AppData\\Local\\AzureR}. On Linux, it will be in \code{~/.config/AzureR}, and on MacOS, it will be in \code{~/Library/Application Support/AzureR}. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).
 
 To list all cached tokens on disk, use \code{list_azure_tokens}. This returns a list of token objects, named according to their MD5 hashes.
 
 To delete a cached token, use \code{delete_azure_token}. This takes the same inputs as \code{get_azure_token}, or you can specify the MD5 hash directly in the \code{hash} argument.
 
 To delete \emph{all} cached tokens, use \code{clean_token_directory}.
+}
+
+\section{Refreshing}{
+
+A token object can be refreshed by calling its \code{refresh()} method. If the token's credentials contain a refresh token, this is used; otherwise a new access token is obtained by reauthenticating.
+
+Note that in AAD, a refresh token can be used to obtain an access token for any resource or scope that you have permissions for. Thus, for example, you could use a refresh token issued on a request for \code{https://management.azure.com} to obtain a new access token for \code{https://graph.microsoft.com} (assuming you've been granted permission).
+
+To obtain an access token for a new resource, change the object's \code{resource} (for an AAD v1.0 token) or \code{scope} field (for an AAD v2.0 token) before calling \code{refresh()}. If you \emph{also} want to retain the token for the old resource, you should call the \code{clone()} method first to create a copy. See the examples below.
 }
 
 \section{Value}{
@@ -197,10 +206,10 @@ token2 <- get_azure_token(c("https://management.azure.com/.default", "offline_ac
     "mytenant", "app_id", version=2)
 
 # requesting multiple scopes (Microsoft Graph) with AAD 2.0
-tok <- get_azure_token(c("https://graph.microsoft.com/User.Read.All",
-                         "https://graph.microsoft.com/User.ReadWrite.All",
-                         "https://graph.microsoft.com/Directory.ReadWrite.All",
-                         "offline_access"),
+get_azure_token(c("https://graph.microsoft.com/User.Read.All",
+                  "https://graph.microsoft.com/User.ReadWrite.All",
+                  "https://graph.microsoft.com/Directory.ReadWrite.All",
+                  "offline_access"),
     "mytenant", "app_id", version=2)
 
 
@@ -246,6 +255,20 @@ extract_jwt("id")
 
 # get a token from within a managed identity (VM, container or service)
 get_managed_token("https://management.azure.com/")
+
+
+# use a refresh token from one resource to get an access token for another resource
+tok <- get_azure_token("https://myresource", "mytenant", "app_id")
+tok2 <- tok$clone()
+tok2$resource <- "https://anotherresource"
+tok2$refresh()
+
+# same for AAD v2.0
+tok <- get_azure_token(c("https://myresource/.default", "offline_access"),
+    "mytenant", "app_id", version=2)
+tok2 <- tok$clone()
+tok2$scope <- c("https://anotherresource/.default", "offline_access")
+tok2$refresh()
 
 }
 }
