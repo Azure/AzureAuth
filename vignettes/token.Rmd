@@ -152,6 +152,29 @@ delete_azure_token("myresource", "mytenant", "app_id",
                    password="client_credentials", auth_type="client_credentials")
 ```
 
+## Refreshing
+
+A token object can be refreshed by calling its `refresh()` method. If the token's credentials contain a refresh token, this is used; otherwise a new access token is obtained by reauthenticating. In most situations you don't need to worry about this, as the AzureR packages will check if the credentials have expired and automatically refresh them for you.
+
+One scenario where you might want to refresh manually is using a token for one resource to obtain a token for another resource. Note that in AAD, a refresh token can be used to obtain an access token for any resource or scope that you have permissions for. Thus, for example, you could use a refresh token issued on a request for `https://management.azure.com` to obtain a new access token for `https://graph.microsoft.com` (assuming you've been granted permission).
+
+To obtain an access token for a new resource, change the object's `resource` (for an AAD v1.0 token) or `scope` field (for an AAD v2.0 token) before calling `refresh()`. If you _also_ want to retain the token for the old resource, you should call the `clone()` method first to create a copy.
+
+```r
+# use a refresh token from one resource to get an access token for another resource
+tok <- get_azure_token("https://myresource", "mytenant", "app_id")
+tok2 <- tok$clone()
+tok2$resource <- "https://anotherresource"
+tok2$refresh()
+
+# same for AAD v2.0
+tok <- get_azure_token(c("https://myresource/.default", "offline_access"),
+    "mytenant", "app_id", version=2)
+tok2 <- tok$clone()
+tok2$scope <- c("https://anotherresource/.default", "offline_access")
+tok2$refresh()
+```
+
 ## More information
 
 For the details on Azure Active Directory, consult the [Microsoft documentation](https://docs.microsoft.com/en-us/azure/active-directory/develop/).
