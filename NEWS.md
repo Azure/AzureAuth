@@ -1,6 +1,7 @@
 # AzureAuth 1.2.1
 
 * Pass the resource and scope as explicit parameters to the AAD endpoint when refreshing a token. Among other things, this allows using a refresh token from one resource to obtain an access token for another resource.
+* Use `utils::askYesNo` for prompts, eg when creating the AzureR caching directory and deleting tokens; this fixes a bug in reading the input. As a side-effect, Windows users who are using RGUI.exe will see a popup dialog box instead of a message in the terminal.
 
 # AzureAuth 1.2.0
 

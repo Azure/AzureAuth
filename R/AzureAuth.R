@@ -15,11 +15,11 @@ make_AzureR_dir <- function()
     AzureR_dir <- AzureR_dir()
     if(!dir.exists(AzureR_dir) && interactive())
     {
-        yn <- readline(paste0(
+        ok <- askYesNo(paste0(
             "The AzureR packages can save your authentication credentials in the directory:\n\n",
             AzureR_dir, "\n\n",
-            "This saves you having to re-authenticate with Azure in future sessions. Create this directory? (Y/n) "))
-        if(tolower(substr(yn, 1, 1)) == "n")
+            "This saves you having to re-authenticate with Azure in future sessions. Create this directory?"))
+        if(!isTRUE(ok))
             return(invisible(NULL))
 
         dir.create(AzureR_dir, recursive=TRUE)
