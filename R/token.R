@@ -256,7 +256,7 @@ delete_azure_token <- function(resource, tenant, app, password=NULL, username=NU
 
     if(confirm && interactive())
     {
-        ok <- askYesNo("Do you really want to delete this Azure Active Directory token?", FALSE)
+        ok <- utils::askYesNo("Do you really want to delete this Azure Active Directory token?", FALSE)
         if(!isTRUE(ok))
             return(invisible(NULL))
     }
@@ -274,7 +274,7 @@ clean_token_directory <- function(confirm=TRUE)
 
     if(confirm && interactive())
     {
-        ok <- askYesNo("Do you really want to delete ALL saved Azure Active Directory tokens?", FALSE)
+        ok <- utils::askYesNo("Do you really want to delete ALL saved Azure Active Directory tokens?", FALSE)
         if(!isTRUE(ok))
             return(invisible(NULL))
     }
