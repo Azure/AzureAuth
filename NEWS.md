@@ -1,3 +1,7 @@
+# AzureAuth 1.2.2
+
+* Only call `utils::askYesNo` if R version is 3.5 or higher.
+
 # AzureAuth 1.2.1
 
 * Pass the resource and scope as explicit parameters to the AAD endpoint when refreshing a token. Among other things, this allows using a refresh token from one resource to obtain an access token for another resource.

@@ -128,7 +128,7 @@ confirmed <- function(msg, default=TRUE)
 {
     ok <- if(getRversion() < numeric_version("3.5.0"))
     {
-        msg <- paste(msg, if(default) "(Yes/no/cancel)" else "(yes/No/cancel)")
+        msg <- paste(msg, if(default) "(Yes/no/cancel) " else "(yes/No/cancel) ")
         yn <- readline(msg)
         if(nchar(yn) == 0)
             default
