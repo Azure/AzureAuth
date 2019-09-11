@@ -118,7 +118,7 @@ extract_jwt(tok, "id")
 
 # ID token with AAD v2.0 (recommended)
 tok2 <- get_azure_token(c("openid", "offline_access"), "mytenant", "app_id", version=2)
-extract_jwt(tok, "id")
+extract_jwt(tok2, "id")
 ```
 
 ## Acknowledgements
