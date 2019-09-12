@@ -124,7 +124,8 @@ paste_v2_scopes <- function(scope)
 }
 
 
-confirmed <- function(msg, default=TRUE)
+# display confirmation prompt, return TRUE/FALSE (no NA)
+get_confirmation <- function(msg, default=TRUE)
 {
     ok <- if(getRversion() < numeric_version("3.5.0"))
     {

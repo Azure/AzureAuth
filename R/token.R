@@ -254,12 +254,10 @@ delete_azure_token <- function(resource, tenant, app, password=NULL, username=NU
         hash <- token_hash(resource, tenant, app, password, username, certificate, auth_type, aad_host, version,
                            authorize_args, token_args, on_behalf_of)
 
-    if(confirm && interactive())
-    {
-        ok <- confirmed("Do you really want to delete this Azure Active Directory token?", FALSE)
-        if(!ok)
-            return(invisible(NULL))
-    }
+    if(confirm && interactive() &&
+       !get_confirmation("Do you really want to delete this Azure Active Directory token?", FALSE))
+        return(invisible(NULL))
+
     file.remove(file.path(AzureR_dir(), hash))
     invisible(NULL)
 }
@@ -272,12 +270,10 @@ clean_token_directory <- function(confirm=TRUE)
     if(!dir.exists(AzureR_dir()))
         return(invisible(NULL))
 
-    if(confirm && interactive())
-    {
-        ok <- confirmed("Do you really want to delete ALL saved Azure Active Directory tokens?", FALSE)
-        if(!ok)
+    if(confirm && interactive() &&
+       !get_confirmation("Do you really want to delete ALL saved Azure Active Directory tokens?", FALSE))
             return(invisible(NULL))
-    }
+
     toks <- dir(AzureR_dir(), pattern="^[0-9a-f]{32}$", full.names=TRUE)
     file.remove(toks)
     invisible(NULL)
