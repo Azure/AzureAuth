@@ -1,3 +1,7 @@
+# AzureAuth 1.2.2.9000
+
+* `is_guid`, `normalize_guid` and `normalize_tenant` now accept vector arguments. `normalize_guid` throws an error if any of its argument values is not a valid GUID.
+
 # AzureAuth 1.2.2
 
 * Only call `utils::askYesNo` if R version is 3.5 or higher.
