@@ -22,6 +22,13 @@ test_that("normalize_tenant, normalize_guid work",
     expect_identical(normalize_tenant("mytenant.com"), "mytenant.com")
     # iterating normalize shouldn't change result
     expect_identical(normalize_tenant(normalize_tenant("mytenant")), "mytenant.onmicrosoft.com")
+
+    # vector args
+    expect_true(all(is_guid(c(guid, guid2))))
+    expect_identical(is_guid(c(guid, guid5)), c(TRUE, FALSE))
+    expect_identical(normalize_guid(c(guid, guid2)), c(guid, guid))
+    expect_error(normalize_guid(c(guid, guid5)))
+    expect_identical(normalize_tenant(c("mytenant", guid)), c("mytenant.onmicrosoft.com", guid))
 })
 
 

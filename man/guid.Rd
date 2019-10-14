@@ -18,14 +18,14 @@ is_guid(x)
 \item{x}{For \code{is_guid}, a character string; for \code{normalize_guid}, a string containing a \emph{validly formatted} GUID.}
 }
 \value{
-For \code{is_guid}, whether the argument is a validly formatted GUID.
+For \code{is_guid}, a logical vector indicating which values of \code{x} are validly formatted GUIDs.
 
-For \code{normalize_guid}, the GUID in canonical format. If the argument is not recognised as a GUID, it throws an error.
+For \code{normalize_guid}, a vector of GUIDs in canonical format. If any values of \code{x} are not recognised as GUIDs, it throws an error.
 
-For \code{normalize_tenant}, the normalized ID or name of the tenant.
+For \code{normalize_tenant}, the normalized tenant IDs or names.
 }
 \description{
-These functions are used by \code{get_azure_token} to recognise and properly format tenant and app IDs.
+These functions are used by \code{get_azure_token} to recognise and properly format tenant and app IDs. \code{is_guid} can also be used generically for identifying GUIDs/UUIDs in any context.
 }
 \details{
 A tenant can be identified either by a GUID, or its name, or a fully-qualified domain name (FQDN). The rules for normalizing a tenant are:
@@ -36,7 +36,7 @@ A tenant can be identified either by a GUID, or its name, or a fully-qualified d
 \item Otherwise, return the value of \code{tenant}
 }
 
-See the link below for GUID formats recognised by these functions.
+These functions are vectorised. See the link below for the GUID formats they accept.
 }
 \examples{
 
@@ -54,6 +54,12 @@ normalize_guid("72f988bf86f141af91ab2d7cd011db47")
 normalize_tenant("microsoft")     # returns 'microsoft.onmicrosoft.com'
 normalize_tenant("microsoft.com") # returns 'microsoft.com'
 normalize_tenant("72f988bf-86f1-41af-91ab-2d7cd011db47") # returns the GUID
+
+# vector arguments are accepted
+ids <- c("72f988bf-86f1-41af-91ab-2d7cd011db47", "72f988bf86f141af91ab2d7cd011db47")
+is_guid(ids)
+normalize_guid(ids)
+normalize_tenant(c("microsoft", ids))
 
 }
 \seealso{
