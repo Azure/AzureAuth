@@ -14,7 +14,7 @@ select_auth_type <- function(password, username, certificate, auth_type, on_beha
     got_cert <- !is.null(certificate)
     got_httpuv <- system.file(package="httpuv") != ""
 
-    if(got_pwd && got_user && !got_cert)
+    auth_type <- if(got_pwd && got_user && !got_cert)
         "resource_owner"
     else if(!got_pwd && !got_user && !got_cert)
     {
@@ -34,6 +34,9 @@ select_auth_type <- function(password, username, certificate, auth_type, on_beha
         else "on_behalf_of"
     }
     else stop("Can't select authentication method", call.=FALSE)
+
+    message("Using ", auth_type, " flow")
+    auth_type
 }
 
 
