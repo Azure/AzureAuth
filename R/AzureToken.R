@@ -165,7 +165,12 @@ private=list(
     {
         # v2.0 endpoint doesn't provide an expires_on field, set it here
         if(is.null(self$credentials$expires_on))
-            self$credentials$expires_on <- as.character(decode_jwt(self$credentials$access_token)$payload$exp)
+        {
+            expiry <- try(as.character(decode_jwt(self$credentials$access_token)$payload$exp))
+            if(inherits(expiry, "try-error"))
+                stop("Bad access token, expiry date not found (do you have a valid tenant?)", call.=FALSE)
+            self$credentials$expires_on <- expiry
+        }
     },
 
     aad_uri=function(type, ...)
