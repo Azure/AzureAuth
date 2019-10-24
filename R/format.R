@@ -24,8 +24,15 @@ format_auth_header <- function(token)
     tenant <- token$tenant
     if(tenant == "common")
     {
-        token_obj <- decode_jwt(token$credentials$access_token)
-        tenant <- paste0(tenant, " / ", token_obj$payload$tid)
+        token_obj <- try(decode_jwt(token), silent=TRUE)
+        if(inherits(token_obj, "try-error"))
+        {
+            token_obj <- try(decode_jwt(token, "id"), silent=TRUE)
+            if(inherits(token_obj, "try-error"))
+                tenant <- "NA"
+            else tenant <- paste0(tenant, " / ", token_obj$payload$tid)
+        }
+        else tenant <- paste0(tenant, " / ", token_obj$payload$tid)
     }
 
     paste0("Azure Active Directory ", version, " token for ", res, "\n",
