@@ -4,6 +4,7 @@
 \alias{get_managed_token}
 \alias{get_azure_token}
 \alias{delete_azure_token}
+\alias{load_azure_token}
 \alias{clean_token_directory}
 \alias{list_azure_tokens}
 \alias{token_hash}
@@ -25,6 +26,8 @@ delete_azure_token(resource, tenant, app, password = NULL,
   aad_host = "https://login.microsoftonline.com/", version = 1,
   authorize_args = list(), token_args = list(), on_behalf_of = NULL,
   hash = NULL, confirm = TRUE)
+
+load_azure_token(hash)
 
 clean_token_directory(confirm = TRUE)
 
@@ -72,7 +75,7 @@ is_azure_v2_token(object)
 
 \item{device_creds}{For the \code{device_code} flow, the device credentials used to verify the session between the client and the server. Only used if \code{auth_type == "device_code"}.}
 
-\item{hash}{The MD5 hash of this token, computed from the above inputs. Used by \code{delete_azure_token} to identify a cached token to delete.}
+\item{hash}{The MD5 hash of this token, computed from the above inputs. Used by \code{load_azure_token} and \code{delete_azure_token} to identify a cached token to load and delete, respectively.}
 
 \item{confirm}{For \code{delete_azure_token}, whether to prompt for confirmation before deleting a token.}
 
@@ -82,7 +85,7 @@ is_azure_v2_token(object)
 Use these functions to authenticate with Azure Active Directory (AAD).
 }
 \details{
-\code{get_azure_token} does much the same thing as \code{\link[httr:oauth2.0_token]{httr::oauth2.0_token()}}, but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. \code{delete_azure_token} deletes a cached token, and \code{list_azure_tokens} lists currently cached tokens.
+\code{get_azure_token} does much the same thing as \code{\link[httr:oauth2.0_token]{httr::oauth2.0_token()}}, but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. \code{load_azure_token} loads a token given its hash, \code{delete_azure_token} deletes a cached token given either the credentials or the hash, and \code{list_azure_tokens} lists currently cached tokens.
 
 \code{get_managed_token} is a specialised function to acquire tokens for a \emph{managed identity}. This is an Azure service, such as a VM or container, that has been assigned its own identity and can be granted access permissions like a regular user. The advantage of managed identities over the other authentication methods (see below) is that you don't have to store a secret password, which improves security. Note that \code{get_managed_token} can only be used from within the managed identity itself.
 

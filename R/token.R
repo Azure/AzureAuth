@@ -19,7 +19,7 @@
 #' @param device_creds For the `device_code` flow, the device credentials used to verify the session between the client and the server. Only used if `auth_type == "device_code"`.
 #'
 #' @details
-#' `get_azure_token` does much the same thing as [httr::oauth2.0_token()], but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. `delete_azure_token` deletes a cached token, and `list_azure_tokens` lists currently cached tokens.
+#' `get_azure_token` does much the same thing as [httr::oauth2.0_token()], but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. `load_azure_token` loads a token given its hash, `delete_azure_token` deletes a cached token given either the credentials or the hash, and `list_azure_tokens` lists currently cached tokens.
 #'
 #' `get_managed_token` is a specialised function to acquire tokens for a _managed identity_. This is an Azure service, such as a VM or container, that has been assigned its own identity and can be granted access permissions like a regular user. The advantage of managed identities over the other authentication methods (see below) is that you don't have to store a secret password, which improves security. Note that `get_managed_token` can only be used from within the managed identity itself.
 #'
@@ -238,7 +238,7 @@ get_azure_token <- function(resource, tenant, app, password=NULL, username=NULL,
 }
 
 
-#' @param hash The MD5 hash of this token, computed from the above inputs. Used by `delete_azure_token` to identify a cached token to delete.
+#' @param hash The MD5 hash of this token, computed from the above inputs. Used by `load_azure_token` and `delete_azure_token` to identify a cached token to load and delete, respectively.
 #' @param confirm For `delete_azure_token`, whether to prompt for confirmation before deleting a token.
 #' @rdname get_azure_token
 #' @export
@@ -260,6 +260,14 @@ delete_azure_token <- function(resource, tenant, app, password=NULL, username=NU
 
     file.remove(file.path(AzureR_dir(), hash))
     invisible(NULL)
+}
+
+
+#' @rdname get_azure_token
+#' @export
+load_azure_token <- function(hash)
+{
+    loadRDS(file.path(AzureR_dir(), hash))
 }
 
 
