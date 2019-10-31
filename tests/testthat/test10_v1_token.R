@@ -50,6 +50,10 @@ test_that("v1.0 simple authentication works",
     expect_identical(dev_tok$hash(), dev_hash)
     expect_identical(res, decode_jwt(dev_tok)$payload$aud)
 
+    aut_tok2 <- load_azure_token(aut_hash)
+    expect_true(is_azure_token(aut_tok2))
+    expect_identical(aut_tok$credentials$access_token, aut_tok2$credentials$access_token)
+
     aut_expire <- as.numeric(aut_tok$credentials$expires_on)
     ccd_expire <- as.numeric(ccd_tok$credentials$expires_on)
     dev_expire <- as.numeric(dev_tok$credentials$expires_on)

@@ -81,15 +81,6 @@ tok2 <- get_azure_token("resource2", "mytenant," "serviceapp_id",
 
 If you don't specify the method, `get_azure_token` makes a best guess based on the presence or absence of the other authentication arguments, and whether httpuv is installed.
 
-```r
-# this will default to authorization_code if httpuv is installed, and device_code if not
-get_azure_token("myresource", "mytenant", "app_id")
-
-# this will use on_behalf_of method
-get_azure_token("myresource", "mytenant", "app_id",
-                password="client_secret", on_behalf_of=token)
-```
-
 ### Managed identities
 
 AzureAuth provides `get_managed_token` to obtain tokens from within a managed identity. This is a VM, service or container in Azure that can authenticate as itself, which removes the need to save secret passwords or certificates.

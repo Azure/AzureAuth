@@ -267,7 +267,7 @@ delete_azure_token <- function(resource, tenant, app, password=NULL, username=NU
 #' @export
 load_azure_token <- function(hash)
 {
-    loadRDS(file.path(AzureR_dir(), hash))
+    readRDS(file.path(AzureR_dir(), hash))
 }
 
 

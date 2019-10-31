@@ -39,6 +39,13 @@ token1 <- get_azure_token("https://management.azure.com/", "mytenant", "app_id")
 # same request to AAD v2.0, along with a refresh token
 token2 <- get_azure_token(c("https://management.azure.com/.default", "offline_access"),
     "mytenant", "app_id", version=2)
+
+# requesting multiple scopes in AAD v2.0 (Microsoft Graph)
+scopes <- c("https://graph.microsoft.com/User.Read",
+            "https://graph.microsoft.com/Files.Read",
+            "https://graph.microsoft.com/Mail.Read",
+            "offline_access")
+token3 <- get_azure_token(scopes, "mytenant", "app_id", version=2)
 ```
 
 ## Authentication methods
@@ -107,29 +114,27 @@ If you don't specify the method, `get_azure_token` makes a best guess based on t
 # this will default to authorization_code if httpuv is installed, and device_code if not
 get_azure_token("myresource", "mytenant", "app_id")
 
+# this will use client_credentials method
+get_azure_token("myresource", "mytenant", "app_id",
+                password="client_secret")
+
 # this will use on_behalf_of method
 get_azure_token("myresource", "mytenant", "app_id",
                 password="client_secret", on_behalf_of=token)
 ```
 
-## OpenID Connect
+### Managed identities
 
-You can also use `get_azure_token` to obtain ID tokens, in addition to access tokens.
-
-With AAD v1.0, using an interactive authentication flow (authorization_code or device_code) will return an ID token by default -- you don't have to do anything extra. The token will be in the `credentials$id_token` component of the returned object.
-
-AAD v2.0 does not return an ID token by default, but you can get one by specifying `openid` as a scope. Again, this applies only to interactive authentication.
+AzureAuth provides `get_managed_token` to obtain tokens from within a managed identity. This is a VM, service or container in Azure that can authenticate as itself, which removes the need to save secret passwords or certificates.
 
 ```r
-# ID token with AAD v1.0
-# if you only want an ID token, set the resource to blank ("")
-tok <- get_azure_token("", "mytenant", "app_id")
-tok$credentials$id_token
-
-# ID token with AAD v2.0
-tok2 <- get_azure_token(c("openid", "offline_access"), "mytenant", "app_id", version=2)
-tok2$credentials$id_token
+# run this from within an Azure VM or container for which an identity has been setup
+get_managed_token("myresource")
 ```
+
+### Inside a web app
+
+Using the interactive flows (authorization_code and device_code) from within a Shiny app requires separating the authorization (logging in to Azure) step from the token acquisition step. For this purpose, AzureAuth provides the `build_authorization_uri` and `get_device_creds` functions. You can use these from within your app to carry out the authorization, and then pass the resulting credentials to `get_azure_token` itself. See the "Authenticating from Shiny" vignette for an example app.
 
 ## Caching
 
@@ -139,7 +144,7 @@ For reasons of CRAN policy, the first time that AzureAuth is loaded, it will pro
 
 To list all cached tokens on disk, use `list_azure_tokens`. This returns a list of token objects, named according to their MD5 hashes.
 
-To delete a cached token, use `delete_azure_token`. This takes the same inputs as `get_azure_token`, or you can specify the MD5 hash directly in the `hash` argument. To delete _all_ cached tokens, use `clean_token_directory`.
+To load a token from the cache using its MD5 hash, use `load_azure_token`. To delete a cached token, use `delete_azure_token`. This takes the same inputs as `get_azure_token`, or you can supply an MD5 hash via the `hash` argument. To delete _all_ cached tokens, use `clean_token_directory`.
 
 ```r
 # list all tokens
@@ -150,6 +155,31 @@ list_azure_tokens()
 # delete a token
 delete_azure_token("myresource", "mytenant", "app_id",
                    password="client_credentials", auth_type="client_credentials")
+```
+
+If you want to bypass the cache, specify `use_cache=FALSE` in the call to `get_azure_token`. This will always obtain a new token from AAD, and also prevent it being saved to the cache.
+
+```r
+get_azure_token("myresource", "mytenant", "app_id", use_cache=FALSE)
+```
+
+## OpenID Connect
+
+You can also use `get_azure_token` to obtain ID tokens, in addition to access tokens.
+
+With AAD v1.0, using an interactive authentication flow (authorization_code or device_code) will return an ID token by default -- you don't have to do anything extra. However, AAD v1.0 will _not_ refresh the ID token when it expires (only the access token). Because of this, specify `use_cache=FALSE` to avoid picking up cached token credentials which may have been refreshed previously.
+
+AAD v2.0 does not return an ID token by default, but you can get one by specifying `openid` as a scope. Again, this applies only to interactive authentication. If you only want an ID token, it's recommended to use AAD v2.0.
+
+```r
+# ID token with AAD v1.0
+# if you only want an ID token, set the resource to blank ("")
+tok <- get_azure_token("", "mytenant", "app_id")
+extract_token(tok, "id")
+
+# ID token with AAD v2.0
+tok2 <- get_azure_token(c("openid", "offline_access"), "mytenant", "app_id", version=2)
+extract_token(tok2, "id")
 ```
 
 ## Refreshing

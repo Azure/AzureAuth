@@ -171,7 +171,10 @@ private=list(
             {
                 expiry <- try(as.character(decode_jwt(self$credentials$id_token)$payload$exp), silent=TRUE)
                 if(inherits(expiry, "try-error"))
-                    stop("Bad access token, expiry date not found", call.=FALSE)
+                {
+                    warning("Expiry date not found", call.=FALSE)
+                    expiry <- NA
+                }
             }
             self$credentials$expires_on <- expiry
         }
