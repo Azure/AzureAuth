@@ -87,6 +87,9 @@ public=list(
 
     validate=function()
     {
+        if(is.null(self$credentials$expires_on) || is.na(self$credentials$expires_on))
+            return(TRUE)
+
         expdate <- as.POSIXct(as.numeric(self$credentials$expires_on), origin="1970-01-01")
         curdate <- Sys.time()
         curdate < expdate
