@@ -2,7 +2,7 @@
 
 * `is_guid`, `normalize_guid` and `normalize_tenant` now accept vector arguments. `normalize_guid` throws an error if any of its argument values is not a valid GUID.
 * `get_azure_token` will now display the authentication method it chooses if the `auth_type` argument is not explicitly specified. To avoid surprises, it's still recommended that you specify `auth_type` when obtaining a token.
-* New `load_token` function to retrieve a token from the cache, given its hash value.
+* New `load_azure_token` function to retrieve a token from the cache, given its hash value.
 
 # AzureAuth 1.2.2
 
