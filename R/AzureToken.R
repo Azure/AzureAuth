@@ -61,7 +61,7 @@ public=list(
         if(is.null(self$credentials))
         {
             res <- private$initfunc(auth_info)
-            self$credentials <- process_aad_response(res)
+            self$credentials <- TokenCredentials$new(process_aad_response(res), self$hash())
         }
         private$set_expiry_time()
 
@@ -120,13 +120,14 @@ public=list(
         else private$initfunc() # reauthenticate if no refresh token (cannot reuse any supplied creds)
 
         creds <- try(process_aad_response(res))
+        hash <- self$hash()
         if(inherits(creds, "try-error"))
         {
-            delete_azure_token(hash=self$hash(), confirm=FALSE)
+            delete_azure_token(hash=hash, confirm=FALSE)
             stop("Unable to refresh token", call.=FALSE)
         }
 
-        self$credentials <- creds
+        self$credentials <- TokenCredentials$new(creds, hash)
         private$set_expiry_time()
 
         if(private$use_cache)
@@ -147,7 +148,8 @@ private=list(
 
     load_cached_credentials=function()
     {
-        tokenfile <- file.path(AzureR_dir(), self$hash())
+        hash <- self$hash()
+        tokenfile <- file.path(AzureR_dir(), hash)
         if(!file.exists(tokenfile))
             return(NULL)
 
@@ -159,7 +161,19 @@ private=list(
             stop("Invalid or corrupted cached token", call.=FALSE)
         }
 
-        self$credentials <- token$credentials
+        creds <- list(
+            expires_on=token$credentials$expires_on,
+            expires_in=token$credentials$expires_in,
+            ext_expires_in=token$credentials$ext_expires_in,
+            not_before=token$credentials$not_before,
+            token_type=token$credentials$token_type,
+            resource=token$credentials$resource,
+            scope=token$credentials$scope,
+            access_token=token$credentials$access_token,
+            id_token=token$credentials$id_token,
+            refresh_token=token$credentials$refresh_token
+        )
+        self$credentials <- TokenCredentials$new(creds, hash)
         if(!self$validate())
             self$refresh()
     },
