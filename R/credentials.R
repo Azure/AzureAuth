@@ -6,17 +6,13 @@ public=list(
     {
         private$set_credentials(credentials)
         private$hash <- hash
+        private$set_expiry_time()
     }
 ),
 
 active=list(
 
-    expires_on=function(value)
-    {
-        if(missing(value))
-            return(private$credentials$expires_on)
-        else private$credentials$expires_on <- value
-    },
+    expires_on=function() private$credentials$expires_on,
 
     expires_in=function() private$credentials$expires_in,
 
@@ -41,6 +37,25 @@ private=list(
 
     credentials=NULL,
     hash=NULL,
+
+    set_expiry_time=function()
+    {
+        # v2.0 endpoint doesn't provide an expires_on field, set it here
+        if(is.null(private$credentials$expires_on))
+        {
+            expiry <- try(as.character(decode_jwt(private$credentials$access_token)$payload$exp), silent=TRUE)
+            if(inherits(expiry, "try-error"))
+            {
+                expiry <- try(as.character(decode_jwt(private$credentials$id_token)$payload$exp), silent=TRUE)
+                if(inherits(expiry, "try-error"))
+                {
+                    warning("Expiry date not found", call.=FALSE)
+                    expiry <- NA
+                }
+            }
+            private$credentials$expires_on <- expiry
+        }
+    },
 
     set_credentials=function(creds)
     {

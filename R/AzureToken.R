@@ -63,7 +63,6 @@ public=list(
             res <- private$initfunc(auth_info)
             self$credentials <- TokenCredentials$new(process_aad_response(res), self$hash())
         }
-        private$set_expiry_time()
 
         if(private$use_cache)
             self$cache()
@@ -119,8 +118,8 @@ public=list(
         }
         else private$initfunc() # reauthenticate if no refresh token (cannot reuse any supplied creds)
 
-        creds <- try(process_aad_response(res))
         hash <- self$hash()
+        creds <- try(process_aad_response(res))
         if(inherits(creds, "try-error"))
         {
             delete_azure_token(hash=hash, confirm=FALSE)
@@ -128,7 +127,6 @@ public=list(
         }
 
         self$credentials <- TokenCredentials$new(creds, hash)
-        private$set_expiry_time()
 
         if(private$use_cache)
             self$cache()
@@ -176,25 +174,6 @@ private=list(
         self$credentials <- TokenCredentials$new(creds, hash)
         if(!self$validate())
             self$refresh()
-    },
-
-    set_expiry_time=function()
-    {
-        # v2.0 endpoint doesn't provide an expires_on field, set it here
-        if(is.null(self$credentials$expires_on))
-        {
-            expiry <- try(as.character(decode_jwt(self$credentials$access_token)$payload$exp), silent=TRUE)
-            if(inherits(expiry, "try-error"))
-            {
-                expiry <- try(as.character(decode_jwt(self$credentials$id_token)$payload$exp), silent=TRUE)
-                if(inherits(expiry, "try-error"))
-                {
-                    warning("Expiry date not found", call.=FALSE)
-                    expiry <- NA
-                }
-            }
-            self$credentials$expires_on <- expiry
-        }
     },
 
     aad_uri=function(type, ...)
