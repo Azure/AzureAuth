@@ -1,6 +1,6 @@
 Package: AzureAuth
 Title: Authentication Services for Azure Active Directory
-Version: 1.2.3
+Version: 1.2.3.9000
 Authors@R: c(
     person("Hong", "Ooi", , "hongooi@microsoft.com", role = c("aut", "cre")),
     person("httr development team", role="ctb", comment="Original OAuth listener code"),
@@ -21,7 +21,7 @@ Imports:
     openssl,
     jsonlite,
     jose,
-    R6,
+    R6 (>= 2.4.1),
     rappdirs
 Suggests:
     knitr,
