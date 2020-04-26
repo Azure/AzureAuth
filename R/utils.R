@@ -75,7 +75,7 @@ verify_v2_scope <- function(scope)
         stop("Unsupported OpenID scope: ", scope, call.=FALSE)
 
     # is it a URI or GUID?
-    valid_uri <- grepl("^https?://", scope)
+    valid_uri <- !is.null(httr::parse_url(scope)$scheme)
     valid_guid <- is_guid(sub("/.*$", "", scope))
     if(!valid_uri && !valid_guid)
         stop("Invalid scope (must be a URI or GUID): ", scope, call.=FALSE)
