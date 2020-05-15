@@ -51,7 +51,10 @@ server <- function(input, output, session)
     if(is.null(opts$code))
         return()
 
-    token <- get_azure_token(resource, tenant, app, authorize_args=list(redirect_uri=redirect),
+    # this assumes your app has a 'public client/native' redirect:
+    # if it is a 'web' redirect, include the client secret as the password argument
+    token <- get_azure_token(resource, tenant, app, auth_type="authorization_code",
+                             authorize_args=list(redirect_uri=redirect),
                              use_cache=FALSE, auth_code=opts$code)
 
     output$token <- renderPrint(token)
