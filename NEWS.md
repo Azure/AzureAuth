@@ -1,6 +1,7 @@
-# AzureAuth 1.2.3.9000
+# AzureAuth 1.2.4
 
 - Allow any scheme to be used in the URI for a token resource, not just HTTP\[S\].
+- Documentation/vignette fixes.
 
 # AzureAuth 1.2.3
 
