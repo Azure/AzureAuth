@@ -66,8 +66,8 @@ jobs:
           _R_CHECK_FORCE_SUGGESTS_: false
         run: |
           pkg <- pkgbuild::build()
-          print(pkg)
           rcmdcheck::rcmdcheck(pkg, args = c("--no-manual", "--as-cran"), error_on = "warning", check_dir = "check")
+          print(pkg)
         shell: Rscript {0}
 
       - name: Upload check results
@@ -83,6 +83,7 @@ jobs:
           token: "${{ secrets.GITHUB_TOKEN }}"
         run: |
           pwd
+          ls
           export PKGBUILD_GZ="$(ls *.gz)"
           mkdir drat
           cd drat
