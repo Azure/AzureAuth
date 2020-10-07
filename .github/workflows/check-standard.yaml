@@ -80,7 +80,7 @@ jobs:
 
       - name: Update Cloudyr drat
         if: success() && github.ref == 'refs/heads/master' && runner.os == 'Linux'
-        with:
+        env:
           token: "${{ secrets.GITHUB_TOKEN }}"
         run: |
           export PKGBUILD_GZ=$(ls *.gz)
@@ -89,11 +89,10 @@ jobs:
           git init
           git config user.email "dummy@example.com"
           git config user.name "Github Actions"
-          git remote add upstream "https://$(INPUT_TOKEN)@github.com/cloudyr/cloudyr.github.io.git"
+          git remote add upstream "https://$token@github.com/cloudyr/cloudyr.github.io.git"
           git fetch upstream
           git checkout master
           Rscript -e "drat::insertPackage('$PKGBUILD_GZ', repodir='./drat')"
           git add --all
           git commit -m "add $PKGBUILD_GZ (build $(Build.BuildId))"
           git push
-
