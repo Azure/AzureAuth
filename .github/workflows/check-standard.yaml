@@ -79,7 +79,7 @@ jobs:
           path: check
 
       - name: Update Cloudyr drat
-        if: success() && github.ref == 'refs/heads/master' && runner.os == 'Linux'
+        if: success() && runner.os == 'Linux' # && github.ref == 'refs/heads/master' 
         env:
           token: "${{ secrets.GITHUB_TOKEN }}"
         run: |
