@@ -82,6 +82,7 @@ jobs:
         env:
           token: "${{ secrets.GITHUB_TOKEN }}"
         run: |
+          pwd
           export PKGBUILD_GZ="$(ls *.gz)"
           mkdir drat
           cd drat
