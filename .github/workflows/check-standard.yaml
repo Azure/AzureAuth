@@ -83,8 +83,8 @@ jobs:
           token: "${{ secrets.GITHUB_TOKEN }}"
         run: |
           pwd
-          ls
-          export PKGBUILD_GZ="$(ls ../*.gz)"
+          ls $GITHUB_WORKSPACE
+          export PKGBUILD_GZ="$(ls $GITHUB_WORKSPACE/*.gz)"
           mkdir drat
           cd drat
           git init
