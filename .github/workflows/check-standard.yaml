@@ -84,7 +84,7 @@ jobs:
         run: |
           pwd
           ls
-          export PKGBUILD_GZ="$(ls *.gz)"
+          export PKGBUILD_GZ="$(ls ../*.gz)"
           mkdir drat
           cd drat
           git init
