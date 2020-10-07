@@ -66,6 +66,7 @@ jobs:
           _R_CHECK_FORCE_SUGGESTS_: false
         run: |
           pkg <- pkgbuild::build()
+          print(pkg)
           rcmdcheck::rcmdcheck(pkg, args = c("--no-manual", "--as-cran"), error_on = "warning", check_dir = "check")
         shell: Rscript {0}
 
@@ -81,7 +82,7 @@ jobs:
         env:
           token: "${{ secrets.GITHUB_TOKEN }}"
         run: |
-          export PKGBUILD_GZ="$(ls .gz)"
+          export PKGBUILD_GZ="$(ls *.gz)"
           mkdir drat
           cd drat
           git init
