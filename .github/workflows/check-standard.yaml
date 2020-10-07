@@ -14,8 +14,8 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: windows-latest, r: 'release'}
-          - {os: macOS-latest, r: 'release'}
+          # - {os: windows-latest, r: 'release'}
+          # - {os: macOS-latest, r: 'release'}
           - {os: ubuntu-20.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
 
     env:
@@ -57,8 +57,7 @@ jobs:
       - name: Install dependencies
         run: |
           remotes::install_deps(dependencies = TRUE)
-          remotes::install_cran("pkgbuild")
-          remotes::install_cran("rcmdcheck")
+          remotes::install_cran(c("pkgbuild", "rcmdcheck", "drat"))
         shell: Rscript {0}
 
       - name: Check
@@ -82,7 +81,7 @@ jobs:
         env:
           token: "${{ secrets.GITHUB_TOKEN }}"
         run: |
-          export PKGBUILD_GZ=$(ls *.gz)
+          export PKGBUILD_GZ="$(ls .gz)"
           mkdir drat
           cd drat
           git init
