@@ -8,4 +8,4 @@
 CONTRIBUTING.md
 drat.sh
 ^LICENSE\.md$
-azure-pipelines.yml
+^\.github$
