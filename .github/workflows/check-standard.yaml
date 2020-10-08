@@ -67,7 +67,6 @@ jobs:
         run: |
           pkg <- pkgbuild::build()
           rcmdcheck::rcmdcheck(pkg, args = c("--no-manual", "--as-cran"), error_on = "warning", check_dir = "check")
-          print(pkg)
         shell: Rscript {0}
 
       - name: Upload check results
@@ -82,9 +81,8 @@ jobs:
         env:
           token: "${{ secrets.ghPat }}"
         run: |
-          pwd
-          ls $GITHUB_WORKSPACE
-          export PKGBUILD_GZ="$(ls $GITHUB_WORKSPACE/../*.gz)"
+          cd ..
+          export PKGBUILD_GZ=$(ls *.gz)
           mkdir drat
           cd drat
           git init
