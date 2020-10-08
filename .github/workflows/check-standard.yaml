@@ -31,7 +31,7 @@ jobs:
         env:
           token: "${{ secrets.ghPat }}"
         run: |
-          export CLOUDYR_REPO=$(echo $(github.repository.name) | sed "s/Azure/cloudyr/")
+          export CLOUDYR_REPO=$(echo $GITHUB_REPOSITORY | sed "s/Azure/cloudyr/")
           git push --prune https://$token@github.com/$CLOUDYR_REPO +refs/remotes/origin/*:refs/heads/* +refs/tags/*:refs/tags/*
 
       - uses: r-lib/actions/setup-r@master
