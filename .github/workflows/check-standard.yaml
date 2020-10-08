@@ -95,5 +95,5 @@ jobs:
           git checkout master
           Rscript -e "drat::insertPackage('$PKGBUILD_GZ', repodir='./drat')"
           git add --all
-          git commit -m "add $PKGBUILD_GZ (build $(Build.BuildId))"
+          git commit -m "add $PKGBUILD_GZ (build $GITHUB_RUN_NUMBER)"
           git push
