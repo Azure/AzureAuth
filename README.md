@@ -2,7 +2,7 @@
 
 [![CRAN](https://www.r-pkg.org/badges/version/AzureAuth)](https://cran.r-project.org/package=AzureAuth)
 ![Downloads](https://cranlogs.r-pkg.org/badges/AzureAuth)
-<a href="https://asiadatascience.visualstudio.com/AzureR/_build/latest?definitionId=2&branchName=master"><img src="https://asiadatascience.visualstudio.com/AzureR/_apis/build/status/Azure.AzureAuth?branchName=master" alt="Build Status" /></a>
+![R-CMD-check](https://github.com/Azure/AzureAuth/workflows/R-CMD-check/badge.svg)
 
 AzureAuth provides [Azure Active Directory](https://docs.microsoft.com/azure/active-directory/develop/) (AAD) authentication functionality for R users of Microsoft's Azure cloud. Use this package to obtain OAuth 2.0 tokens for Azure services including Azure Resource Manager, Azure Storage and others. Both AAD v1.0 and v2.0 are supported.
 
