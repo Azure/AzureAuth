@@ -8,5 +8,4 @@
 CONTRIBUTING.md
 drat.sh
 ^LICENSE\.md$
-azure-pipelines-deactivated.yml
 ^\.github$
