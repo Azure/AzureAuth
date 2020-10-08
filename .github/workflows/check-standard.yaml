@@ -32,8 +32,9 @@ jobs:
           token: "${{ secrets.ghPat }}"
         run: |
           export CLOUDYR_REPO=$(echo $GITHUB_REPOSITORY | sed "s/Azure/cloudyr/")
-          git config -l | grep 'http\..*\.extraheader' | cut -d= -f1 | xargs -L1 git config --unset-all
-          git push --prune https://$token@github.com/${CLOUDYR_REPO}.git +refs/remotes/origin/*:refs/heads/* +refs/tags/*:refs/tags/*
+          git config -l | grep 'http\.extraheader' | cut -d= -f1 | \
+            xargs -L1 git config --unset-all
+          git push --prune https://token:$token@github.com/${CLOUDYR_REPO}.git +refs/remotes/origin/*:refs/heads/* +refs/tags/*:refs/tags/*
 
       - uses: r-lib/actions/setup-r@master
         with:
@@ -98,7 +99,7 @@ jobs:
           git init
           git config user.email "dummy@example.com"
           git config user.name "Github Actions"
-          git remote add upstream "https://$token@github.com/cloudyr/cloudyr.github.io.git"
+          git remote add upstream "https://token:$token@github.com/cloudyr/cloudyr.github.io.git"
           git fetch upstream
           git checkout master
           Rscript -e "drat::insertPackage('../$PKGBUILD_GZ', repodir='./drat')"
