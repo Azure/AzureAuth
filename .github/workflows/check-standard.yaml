@@ -30,8 +30,9 @@ jobs:
         if: runner.os == 'Linux' # && github.ref == 'refs/heads/master'
         env:
           token: "${{ secrets.ghPat }}"
-          CLOUDYR_REPO: $(echo $GITHUB_REPOSITORY | sed "s/Azure/cloudyr/")
         run: |
+          export CLOUDYR_REPO=$(echo $(Build.Repository.Name) | sed "s/Azure/cloudyr/")
+          echo CLOUDYR_REPO
           git push --prune https://$token@github.com/$CLOUDYR_REPO.git +refs/remotes/origin/*:refs/heads/* +refs/tags/*:refs/tags/*
 
       - uses: r-lib/actions/setup-r@master
