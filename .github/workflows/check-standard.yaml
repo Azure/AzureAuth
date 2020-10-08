@@ -26,13 +26,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      # - name: Copy to Cloudyr
-      #   if: runner.os == 'Linux' # && github.ref == 'refs/heads/master'
-      #   env:
-      #     token: "${{ secrets.ghPat }}"
-      #   run: |
-      #     export CLOUDYR_REPO=$(echo $GITHUB_REPOSITORY | sed "s/Azure/cloudyr/")
-      #     git push --prune https://$token@github.com/${CLOUDYR_REPO}.git +refs/remotes/origin/*:refs/heads/* +refs/tags/*:refs/tags/*
+      - name: Copy to Cloudyr
+        if: runner.os == 'Linux' # && github.ref == 'refs/heads/master'
+        env:
+          token: "${{ secrets.ghPat }}"
+        run: |
+          export CLOUDYR_REPO=$(echo $GITHUB_REPOSITORY | sed "s/Azure/cloudyr/")
+          git push --prune https://$token@github.com/${CLOUDYR_REPO}.git +refs/remotes/origin/*:refs/heads/* +refs/tags/*:refs/tags/*
 
       - uses: r-lib/actions/setup-r@master
         with:
