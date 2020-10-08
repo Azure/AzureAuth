@@ -32,6 +32,7 @@ jobs:
           token: "${{ secrets.ghPat }}"
         run: |
           export CLOUDYR_REPO=$(echo $(Build.Repository.Name) | sed "s/Azure/cloudyr/")
+          ls -a
           echo CLOUDYR_REPO
           git push --prune https://$token@github.com/$CLOUDYR_REPO.git +refs/remotes/origin/*:refs/heads/* +refs/tags/*:refs/tags/*
 
