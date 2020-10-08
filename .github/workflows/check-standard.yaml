@@ -91,7 +91,7 @@ jobs:
           git remote add upstream "https://$token@github.com/cloudyr/cloudyr.github.io.git"
           git fetch upstream
           git checkout master
-          Rscript -e "drat::insertPackage('$PKGBUILD_GZ', repodir='./drat')"
+          Rscript -e "drat::insertPackage('../$PKGBUILD_GZ', repodir='./drat')"
           git add --all
           git commit -m "add $PKGBUILD_GZ (build $GITHUB_RUN_NUMBER)"
           git push
