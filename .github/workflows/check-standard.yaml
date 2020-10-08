@@ -32,6 +32,7 @@ jobs:
           token: "${{ secrets.ghPat }}"
         run: |
           export CLOUDYR_REPO=$(echo $GITHUB_REPOSITORY | sed "s/Azure/cloudyr/")
+          git config -l | grep 'http\..*\.extraheader' | cut -d= -f1 | xargs -L1 git config --unset-all
           git push --prune https://$token@github.com/${CLOUDYR_REPO}.git +refs/remotes/origin/*:refs/heads/* +refs/tags/*:refs/tags/*
 
       - uses: r-lib/actions/setup-r@master
