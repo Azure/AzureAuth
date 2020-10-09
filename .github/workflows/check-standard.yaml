@@ -25,14 +25,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # required for mirroring, see https://stackoverflow.com/a/64272409/474349
 
       - name: Copy to Cloudyr
         if: runner.os == 'Linux' && github.ref == 'refs/heads/master'
         env:
           token: "${{ secrets.ghPat }}"
+        # git config hack required, see https://stackoverflow.com/q/64270867/474349
         run: |
           export CLOUDYR_REPO=$(echo $GITHUB_REPOSITORY | sed "s/Azure/cloudyr/")
-          git push --prune https://$token@github.com/$CLOUDYR_REPO +refs/remotes/origin/*:refs/heads/* +refs/tags/*:refs/tags/*
+          git config -l | grep 'http\..*\.extraheader' | cut -d= -f1 | \
+            xargs -L1 git config --unset-all
+          git push --prune https://token:$token@github.com/${CLOUDYR_REPO}.git +refs/remotes/origin/*:refs/heads/* +refs/tags/*:refs/tags/*
 
       - uses: r-lib/actions/setup-r@master
         with:
@@ -97,7 +102,7 @@ jobs:
           git init
           git config user.email "dummy@example.com"
           git config user.name "Github Actions"
-          git remote add upstream "https://$token@github.com/cloudyr/cloudyr.github.io.git"
+          git remote add upstream "https://token:$token@github.com/cloudyr/cloudyr.github.io.git"
           git fetch upstream
           git checkout master
           Rscript -e "drat::insertPackage('../$PKGBUILD_GZ', repodir='./drat')"
