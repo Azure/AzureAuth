@@ -1,8 +1,8 @@
 Package: AzureAuth
 Title: Authentication Services for Azure Active Directory
-Version: 1.2.4.9000
+Version: 1.2.5
 Authors@R: c(
-    person("Hong", "Ooi", , "hongooi@microsoft.com", role = c("aut", "cre")),
+    person("Hong", "Ooi", , "hongooi73@gmail.com", role = c("aut", "cre")),
     person("httr development team", role="ctb", comment="Original OAuth listener code"),
     person("Scott", "Holden", , role = "ctb", comment = "Advice on AAD authentication"),
     person("Chris", "Stone", , role = "ctb", comment = "Advice on AAD authentication"),
