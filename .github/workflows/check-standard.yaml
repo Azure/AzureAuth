@@ -25,6 +25,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Copy to Cloudyr
         if: runner.os == 'Linux' # && github.ref == 'refs/heads/master'
