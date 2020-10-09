@@ -29,7 +29,7 @@ jobs:
           fetch-depth: 0
 
       - name: Copy to Cloudyr
-        if: runner.os == 'Linux' # && github.ref == 'refs/heads/master'
+        if: runner.os == 'Linux' && github.ref == 'refs/heads/master'
         env:
           token: "${{ secrets.ghPat }}"
         run: |
@@ -90,7 +90,7 @@ jobs:
           path: check
 
       - name: Update Cloudyr drat
-        if: success() && runner.os == 'Linux' # && github.ref == 'refs/heads/master' 
+        if: success() && runner.os == 'Linux' && github.ref == 'refs/heads/master' 
         env:
           token: "${{ secrets.ghPat }}"
         run: |
