@@ -26,12 +26,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # required for mirroring, see https://stackoverflow.com/a/64272409/474349
 
       - name: Copy to Cloudyr
         if: runner.os == 'Linux' && github.ref == 'refs/heads/master'
         env:
           token: "${{ secrets.ghPat }}"
+        # git config hack required, see https://stackoverflow.com/q/64270867/474349
         run: |
           export CLOUDYR_REPO=$(echo $GITHUB_REPOSITORY | sed "s/Azure/cloudyr/")
           git config -l | grep 'http\..*\.extraheader' | cut -d= -f1 | \
