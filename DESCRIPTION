@@ -25,6 +25,7 @@ Imports:
     rappdirs
 Suggests:
     knitr,
+    rmarkdown,
     testthat,
     httpuv,
     shiny,
