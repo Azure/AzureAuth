@@ -1,3 +1,7 @@
+# AzureAuth 1.2.5.9000
+
+- Transfer to AzureRSDK org on GitHub.
+
 # AzureAuth 1.2.5
 
 - Change maintainer email address.
