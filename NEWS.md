@@ -1,5 +1,6 @@
 # AzureAuth 1.2.5.9000
 
+- Allow obtaining tokens for the `organizations` and `consumers` generic endpoints, in addition to `common`.
 - Transfer to AzureRSDK org on GitHub.
 
 # AzureAuth 1.2.5

@@ -15,17 +15,40 @@
 \usage{
 get_managed_token(resource, token_args = list(), use_cache = TRUE)
 
-get_azure_token(resource, tenant, app, password = NULL,
-  username = NULL, certificate = NULL, auth_type = NULL,
-  aad_host = "https://login.microsoftonline.com/", version = 1,
-  authorize_args = list(), token_args = list(), use_cache = TRUE,
-  on_behalf_of = NULL, auth_code = NULL, device_creds = NULL)
+get_azure_token(
+  resource,
+  tenant,
+  app,
+  password = NULL,
+  username = NULL,
+  certificate = NULL,
+  auth_type = NULL,
+  aad_host = "https://login.microsoftonline.com/",
+  version = 1,
+  authorize_args = list(),
+  token_args = list(),
+  use_cache = TRUE,
+  on_behalf_of = NULL,
+  auth_code = NULL,
+  device_creds = NULL
+)
 
-delete_azure_token(resource, tenant, app, password = NULL,
-  username = NULL, certificate = NULL, auth_type = NULL,
-  aad_host = "https://login.microsoftonline.com/", version = 1,
-  authorize_args = list(), token_args = list(), on_behalf_of = NULL,
-  hash = NULL, confirm = TRUE)
+delete_azure_token(
+  resource,
+  tenant,
+  app,
+  password = NULL,
+  username = NULL,
+  certificate = NULL,
+  auth_type = NULL,
+  aad_host = "https://login.microsoftonline.com/",
+  version = 1,
+  authorize_args = list(),
+  token_args = list(),
+  on_behalf_of = NULL,
+  hash = NULL,
+  confirm = TRUE
+)
 
 load_azure_token(hash)
 
@@ -33,10 +56,20 @@ clean_token_directory(confirm = TRUE)
 
 list_azure_tokens()
 
-token_hash(resource, tenant, app, password = NULL, username = NULL,
-  certificate = NULL, auth_type = NULL,
-  aad_host = "https://login.microsoftonline.com/", version = 1,
-  authorize_args = list(), token_args = list(), on_behalf_of = NULL)
+token_hash(
+  resource,
+  tenant,
+  app,
+  password = NULL,
+  username = NULL,
+  certificate = NULL,
+  auth_type = NULL,
+  aad_host = "https://login.microsoftonline.com/",
+  version = 1,
+  authorize_args = list(),
+  token_args = list(),
+  on_behalf_of = NULL
+)
 
 is_azure_token(object)
 
@@ -63,7 +96,7 @@ is_azure_v2_token(object)
 
 \item{auth_type}{The authentication type. See 'Details' below.}
 
-\item{aad_host}{URL for your AAD host. For the public Azure cloud, this is \code{https://login.microsoftonline.com/}. Change this if you are using a government or private cloud. Can also be a full URL, eg \code{https://mydomain.b2clogin.com/mydomain/other/path/names/oauth2} (this is relevant mainly for Azure B2C logins).}
+\item{aad_host}{URL for your AAD host. For the public Azure cloud, this is \verb{https://login.microsoftonline.com/}. Change this if you are using a government or private cloud. Can also be a full URL, eg \verb{https://mydomain.b2clogin.com/mydomain/other/path/names/oauth2} (this is relevant mainly for Azure B2C logins).}
 
 \item{version}{The AAD version, either 1 or 2.}
 
@@ -89,7 +122,7 @@ Use these functions to authenticate with Azure Active Directory (AAD).
 
 \code{get_managed_token} is a specialised function to acquire tokens for a \emph{managed identity}. This is an Azure service, such as a VM or container, that has been assigned its own identity and can be granted access permissions like a regular user. The advantage of managed identities over the other authentication methods (see below) is that you don't have to store a secret password, which improves security. Note that \code{get_managed_token} can only be used from within the managed identity itself.
 
-The \code{resource} arg should be a single URL or GUID for AAD v1.0. For AAD v2.0, it should be a vector of \emph{scopes}, where each scope consists of a URL or GUID along with a path that designates the type of access requested. If a v2.0 scope doesn't have a path, \code{get_azure_token} will append the \code{/.default} path with a warning. A special scope is \code{offline_access}, which requests a refresh token from AAD along with the access token: without this scope, you will have to reauthenticate if you want to refresh the token.
+The \code{resource} arg should be a single URL or GUID for AAD v1.0. For AAD v2.0, it should be a vector of \emph{scopes}, where each scope consists of a URL or GUID along with a path that designates the type of access requested. If a v2.0 scope doesn't have a path, \code{get_azure_token} will append the \verb{/.default} path with a warning. A special scope is \code{offline_access}, which requests a refresh token from AAD along with the access token: without this scope, you will have to reauthenticate if you want to refresh the token.
 
 The \code{auth_code} and \code{device_creds} arguments are intended for use in embedded scenarios, eg when AzureAuth is loaded from within a Shiny web app. They enable the flow authorization step to be separated from the token acquisition step, which is necessary within an app; you can generally ignore these arguments when using AzureAuth interactively or as part of an R script. See the help for \link{build_authorization_uri} for examples on their use.
 
@@ -135,7 +168,7 @@ OAuth tokens can be authenticated via an SSL/TLS certificate, which is considere
 
 \section{Caching}{
 
-AzureAuth caches tokens based on all the inputs to \code{get_azure_token} as listed above. Tokens are cached in a custom, user-specific directory, created with the rappdirs package. On recent Windows versions, this will usually be in the location \code{C:\\Users\\(username)\\AppData\\Local\\AzureR}. On Linux, it will be in \code{~/.config/AzureR}, and on MacOS, it will be in \code{~/Library/Application Support/AzureR}. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).
+AzureAuth caches tokens based on all the inputs to \code{get_azure_token} as listed above. Tokens are cached in a custom, user-specific directory, created with the rappdirs package. On recent Windows versions, this will usually be in the location \verb{C:\\\\Users\\\\(username)\\\\AppData\\\\Local\\\\AzureR}. On Linux, it will be in \verb{~/.config/AzureR}, and on MacOS, it will be in \verb{~/Library/Application Support/AzureR}. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).
 
 To list all cached tokens on disk, use \code{list_azure_tokens}. This returns a list of token objects, named according to their MD5 hashes.
 
@@ -148,7 +181,7 @@ To delete \emph{all} cached tokens, use \code{clean_token_directory}.
 
 A token object can be refreshed by calling its \code{refresh()} method. If the token's credentials contain a refresh token, this is used; otherwise a new access token is obtained by reauthenticating.
 
-Note that in AAD, a refresh token can be used to obtain an access token for any resource or scope that you have permissions for. Thus, for example, you could use a refresh token issued on a request for \code{https://management.azure.com} to obtain a new access token for \code{https://graph.microsoft.com} (assuming you've been granted permission).
+Note that in AAD, a refresh token can be used to obtain an access token for any resource or scope that you have permissions for. Thus, for example, you could use a refresh token issued on a request for \verb{https://management.azure.com} to obtain a new access token for \verb{https://graph.microsoft.com} (assuming you've been granted permission).
 
 To obtain an access token for a new resource, change the object's \code{resource} (for an AAD v1.0 token) or \code{scope} field (for an AAD v2.0 token) before calling \code{refresh()}. If you \emph{also} want to retain the token for the old resource, you should call the \code{clone()} method first to create a copy. See the examples below.
 }
@@ -276,7 +309,7 @@ tok2$refresh()
 }
 }
 \seealso{
-\link{AzureToken}, \link[httr:oauth2.0_token]{httr::oauth2.0_token}, \link[httr:Token]{httr::Token}, \link{cert_assertion},
+\link{AzureToken}, \link[httr:oauth2.0_token]{httr::oauth2.0_token}, \link[httr:Token-class]{httr::Token}, \link{cert_assertion},
 \link{build_authorization_uri}, \link{get_device_creds}
 
 \href{https://docs.microsoft.com/en-us/azure/active-directory/develop/}{Azure Active Directory for developers},

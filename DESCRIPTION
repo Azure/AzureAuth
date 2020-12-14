@@ -31,5 +31,5 @@ Suggests:
     shiny,
     AzureRMR,
     AzureGraph
-Roxygen: list(markdown=TRUE)
-RoxygenNote: 6.1.1
+Roxygen: list(markdown=TRUE, r6=FALSE)
+RoxygenNote: 7.1.1

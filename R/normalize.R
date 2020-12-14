@@ -9,8 +9,8 @@
 #' A tenant can be identified either by a GUID, or its name, or a fully-qualified domain name (FQDN). The rules for normalizing a tenant are:
 #' 1. If `tenant` is recognised as a valid GUID, return its canonically formatted value
 #' 2. Otherwise, if it is a FQDN, return it
-#' 3. Otherwise, if it is not the string "common", append ".onmicrosoft.com" to it
-#' 4. Otherwise, return the value of `tenant`
+#' 3. Otherwise, if it is one of the generic tenants "common", "organizations" or "consumers", return it
+#' 4. Otherwise, append ".onmicrosoft.com" to it
 #'
 #' These functions are vectorised. See the link below for the GUID formats they accept.
 #'
@@ -59,11 +59,11 @@ normalize_tenant <- function(tenant)
     tenant <- tolower(tenant)
 
     # check if supplied a guid; if not, check if a fqdn;
-    # if not, check if 'common'; if not, append '.onmicrosoft.com'
+    # if not, check if 'common', 'organizations' or 'consumers'; if not, append '.onmicrosoft.com'
     guid <- is_guid(tenant)
     tenant[guid] <- normalize_guid(tenant[guid])
 
-    name <- !guid & (tenant != "common") & !grepl(".", tenant, fixed=TRUE)
+    name <- !guid & !(tenant %in% c("common", "organizations", "consumers")) & !grepl(".", tenant, fixed=TRUE)
     tenant[name] <- paste0(tenant[name], ".onmicrosoft.com")
 
     tenant

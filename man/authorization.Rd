@@ -5,11 +5,23 @@
 \alias{get_device_creds}
 \title{Standalone OAuth authorization functions}
 \usage{
-build_authorization_uri(resource, tenant, app, username = NULL, ...,
-  aad_host = "https://login.microsoftonline.com/", version = 1)
+build_authorization_uri(
+  resource,
+  tenant,
+  app,
+  username = NULL,
+  ...,
+  aad_host = "https://login.microsoftonline.com/",
+  version = 1
+)
 
-get_device_creds(resource, tenant, app,
-  aad_host = "https://login.microsoftonline.com/", version = 1)
+get_device_creds(
+  resource,
+  tenant,
+  app,
+  aad_host = "https://login.microsoftonline.com/",
+  version = 1
+)
 }
 \arguments{
 \item{resource, tenant, app, aad_host, version}{See the corresponding arguments for \link{get_azure_token}.}

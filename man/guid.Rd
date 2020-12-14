@@ -32,8 +32,8 @@ A tenant can be identified either by a GUID, or its name, or a fully-qualified d
 \enumerate{
 \item If \code{tenant} is recognised as a valid GUID, return its canonically formatted value
 \item Otherwise, if it is a FQDN, return it
-\item Otherwise, if it is not the string "common", append ".onmicrosoft.com" to it
-\item Otherwise, return the value of \code{tenant}
+\item Otherwise, if it is one of the generic tenants "common", "organizations" or "consumers", return it
+\item Otherwise, append ".onmicrosoft.com" to it
 }
 
 These functions are vectorised. See the link below for the GUID formats they accept.
