@@ -84,7 +84,7 @@ is_azure_v2_token(object)
 
 \item{use_cache}{If TRUE and cached credentials exist, use them instead of obtaining a new token. Set this to FALSE to bypass the cache.}
 
-\item{tenant}{Your tenant. This can be a name ("myaadtenant"), a fully qualified domain name ("myaadtenant.onmicrosoft.com" or "mycompanyname.com"), or a GUID.}
+\item{tenant}{Your tenant. This can be a name ("myaadtenant"), a fully qualified domain name ("myaadtenant.onmicrosoft.com" or "mycompanyname.com"), or a GUID. It can also be one of the generic tenants "common", "organizations" or "consumers"; see 'Generic tenants' below.}
 
 \item{app}{The client/app ID to use to authenticate with.}
 
@@ -98,7 +98,7 @@ is_azure_v2_token(object)
 
 \item{aad_host}{URL for your AAD host. For the public Azure cloud, this is \verb{https://login.microsoftonline.com/}. Change this if you are using a government or private cloud. Can also be a full URL, eg \verb{https://mydomain.b2clogin.com/mydomain/other/path/names/oauth2} (this is relevant mainly for Azure B2C logins).}
 
-\item{version}{The AAD version, either 1 or 2.}
+\item{version}{The AAD version, either 1 or 2. Authenticating with a personal account as opposed to a work or school account requires AAD 2.0.}
 
 \item{authorize_args}{An optional list of further parameters for the AAD authorization endpoint. These will be included in the request URI as query parameters. Only used if \code{auth_type="authorization_code"}.}
 
@@ -154,6 +154,17 @@ OAuth tokens can be authenticated via an SSL/TLS certificate, which is considere
 \item The name of a PEM or PFX file, containing \emph{both} the private key and the public certificate.
 \item A certificate object from the AzureKeyVault package, representing a cert stored in the Key Vault service.
 \item A call to the \code{cert_assertion()} function to customise details of the requested token, eg the duration, expiry date, custom claims, etc. See the examples below.
+}
+}
+
+\section{Generic tenants}{
+
+
+There are 3 generic values that can be used as tenants when authenticating:\tabular{ll}{
+   Tenant \tab Description \cr
+   \code{common} \tab Allows users with both personal Microsoft accounts and work/school accounts from Azure AD to sign into the application. \cr
+   \code{organizations} \tab Allows only users with work/school accounts from Azure AD to sign into the application. \cr
+   \code{consumers} \tab Allows only users with personal Microsoft accounts (MSA) to sign into the application. \cr
 }
 }
 
