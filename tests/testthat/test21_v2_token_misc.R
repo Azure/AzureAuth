@@ -10,6 +10,7 @@ cert_file <- Sys.getenv("AZ_TEST_CERT_FILE")
 web_app <- Sys.getenv("AZ_TEST_WEB_APP_ID")
 web_app_pwd <- Sys.getenv("AZ_TEST_WEB_APP_PASSWORD")
 userpwd <- Sys.getenv("AZ_TEST_USERPWD")
+admin_username <- Sys.getenv("AZ_TEST_ADMINUSERNAME")
 
 if(tenant == "" || app == "" || username == "" || password == "" || native_app == "" ||
    cert_app == "" || cert_file == "" || web_app == "" || web_app_pwd == "" || userpwd == "")
@@ -38,13 +39,14 @@ test_that("Providing optional args works",
     res <- "https://management.azure.com/.default"
     resbase <- "https://management.azure.com"
 
-    aut_tok <- get_azure_token(res, tenant, native_app, username=username, auth_type="authorization_code", version=2)
+    aut_tok <- get_azure_token(res, tenant, native_app, username=admin_username, auth_type="authorization_code",
+                               version=2)
     expect_true(is_azure_token(aut_tok))
     expect_identical(resbase, decode_jwt(aut_tok)$payload$aud)
 
     expect_null(
-        delete_azure_token(res, tenant, native_app, username=username, auth_type="authorization_code", version=2,
-            confirm=FALSE))
+        delete_azure_token(res, tenant, native_app, username=admin_username, auth_type="authorization_code", version=2,
+                           confirm=FALSE))
 })
 
 
@@ -150,7 +152,7 @@ test_that("Webapp authentication works",
     expect_identical(tok2$auth_type, "client_credentials")
     expect_identical(resbase, decode_jwt(tok2)$payload$aud)
 
-    tok3 <- get_azure_token(res, tenant, web_app, password=web_app_pwd, username=username,
+    tok3 <- get_azure_token(res, tenant, web_app, password=web_app_pwd, username=admin_username,
         auth_type="authorization_code", version=2)
     expect_true(is_azure_token(tok2))
     expect_identical(resbase, decode_jwt(tok3)$payload$aud)
@@ -184,4 +186,16 @@ test_that("Refreshing with changed resource works",
     tok$scope[1] <- "https://graph.microsoft.com/.default"
     tok$refresh()
     expect_identical(decode_jwt(tok)$payload$aud, "https://graph.microsoft.com")
+})
+
+
+test_that("Consumers tenant works",
+{
+    res <- "https://graph.microsoft.com/.default"
+    res2 <- "offline_access"
+    res3 <- "openid"
+
+    tok <- get_azure_token(c(res, res2, res3), "consumers", cli_app, version=2)
+    expect_error(decode_jwt(tok))
+    expect_identical(decode_jwt(tok, "id")$payload$tid, "9188040d-6c67-4c5b-b112-36a304b66dad")
 })
