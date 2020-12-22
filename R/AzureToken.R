@@ -169,17 +169,20 @@ private=list(
         # v2.0 endpoint doesn't provide an expires_on field, set it here
         if(is.null(self$credentials$expires_on))
         {
-            expiry <- try(as.character(decode_jwt(self$credentials$access_token)$payload$exp), silent=TRUE)
+            expiry <- try(decode_jwt(self$credentials$access_token)$payload$exp, silent=TRUE)
             if(inherits(expiry, "try-error"))
             {
-                expiry <- try(as.character(decode_jwt(self$credentials$id_token)$payload$exp), silent=TRUE)
+                expiry <- try(decode_jwt(self$credentials$id_token)$payload$exp, silent=TRUE)
                 if(inherits(expiry, "try-error"))
                 {
                     warning("Expiry date not found", call.=FALSE)
                     expiry <- NA
                 }
             }
-            self$credentials$expires_on <- expiry
+
+            self$credentials$expires_on <- if(!is.null(self$credentials$expires_in))
+                as.character(min(expiry, Sys.time() + as.numeric(self$credentials$expires_in, na.rm=TRUE)))
+            else as.character(expiry)
         }
     },
 
