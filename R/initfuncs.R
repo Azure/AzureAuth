@@ -47,6 +47,7 @@ poll_for_token <- function(url, body, interval, period)
 {
     interval <- as.numeric(interval)
     ntries <- as.numeric(period) %/% interval
+    body$grant_type <- "urn:ietf:params:oauth:grant-type:device_code"
 
     message("Waiting for device code in browser...\nPress Esc/Ctrl + C to abort")
     for(i in seq_len(ntries))
