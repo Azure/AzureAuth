@@ -1,4 +1,4 @@
-# AzureAuth 1.2.5.9000
+# AzureAuth 1.2.6
 
 - Allow obtaining tokens for the `organizations` and `consumers` generic tenants, in addition to `common`.
 - More robust handling of expiry time calculation for AAD v2.0 authentication.
