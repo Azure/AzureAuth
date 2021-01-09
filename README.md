@@ -2,11 +2,11 @@
 
 [![CRAN](https://www.r-pkg.org/badges/version/AzureAuth)](https://cran.r-project.org/package=AzureAuth)
 ![Downloads](https://cranlogs.r-pkg.org/badges/AzureAuth)
-![R-CMD-check](https://github.com/AzureRSDK/AzureAuth/workflows/R-CMD-check/badge.svg)
+![R-CMD-check](https://github.com/Azure/AzureAuth/workflows/R-CMD-check/badge.svg)
 
 AzureAuth provides [Azure Active Directory](https://docs.microsoft.com/azure/active-directory/develop/) (AAD) authentication functionality for R users of Microsoft's Azure cloud. Use this package to obtain OAuth 2.0 tokens for Azure services including Azure Resource Manager, Azure Storage and others. Both AAD v1.0 and v2.0 are supported.
 
-The primary repo for this package is at https://github.com/AzureRSDK/AzureAuth; please submit issues and PRs there. It is also mirrored at the Cloudyr org at https://github.com/cloudyr/AzureAuth. You can install the development version of the package with `devtools::install_github("AzureRSDK/AzureAuth")`.
+The primary repo for this package is at https://github.com/Azure/AzureAuth; please submit issues and PRs there. It is also mirrored at the Cloudyr org at https://github.com/cloudyr/AzureAuth. You can install the development version of the package with `devtools::install_github("Azure/AzureAuth")`.
 
 ## Obtaining tokens
 
@@ -117,5 +117,5 @@ extract_jwt(tok2, "id")
 The AzureAuth interface is based on the OAuth framework in the [httr](https://github.com/r-lib/httr) package, customised and streamlined for Azure. It is an independent implementation of OAuth, but benefited greatly from the work done by Hadley Wickham and the rest of the httr development team.
 
 ----
-<p align="center"><a href="https://github.com/AzureRSDK/AzureR"><img src="https://github.com/AzureRSDK/AzureR/raw/master/images/logo2.png" width=800 /></a></p>
+<p align="center"><a href="https://github.com/Azure/AzureR"><img src="https://github.com/Azure/AzureR/raw/master/images/logo2.png" width=800 /></a></p>
 
