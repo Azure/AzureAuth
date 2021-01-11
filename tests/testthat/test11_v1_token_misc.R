@@ -10,6 +10,7 @@ cert_file <- Sys.getenv("AZ_TEST_CERT_FILE")
 web_app <- Sys.getenv("AZ_TEST_WEB_APP_ID")
 web_app_pwd <- Sys.getenv("AZ_TEST_WEB_APP_PASSWORD")
 userpwd <- Sys.getenv("AZ_TEST_USERPWD")
+admin_username <- Sys.getenv("AZ_TEST_ADMINUSERNAME")
 
 if(tenant == "" || app == "" || username == "" || password == "" || native_app == "" ||
    cert_app == "" || cert_file == "" || web_app == "" || web_app_pwd == "" || userpwd == "")
@@ -37,12 +38,13 @@ test_that("Providing optional args works",
     res <- "https://management.azure.com/"
 
     # login hint
-    aut_tok <- get_azure_token(res, tenant, native_app, username=username, auth_type="authorization_code")
+    aut_tok <- get_azure_token(res, tenant, native_app, username=admin_username, auth_type="authorization_code")
     expect_true(is_azure_token(aut_tok))
     expect_identical(res, decode_jwt(aut_tok)$payload$aud)
 
     expect_null(
-        delete_azure_token(res, tenant, native_app, username=username, auth_type="authorization_code", confirm=FALSE))
+        delete_azure_token(res, tenant, native_app, username=admin_username, auth_type="authorization_code",
+                           confirm=FALSE))
 })
 
 
@@ -116,7 +118,7 @@ test_that("Webapp authentication works",
     expect_identical(tok2$auth_type, "client_credentials")
     expect_identical(res, decode_jwt(tok2)$payload$aud)
 
-    tok3 <- get_azure_token(res, tenant, web_app, password=web_app_pwd, username=username,
+    tok3 <- get_azure_token(res, tenant, web_app, password=web_app_pwd, username=admin_username,
         auth_type="authorization_code")
     expect_true(is_azure_token(tok2))
     expect_identical(res, decode_jwt(tok3)$payload$aud)

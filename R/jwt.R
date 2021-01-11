@@ -30,8 +30,10 @@ decode_jwt <- function(token, ...)
 #' @export
 decode_jwt.AzureToken <- function(token, type=c("access", "id"), ...)
 {
-    type <- match.arg(type)
-    decode_jwt(token$credentials[[paste0(type, "_token")]])
+    type <- paste0(match.arg(type), "_token")
+    if(is.null(token$credentials[[type]]))
+        stop(type, " not found", call.=FALSE)
+    decode_jwt(token$credentials[[type]])
 }
 
 
@@ -39,8 +41,10 @@ decode_jwt.AzureToken <- function(token, type=c("access", "id"), ...)
 #' @export
 decode_jwt.Token <- function(token, type=c("access", "id"), ...)
 {
-    type <- match.arg(type)
-    decode_jwt(token$credentials[[paste0(type, "_token")]])
+    type <- paste0(match.arg(type), "_token")
+    if(is.null(token$credentials[[type]]))
+        stop(type, " not found", call.=FALSE)
+    decode_jwt(token$credentials[[type]])
 }
 
 

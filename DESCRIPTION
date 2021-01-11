@@ -1,6 +1,6 @@
 Package: AzureAuth
 Title: Authentication Services for Azure Active Directory
-Version: 1.2.5
+Version: 1.3.0
 Authors@R: c(
     person("Hong", "Ooi", , "hongooi73@gmail.com", role = c("aut", "cre")),
     person("httr development team", role="ctb", comment="Original OAuth listener code"),
@@ -31,5 +31,5 @@ Suggests:
     shiny,
     AzureRMR,
     AzureGraph
-Roxygen: list(markdown=TRUE)
-RoxygenNote: 6.1.1
+Roxygen: list(markdown=TRUE, r6=FALSE)
+RoxygenNote: 7.1.1

@@ -58,12 +58,14 @@ public=list(
         if(use_cache)
             private$load_cached_credentials()
 
+        # time of initial request for token: in case we need to set expiry time manually
+        request_time <- Sys.time()
         if(is.null(self$credentials))
         {
             res <- private$initfunc(auth_info)
             self$credentials <- process_aad_response(res)
         }
-        private$set_expiry_time()
+        private$set_expiry_time(request_time)
 
         if(private$use_cache)
             self$cache()
@@ -102,6 +104,7 @@ public=list(
 
     refresh=function()
     {
+        request_time <- Sys.time()
         res <- if(!is.null(self$credentials$refresh_token))
         {
             body <- list(grant_type="refresh_token",
@@ -127,7 +130,7 @@ public=list(
         }
 
         self$credentials <- creds
-        private$set_expiry_time()
+        private$set_expiry_time(request_time)
 
         if(private$use_cache)
             self$cache()
@@ -164,22 +167,30 @@ private=list(
             self$refresh()
     },
 
-    set_expiry_time=function()
+    set_expiry_time=function(request_time)
     {
         # v2.0 endpoint doesn't provide an expires_on field, set it here
         if(is.null(self$credentials$expires_on))
         {
-            expiry <- try(as.character(decode_jwt(self$credentials$access_token)$payload$exp), silent=TRUE)
+            expiry <- try(decode_jwt(self$credentials$access_token)$payload$exp, silent=TRUE)
             if(inherits(expiry, "try-error"))
+                expiry <- try(decode_jwt(self$credentials$id_token)$payload$exp, silent=TRUE)
+            if(inherits(expiry, "try-error"))
+                expiry <- NA
+
+            expires_in <- if(!is.null(self$credentials$expires_in))
+                as.numeric(self$credentials$expires_in)
+            else NA
+
+            request_time <- floor(as.numeric(request_time))
+            expires_on <- request_time + expires_in
+
+            self$credentials$expires_on <- if(is.na(expiry) && is.na(expires_on))
             {
-                expiry <- try(as.character(decode_jwt(self$credentials$id_token)$payload$exp), silent=TRUE)
-                if(inherits(expiry, "try-error"))
-                {
-                    warning("Expiry date not found", call.=FALSE)
-                    expiry <- NA
-                }
+                warning("Could not set expiry time, using default validity period of 1 hour")
+                as.character(as.numeric(request_time + 3600))
             }
-            self$credentials$expires_on <- expiry
+            else as.character(as.numeric(min(expiry, expires_on, na.rm=TRUE)))
         }
     },
 
