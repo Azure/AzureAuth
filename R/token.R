@@ -81,7 +81,7 @@
 #' @section Refreshing:
 #' A token object can be refreshed by calling its `refresh()` method. If the token's credentials contain a refresh token, this is used; otherwise a new access token is obtained by reauthenticating.
 #'
-#' Note that in AAD, a refresh token can be used to obtain an access token for any resource or scope that you have permissions for. Thus, for example, you could use a refresh token issued on a request for `https://management.azure.com` to obtain a new access token for `https://graph.microsoft.com` (assuming you've been granted permission).
+#' Note that in AAD, a refresh token can be used to obtain an access token for any resource or scope that you have permissions for. Thus, for example, you could use a refresh token issued on a request for Azure Resource Manager (`https://management.azure.com/`) to obtain a new access token for Microsoft Graph (`https://graph.microsoft.com/`).
 #'
 #' To obtain an access token for a new resource, change the object's `resource` (for an AAD v1.0 token) or `scope` field (for an AAD v2.0 token) before calling `refresh()`. If you _also_ want to retain the token for the old resource, you should call the `clone()` method first to create a copy. See the examples below.
 #'
@@ -89,6 +89,8 @@
 #' For `get_azure_token`, an object inheriting from `AzureToken`. The specific class depends on the authentication flow: `AzureTokenAuthCode`, `AzureTokenDeviceCode`, `AzureTokenClientCreds`, `AzureTokenOnBehalfOf`, `AzureTokenResOwner`. For `get_managed_token`, a similar object of class `AzureTokenManaged`.
 #'
 #' For `list_azure_tokens`, a list of such objects retrieved from disk.
+#'
+#' The actual credentials that are returned from the authorization endpoint can be found in the `credentials` field, the same as with a `httr::Token` object. The access token (if present) will be `credentials$access_token`, and the ID token (if present) will be `credentials$id_token`. Use these if you are manually constructing a HTTP request and need to insert an "Authorization" header, for example.
 #'
 #' @seealso
 #' [AzureToken], [httr::oauth2.0_token], [httr::Token], [cert_assertion],
@@ -210,6 +212,12 @@
 #' tok2 <- tok$clone()
 #' tok2$scope <- c("https://anotherresource/.default", "offline_access")
 #' tok2$refresh()
+#'
+#'
+#' # manually adding auth header for a HTTP request
+#' tok <- get_azure_token("https://myresource", "mytenant", "app_id")
+#' header <- httr::add_headers(Authorization=paste("Bearer", tok$credentials$access_token))
+#' httr::GET("https://myresource/path/for/call", header, ...)
 #'
 #' }
 #' @export
