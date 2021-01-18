@@ -132,7 +132,7 @@ test_that("Resource owner grant works",
 {
     res <- "https://management.azure.com/"
 
-    tok <- get_azure_token(res, tenant, cli_app, password=userpwd, username=username, auth_type="resource_owner")
+    tok <- get_azure_token(res, tenant, native_app, password=userpwd, username=username, auth_type="resource_owner")
     expect_true(is_azure_token(tok))
 })
 
@@ -141,7 +141,7 @@ test_that("Refreshing with changed resource works",
 {
     res <- "https://management.azure.com/"
 
-    tok <- get_azure_token(res, tenant, cli_app)
+    tok <- get_azure_token(res, tenant, native_app)
     expect_identical(res, decode_jwt(tok)$payload$aud)
 
     tok$resource <- "https://graph.microsoft.com/"

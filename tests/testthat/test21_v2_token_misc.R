@@ -167,7 +167,7 @@ test_that("Resource owner grant works",
     res <- "https://management.azure.com/.default"
     resbase <- "https://management.azure.com"
 
-    tok <- get_azure_token(res, tenant, cli_app, password=userpwd, username=username, auth_type="resource_owner",
+    tok <- get_azure_token(res, tenant, native_app, password=userpwd, username=username, auth_type="resource_owner",
         version=2)
     expect_true(is_azure_token(tok))
     expect_identical(resbase, decode_jwt(tok)$payload$aud)
@@ -180,7 +180,7 @@ test_that("Refreshing with changed resource works",
     resbase <- "https://management.azure.com"
     res2 <- "offline_access"
 
-    tok <- get_azure_token(c(res, res2), tenant, cli_app, version=2)
+    tok <- get_azure_token(c(res, res2), tenant, native_app, version=2)
     expect_identical(resbase, decode_jwt(tok)$payload$aud)
 
     tok$scope[1] <- "https://graph.microsoft.com/.default"
@@ -195,7 +195,7 @@ test_that("Consumers tenant works",
     res2 <- "offline_access"
     res3 <- "openid"
 
-    tok <- get_azure_token(c(res, res2, res3), "consumers", cli_app, version=2)
+    tok <- get_azure_token(c(res, res2, res3), "consumers", native_app, version=2)
     expect_error(decode_jwt(tok))
     expect_identical(decode_jwt(tok, "id")$payload$tid, "9188040d-6c67-4c5b-b112-36a304b66dad")
 })
