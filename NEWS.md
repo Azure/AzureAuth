@@ -1,3 +1,7 @@
+# AzureAuth 1.3.0.9000
+
+- Allow specifying the location of the token caching directory in the environment variable `R_AZURE_DATA_DIR`.
+
 # AzureAuth 1.3.0
 
 - Allow obtaining tokens for the `organizations` and `consumers` generic tenants, in addition to `common`.
