@@ -1,7 +1,7 @@
 utils::globalVariables(c("self", "private"))
 
 
-.data_env <- new.env()
+.data_env <- new.env(parent=emptyenv())
 
 .onLoad <- function(libname, pkgname)
 {
