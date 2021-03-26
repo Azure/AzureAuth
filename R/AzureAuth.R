@@ -1,8 +1,6 @@
 utils::globalVariables(c("self", "private"))
 
 
-.data_env <- new.env(parent=emptyenv())
-
 .onLoad <- function(libname, pkgname)
 {
     .data_env$dir <- AzureR_dir()  # save the caching directory at startup
@@ -50,9 +48,6 @@ make_AzureR_dir <- function()
 #' @export
 AzureR_dir <- function()
 {
-    # check for a saved location (guards against env variable changing during the session)
-    if(!is.null(.data_env$dir) && .data_env$dir != "")
-        return(.data_env$dir)
     userdir <- Sys.getenv("R_AZURE_DATA_DIR")
     if(userdir != "")
         return(userdir)
