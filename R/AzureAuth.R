@@ -3,7 +3,6 @@ utils::globalVariables(c("self", "private"))
 
 .onLoad <- function(libname, pkgname)
 {
-    .data_env$dir <- AzureR_dir()  # save the caching directory at startup
     make_AzureR_dir()
     options(azure_imds_version="2018-02-01")
     invisible(NULL)
