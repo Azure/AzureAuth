@@ -70,13 +70,13 @@
 #' - Unlike AAD v1.0, AAD v2.0 does not return an ID token by default. To get a token, specify `openid` as a scope. On the other hand it _does_ refresh the ID token, so bypassing the cache is not needed. It's recommended to use AAD v2.0 if you only want an ID token.
 #'
 #' @section Caching:
-#' AzureAuth caches tokens based on all the inputs to `get_azure_token` as listed above. Tokens are cached in a custom, user-specific directory, created with the rappdirs package. On recent Windows versions, this will usually be in the location `C:\\Users\\(username)\\AppData\\Local\\AzureR`. On Linux, it will be in `~/.config/AzureR`, and on MacOS, it will be in `~/Library/Application Support/AzureR`. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).
+#' AzureAuth caches tokens based on all the inputs to `get_azure_token` as listed above. Tokens are cached in a custom, user-specific directory, created with the rappdirs package. On recent Windows versions, this will usually be in the location `C:\\Users\\(username)\\AppData\\Local\\AzureR`. On Linux, it will be in `~/.config/AzureR`, and on MacOS, it will be in `~/Library/Application Support/AzureR`. Alternatively, you can specify the location of the directory in the environment variable `R_AZURE_DATA_DIR`. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).
 #'
 #' To list all cached tokens on disk, use `list_azure_tokens`. This returns a list of token objects, named according to their MD5 hashes.
 #'
 #' To delete a cached token, use `delete_azure_token`. This takes the same inputs as `get_azure_token`, or you can specify the MD5 hash directly in the `hash` argument.
 #'
-#' To delete _all_ cached tokens, use `clean_token_directory`.
+#' To delete all files in the caching directory, use `clean_token_directory`.
 #'
 #' @section Refreshing:
 #' A token object can be refreshed by calling its `refresh()` method. If the token's credentials contain a refresh token, this is used; otherwise a new access token is obtained by reauthenticating.
