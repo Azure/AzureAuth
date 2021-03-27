@@ -179,13 +179,13 @@ There are 3 generic values that can be used as tenants when authenticating:\tabu
 
 \section{Caching}{
 
-AzureAuth caches tokens based on all the inputs to \code{get_azure_token} as listed above. Tokens are cached in a custom, user-specific directory, created with the rappdirs package. On recent Windows versions, this will usually be in the location \verb{C:\\\\Users\\\\(username)\\\\AppData\\\\Local\\\\AzureR}. On Linux, it will be in \verb{~/.config/AzureR}, and on MacOS, it will be in \verb{~/Library/Application Support/AzureR}. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).
+AzureAuth caches tokens based on all the inputs to \code{get_azure_token} as listed above. Tokens are cached in a custom, user-specific directory, created with the rappdirs package. On recent Windows versions, this will usually be in the location \verb{C:\\\\Users\\\\(username)\\\\AppData\\\\Local\\\\AzureR}. On Linux, it will be in \verb{~/.config/AzureR}, and on MacOS, it will be in \verb{~/Library/Application Support/AzureR}. Alternatively, you can specify the location of the directory in the environment variable \code{R_AZURE_DATA_DIR}. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).
 
 To list all cached tokens on disk, use \code{list_azure_tokens}. This returns a list of token objects, named according to their MD5 hashes.
 
 To delete a cached token, use \code{delete_azure_token}. This takes the same inputs as \code{get_azure_token}, or you can specify the MD5 hash directly in the \code{hash} argument.
 
-To delete \emph{all} cached tokens, use \code{clean_token_directory}.
+To delete all files in the caching directory, use \code{clean_token_directory}.
 }
 
 \section{Refreshing}{
