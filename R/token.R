@@ -297,10 +297,10 @@ clean_token_directory <- function(confirm=TRUE)
         return(invisible(NULL))
 
     if(confirm && interactive() &&
-       !get_confirmation("Do you really want to delete ALL saved Azure Active Directory tokens?", FALSE))
+       !get_confirmation("Do you really want to remove all files in the AzureR token directory?", FALSE))
             return(invisible(NULL))
 
-    toks <- dir(AzureR_dir(), pattern="^[0-9a-f]{32}$", full.names=TRUE)
+    toks <- dir(AzureR_dir(), full.names=TRUE)
     file.remove(toks)
     invisible(NULL)
 }
