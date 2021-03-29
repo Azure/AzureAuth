@@ -8,7 +8,7 @@ vignette: >
   %\VignetteEncoding{utf8}
 ---
 
-The interaction between app registration configuration and requesting a token can be confusing. This vignette describes some common authentication scenarios that R users might encounter. For each scenario, we describe how to setup your app registration in Azure, and how to request a token using AzureAuth. The [Azure Active Directory documentation](https://docs.microsoft.com/en-au/azure/active-directory/develop/v2-overview) is the authoritative reference.
+The interaction between app registration configuration and requesting a token can be confusing. This vignette outlines some common authentication scenarios that R users might encounter. For each scenario, we briefly describe the necessary settings for your app registration in Azure, and how to request a token using AzureAuth. The [Azure Active Directory documentation](https://docs.microsoft.com/en-au/azure/active-directory/develop/v2-overview) is the authoritative reference.
 
 ## Interactive authentication on a local machine
 
@@ -20,10 +20,15 @@ The code to run in your R session is
 
 ```r
 library(AzureAuth)
-tok <- get_azure_token("resource", tenant="yourtenant", app="yourappid")
+
+# for an AADv1 token
+tok <- get_azure_token("https://resource", tenant="yourtenant", app="yourappid")
+
+# for an AADv2 token
+tok <- get_azure_token("https://resource/scope", tenant="yourtenant", app="yourappid", version=2)
 ```
 
-where `resource` is the URL for the Azure resource you want a token for, `yourtenant` is your Azure tenant name or GUID, and `yourappid` is your app registration ID. Note that you do _not_ specify your username or password in the `get_azure_token` call.
+where `resource[/scope]` is the Azure resource/scope you want a token for, `yourtenant` is your Azure tenant name or GUID, and `yourappid` is your app registration ID. Note that you do _not_ specify your username or password in the `get_azure_token` call.
 
 On the server side, the app registration you use should have a **mobile & desktop redirect** of `http://localhost:1410`. See the crop below of the authentication pane for the app in the Azure portal.
 
