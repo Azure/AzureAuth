@@ -10,15 +10,13 @@ The primary repo for this package is at https://github.com/Azure/AzureAuth; plea
 
 ## Obtaining tokens
 
-The main function in AzureAuth is `get_azure_token`, which obtains an OAuth token from AAD. The token is cached in a user-specific directory using the [rappdirs](https://github.com/r-lib/rappdirs) package, and future requests will use the cached token without needing you to reauthenticate.
+The main function in AzureAuth is `get_azure_token`, which obtains an OAuth token from AAD. The token is saved in a user-specific directory; future requests will use the saved token without needing you to reauthenticate. The default location for the token directory is determined using the [rappdirs](https://github.com/r-lib/rappdirs) package, or you can specify the location in the `R_AZURE_DATA_DIR` environment variable. 
 
 ```r
 library(AzureAuth)
 
 token <- get_azure_token(resource="myresource", tenant="mytenant", app="app_id", ...)
 ```
-
-For reasons of CRAN policy, the first time AzureAuth is loaded, it will prompt you for permission to create this directory. Unless you have a specific reason otherwise, it's recommended that you allow the directory to be created. Note that most other cloud engineering tools save credentials in this way, including Docker, Kubernetes, and the Azure CLI itself. The prompt only appears in an interactive session; if AzureAuth is loaded in a batch script, the directory is not created if it doesn't already exist.
 
 Other supplied functions include `list_azure_tokens`, `delete_azure_token` and `clean_token_directory`, to let you manage the token cache.
 
