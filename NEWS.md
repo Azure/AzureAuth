@@ -1,8 +1,9 @@
-# AzureAuth 1.3.0.9000
+# AzureAuth 1.3.1
 
 - Allow specifying the location of the token caching directory in the environment variable `R_AZURE_DATA_DIR`.
 - Change `clean_token_directory` to actually clean the directory (delete all files). This is because the main non-token objects found here are AzureRMR and AzureGraph logins, which are orphaned once their backing tokens are deleted. Deleting them as well is less confusing, as a message will be displayed saying to create a new login.
 - Always create the token caching directory, rather than asking first. This should result in consistent behaviour for both interactive and non-interactive sessions.
+- Add a vignette outlining the app registration settings and `get_azure_token` arguments for some common authentication scenarios.
 
 # AzureAuth 1.3.0
 
