@@ -3,6 +3,7 @@ Title: Authentication Services for Azure Active Directory
 Version: 1.3.1.9000
 Authors@R: c(
     person("Hong", "Ooi", , "hongooi73@gmail.com", role = c("aut", "cre")),
+    person("Tyler", "Littlefield", role="ctb"),
     person("httr development team", role="ctb", comment="Original OAuth listener code"),
     person("Scott", "Holden", , role = "ctb", comment = "Advice on AAD authentication"),
     person("Chris", "Stone", , role = "ctb", comment = "Advice on AAD authentication"),
