@@ -3,9 +3,9 @@ title: "Authenticating from Shiny"
 author: Hong Ooi
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Shiny}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{utf8}
+    %\VignetteIndexEntry{Shiny}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{utf8}
 ---
 
 Because a Shiny app has separate UI and server components, the interactive authentication flows require some changes. In particular, the authorization step (logging in to Azure) has to be conducted separately from the token acquisition step.
@@ -49,15 +49,15 @@ ui_func <- function(req)
 
 # code for cleaning url after authentication
 clean_url_js <- sprintf(
-  "
-  $(document).ready(function(event) {
-    const nextURL = '%s';
-    const nextTitle = 'My new page title';
-    const nextState = { additionalInformation: 'Updated the URL with JS' };
-    // This will create a new entry in the browser's history, without reloading
-    window.history.pushState(nextState, nextTitle, nextURL);
-  });
-  ", redirect
+    "
+    $(document).ready(function(event) {
+      const nextURL = '%s';
+      const nextTitle = 'My new page title';
+      const nextState = { additionalInformation: 'Updated the URL with JS' };
+      // This will create a new entry in the browser's history, without reloading
+      window.history.pushState(nextState, nextTitle, nextURL);
+    });
+    ", redirect
 )
 
 server <- function(input, output, session)
