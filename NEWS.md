@@ -1,3 +1,7 @@
+# AzureAuth 1.3.1.9000
+
+- Update Shiny vignette to clean up redirect page after authenticating (thanks to Tyler Littlefield).
+
 # AzureAuth 1.3.1
 
 - Allow specifying the location of the token caching directory in the environment variable `R_AZURE_DATA_DIR`.

@@ -3,20 +3,21 @@ title: "Authenticating from Shiny"
 author: Hong Ooi
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Shiny}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{utf8}
+    %\VignetteIndexEntry{Shiny}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{utf8}
 ---
 
 Because a Shiny app has separate UI and server components, the interactive authentication flows require some changes. In particular, the authorization step (logging in to Azure) has to be conducted separately from the token acquisition step.
 
 AzureAuth provides the `build_authorization_uri` function to facilitate this separation. You call this function to obtain a URI that you browse to in order to login to Azure. Once you have logged in, Azure will return an authorization code as part of a redirect.
 
-Here is a skeleton Shiny app that demonstrates its use. The UI calls `build_authorization_uri`, and then redirects your browser to that location. When you have logged in, the server captures the authorization code and calls `get_azure_token` to obtain the token.
+Here is a skeleton Shiny app that demonstrates its use. The UI calls `build_authorization_uri`, and then redirects your browser to that location. When you have logged in, the server captures the authorization code and calls `get_azure_token` to obtain the token. Once the token is obtained, `shinyjs` is used to return the URL back to its original state.
 
 ```r
 library(AzureAuth)
 library(shiny)
+library(shinyjs)
 
 resource <- "https://management.azure.com"
 tenant <- "your-tenant-here"
@@ -30,6 +31,7 @@ options(shiny.port=as.numeric(httr::parse_url(redirect)$port))
 
 # replace this with your app's regular UI
 ui <- fluidPage(
+    useShinyjs(),
     verbatimTextOutput("token")
 )
 
@@ -45,8 +47,23 @@ ui_func <- function(req)
     else ui
 }
 
+# code for cleaning url after authentication
+clean_url_js <- sprintf(
+    "
+    $(document).ready(function(event) {
+      const nextURL = '%s';
+      const nextTitle = 'My new page title';
+      const nextState = { additionalInformation: 'Updated the URL with JS' };
+      // This will create a new entry in the browser's history, without reloading
+      window.history.pushState(nextState, nextTitle, nextURL);
+    });
+    ", redirect
+)
+
 server <- function(input, output, session)
 {
+    shinyjs::runjs(clean_url_js)
+
     opts <- parseQueryString(isolate(session$clientData$url_search))
     if(is.null(opts$code))
         return()
