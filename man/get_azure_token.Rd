@@ -13,7 +13,7 @@
 \alias{is_azure_v2_token}
 \title{Manage Azure Active Directory OAuth 2.0 tokens}
 \usage{
-get_managed_token(resource, token_args = list(), use_cache = TRUE)
+get_managed_token(resource, token_args = list(), use_cache = NULL)
 
 get_azure_token(
   resource,
@@ -27,7 +27,7 @@ get_azure_token(
   version = 1,
   authorize_args = list(),
   token_args = list(),
-  use_cache = TRUE,
+  use_cache = NULL,
   on_behalf_of = NULL,
   auth_code = NULL,
   device_creds = NULL
@@ -82,7 +82,7 @@ is_azure_v2_token(object)
 
 \item{token_args}{An optional list of further parameters for the token endpoint. These will be included in the body of the request for \code{get_azure_token}, or as URI query parameters for \code{get_managed_token}.}
 
-\item{use_cache}{If TRUE and cached credentials exist, use them instead of obtaining a new token. Set this to FALSE to bypass the cache.}
+\item{use_cache}{If TRUE and cached credentials exist, use them instead of obtaining a new token. The default value of NULL means to use the cache only if AzureAuth is not running inside a Shiny app.}
 
 \item{tenant}{Your tenant. This can be a name ("myaadtenant"), a fully qualified domain name ("myaadtenant.onmicrosoft.com" or "mycompanyname.com"), or a GUID. It can also be one of the generic tenants "common", "organizations" or "consumers"; see 'Generic tenants' below.}
 

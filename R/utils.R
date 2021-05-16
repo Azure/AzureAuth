@@ -141,3 +141,9 @@ get_confirmation <- function(msg, default=TRUE)
     else utils::askYesNo(msg, default)
     isTRUE(ok)
 }
+
+
+in_shiny <- function()
+{
+    ("shiny" %in% loadedNamespaces()) && shiny::isRunning()
+}

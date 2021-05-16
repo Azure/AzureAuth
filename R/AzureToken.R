@@ -32,7 +32,7 @@ public=list(
     initialize=function(resource, tenant, app, password=NULL, username=NULL, certificate=NULL,
                         aad_host="https://login.microsoftonline.com/", version=1,
                         authorize_args=list(), token_args=list(),
-                        use_cache=TRUE, auth_info=NULL)
+                        use_cache=NULL, auth_info=NULL)
     {
         if(is.null(private$initfunc))
             stop("Do not call this constructor directly; use get_azure_token() instead")
@@ -45,6 +45,10 @@ public=list(
             self$resource <- resource
         }
         else self$scope <- sapply(resource, verify_v2_scope, USE.NAMES=FALSE)
+
+        # default behaviour: disable cache if running in shiny
+        if(is.null(use_cache))
+            use_cache <- !in_shiny()
 
         self$aad_host <- aad_host
         self$tenant <- normalize_tenant(tenant)
