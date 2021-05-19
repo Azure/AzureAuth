@@ -2,9 +2,12 @@
 % Please edit documentation in R/AzureAuth.R
 \name{AzureR_dir}
 \alias{AzureR_dir}
+\alias{create_AzureR_dir}
 \title{Data directory for AzureR packages}
 \usage{
 AzureR_dir()
+
+create_AzureR_dir()
 }
 \value{
 A string containing the data directory.
@@ -13,9 +16,13 @@ A string containing the data directory.
 Data directory for AzureR packages
 }
 \details{
-AzureAuth saves your authentication credentials in a user-specific directory, so you don't have to reauthenticate in every R session. The default location is determined using the rappdirs package: on recent Windows versions, this will usually be in the location \verb{C:\\\\Users\\\\(username)\\\\AppData\\\\Local\\\\AzureR}; on Unix/Linux, it will be in \verb{~/.local/share/AzureR}; and on MacOS, it will be in \verb{~/Library/Application Support/AzureR}. Alternatively, you can specify the location of the directory in the environment variable \code{R_AZURE_DATA_DIR}. AzureAuth does not modify R's working directory, which significantly lessens the risk of accidentally introducing cached tokens into source control.
+AzureAuth can save your authentication credentials in a user-specific directory, using the rappdirs package. On recent Windows versions, this will usually be in the location \verb{C:\\\\Users\\\\(username)\\\\AppData\\\\Local\\\\AzureR}. On Unix/Linux, it will be in \verb{~/.local/share/AzureR}, and on MacOS, it will be in \verb{~/Library/Application Support/AzureR}.Alternatively, you can specify the location of the directory in the environment variable \code{R_AZURE_DATA_DIR}. AzureAuth does not modify R's working directory, which significantly lessens the risk of accidentally introducing cached tokens into source control.
 
-This directory is also used by other AzureR packages, notably AzureRMR (for storing Resource Manager logins) and AzureGraph (for Microsoft Graph logins). You should not save your own files in it; instead, treat it as something internal to the AzureR packages.
+On package startup, if this directory does not exist, AzureAuth will prompt you for permission to create it. It's recommended that you allow the directory to be created, as otherwise you will have to reauthenticate with Azure every time. Note that many cloud engineering tools, including the \href{https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest}{Azure CLI}, save authentication credentials in this way. The prompt only appears in an interactive session (in the sense that \code{interactive()} returns TRUE); if AzureAuth is loaded in a batch script, the directory is not created if it doesn't already exist.
+
+\code{create_AzureR_dir} is a utility function to create the caching directory manually. This can be useful not just for non-interactive sessions, but also Jupyter and R notebooks, which are not \emph{technically} interactive in that \code{interactive()} returns FALSE.
+
+The caching directory is also used by other AzureR packages, notably AzureRMR (for storing Resource Manager logins) and AzureGraph (for Microsoft Graph logins). You should not save your own files in it; instead, treat it as something internal to the AzureR packages.
 }
 \seealso{
 \link{get_azure_token}
