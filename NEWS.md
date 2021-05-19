@@ -2,6 +2,7 @@
 
 - Change the default caching behaviour to disable the cache if running inside Shiny.
 - Update Shiny vignette to clean up redirect page after authenticating (thanks to Tyler Littlefield).
+- Revert the changed behaviour for caching directory creation in 1.3.1.
 
 # AzureAuth 1.3.1
 
