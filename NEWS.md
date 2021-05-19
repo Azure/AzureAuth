@@ -1,4 +1,4 @@
-# AzureAuth 1.3.1.9000
+# AzureAuth 1.3.2
 
 - Change the default caching behaviour to disable the cache if running inside Shiny.
 - Update Shiny vignette to clean up redirect page after authenticating (thanks to Tyler Littlefield).
