@@ -10,7 +10,7 @@
 #' @param certificate A file containing the certificate for authenticating with (including the private key), an Azure Key Vault certificate object, or a call to the `cert_assertion` function to build a client assertion with a certificate. See 'Certificate authentication' below.
 #' @param auth_type The authentication type. See 'Details' below.
 #' @param aad_host URL for your AAD host. For the public Azure cloud, this is `https://login.microsoftonline.com/`. Change this if you are using a government or private cloud. Can also be a full URL, eg `https://mydomain.b2clogin.com/mydomain/other/path/names/oauth2` (this is relevant mainly for Azure B2C logins).
-#' @param version The AAD version, either 1 or 2. Authenticating with a personal account as opposed to a work or school account requires AAD 2.0.
+#' @param version The AAD version, either 1 or 2. Authenticating with a personal account as opposed to a work or school account requires AAD 2.0. The default is AAD 1.0 for compatibility reasons, but you should use AAD 2.0 if possible.
 #' @param authorize_args An optional list of further parameters for the AAD authorization endpoint. These will be included in the request URI as query parameters. Only used if `auth_type="authorization_code"`.
 #' @param token_args An optional list of further parameters for the token endpoint. These will be included in the body of the request for `get_azure_token`, or as URI query parameters for `get_managed_token`.
 #' @param use_cache If TRUE and cached credentials exist, use them instead of obtaining a new token. The default value of NULL means to use the cache only if AzureAuth is not running inside a Shiny app.
@@ -22,6 +22,8 @@
 #' `get_azure_token` does much the same thing as [httr::oauth2.0_token()], but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. `load_azure_token` loads a token given its hash, `delete_azure_token` deletes a cached token given either the credentials or the hash, and `list_azure_tokens` lists currently cached tokens.
 #'
 #' `get_managed_token` is a specialised function to acquire tokens for a _managed identity_. This is an Azure service, such as a VM or container, that has been assigned its own identity and can be granted access permissions like a regular user. The advantage of managed identities over the other authentication methods (see below) is that you don't have to store a secret password, which improves security. Note that `get_managed_token` can only be used from within the managed identity itself.
+#'
+#' By default `get_managed_token` retrieves a token using the system-assigned identity for the resource. To obtain a token with a user-assigned identity, pass either the client, object or Azure resource ID in the `token_args` argument. See the examples below.
 #'
 #' The `resource` arg should be a single URL or GUID for AAD v1.0. For AAD v2.0, it should be a vector of _scopes_, where each scope consists of a URL or GUID along with a path that designates the type of access requested. If a v2.0 scope doesn't have a path, `get_azure_token` will append the `/.default` path with a warning. A special scope is `offline_access`, which requests a refresh token from AAD along with the access token: without this scope, you will have to reauthenticate if you want to refresh the token.
 #'
@@ -64,10 +66,20 @@
 #' | `organizations` | Allows only users with work/school accounts from Azure AD to sign into the application. |
 #' | `consumers` | Allows only users with personal Microsoft accounts (MSA) to sign into the application. |
 #'
-#' @section OpenID Connect:
-#' `get_azure_token` can be used to obtain ID tokens along with regular OAuth access tokens, when using an interactive authentication flow (authorization_code or device_code). The behaviour depends on the AAD version:
+#' @section Authentication vs authorization:
+#' Azure Active Directory can be used for two purposes: _authentication_ (verifying that a user is who they claim they are) and _authorization_ (granting a user permission to access a resource). In AAD, a successful authorization process concludes with the granting of an OAuth 2.0 access token, as discussed above. Authentication uses the same process but concludes by granting an ID token, as defined in the OpenID Connect protocol.
+#'
+#' `get_azure_token` can be used to obtain ID tokens along with regular OAuth access tokens, when using an interactive flow (authorization_code or device_code). The behaviour depends on the AAD version:
+#'
+#' When retrieving ID tokens, the behaviour depends on the AAD version:
 #' - AAD v1.0 will return an ID token as well as the access token by default; you don't have to do anything extra. However, AAD v1.0 will not _refresh_ the ID token when it expires; you must reauthenticate to get a new one. To ensure you don't pull the cached version of the credentials, specify `use_cache=FALSE` in the calls to `get_azure_token`.
-#' - Unlike AAD v1.0, AAD v2.0 does not return an ID token by default. To get a token, specify `openid` as a scope. On the other hand it _does_ refresh the ID token, so bypassing the cache is not needed. It's recommended to use AAD v2.0 if you only want an ID token.
+#' - Unlike AAD v1.0, AAD v2.0 does not return an ID token by default. To get a token, include `openid` as a scope. On the other hand it _does_ refresh the ID token, so bypassing the cache is not needed. It's recommended to use AAD v2.0 if you only want an ID token.
+#'
+#' If you _only_ want to do authentication and not authorization (for example if your app does not use any Azure resources), specify the `resource` argument as follows:
+#' - For AAD v1.0, use a blank resource (`resource=""`).
+#' - For AAD v2.0, use `resource="openid"` without any other elements. Optionally you can add `"offline_access"` as a 2nd element if you want a refresh token as well.
+#'
+#' See also the examples below.
 #'
 #' @section Caching:
 #' AzureAuth caches tokens based on all the inputs to `get_azure_token` as listed above. Tokens are cached in a custom, user-specific directory, created with the rappdirs package. On recent Windows versions, this will usually be in the location `C:\\Users\\(username)\\AppData\\Local\\AzureR`. On Linux, it will be in `~/.config/AzureR`, and on MacOS, it will be in `~/Library/Application Support/AzureR`. Alternatively, you can specify the location of the directory in the environment variable `R_AZURE_DATA_DIR`. Note that a single directory is used for all tokens, and the working directory is not touched (which significantly lessens the risk of accidentally introducing cached tokens into source control).
@@ -97,6 +109,7 @@
 #' [build_authorization_uri], [get_device_creds]
 #'
 #' [Azure Active Directory for developers](https://docs.microsoft.com/en-us/azure/active-directory/develop/),
+#' [Managed identities overview](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview)
 #' [Device code flow on OAuth.com](https://www.oauth.com/oauth2-servers/device-flow/token-request/),
 #' [OAuth 2.0 RFC](https://tools.ietf.org/html/rfc6749) for the gory details on how OAuth works
 #'
@@ -199,6 +212,12 @@
 #' # get a token from within a managed identity (VM, container or service)
 #' get_managed_token("https://management.azure.com/")
 #'
+#' # get a token from a managed identity, with a user-defined identity:
+#' # specify one of the identity's object_id, client_id and mi_res_id (Azure resource ID)
+#' # you can get these values via the Azure Portal or Azure CLI
+#' get_managed_token("https://management.azure.com/", token_args=list(
+#'     mi_res_id="/subscriptions/zzzz-zzzz/resourceGroups/resgroupname/..."
+#' ))
 #'
 #' # use a refresh token from one resource to get an access token for another resource
 #' tok <- get_azure_token("https://myresource", "mytenant", "app_id")

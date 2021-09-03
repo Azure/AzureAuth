@@ -19,15 +19,20 @@ library(AzureAuth)
 library(shiny)
 library(shinyjs)
 
-resource <- "https://management.azure.com"
 tenant <- "your-tenant-here"
 app <- "your-app-id-here"
+
+# the Azure resource permissions needed
+# if your app doesn't use any Azure resources (you only want to do authentication),
+# set the resource to "openid" only
+resource <- c("https://management.azure.com/.default", "openid")
 
 # set this to the site URL of your app once it is deployed
 # this must also be the redirect for your registered app in Azure Active Directory
 redirect <- "http://localhost:8100"
 
-options(shiny.port=as.numeric(httr::parse_url(redirect)$port))
+port <- httr::parse_url(redirect)$port
+options(shiny.port=if(is.null(port)) 80 else as.numeric(port))
 
 # replace this with your app's regular UI
 ui <- fluidPage(
@@ -40,7 +45,7 @@ ui_func <- function(req)
     opts <- parseQueryString(req$QUERY_STRING)
     if(is.null(opts$code))
     {
-        auth_uri <- build_authorization_uri(resource, tenant, app, redirect_uri=redirect)
+        auth_uri <- build_authorization_uri(resource, tenant, app, redirect_uri=redirect, version=2)
         redir_js <- sprintf("location.replace(\"%s\");", auth_uri)
         tags$script(HTML(redir_js))
     }
@@ -71,7 +76,7 @@ server <- function(input, output, session)
     # this assumes your app has a 'public client/native' redirect:
     # if it is a 'web' redirect, include the client secret as the password argument
     token <- get_azure_token(resource, tenant, app, auth_type="authorization_code",
-                             authorize_args=list(redirect_uri=redirect),
+                             authorize_args=list(redirect_uri=redirect), version=2,
                              use_cache=FALSE, auth_code=opts$code)
 
     output$token <- renderPrint(token)

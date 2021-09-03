@@ -1,3 +1,9 @@
+# AzureAuth 1.3.2.9000
+
+- Documentation update only:
+  - Clarify that you can use `get_managed_token` to obtain tokens with a user-defined identity, not just a system identity
+  - Clarify the distinction between authentication and authorization in the `get_azure_token` help, and also in the Shiny vignette
+
 # AzureAuth 1.3.2
 
 - Change the default caching behaviour to disable the cache if running inside Shiny.

@@ -98,7 +98,7 @@ is_azure_v2_token(object)
 
 \item{aad_host}{URL for your AAD host. For the public Azure cloud, this is \verb{https://login.microsoftonline.com/}. Change this if you are using a government or private cloud. Can also be a full URL, eg \verb{https://mydomain.b2clogin.com/mydomain/other/path/names/oauth2} (this is relevant mainly for Azure B2C logins).}
 
-\item{version}{The AAD version, either 1 or 2. Authenticating with a personal account as opposed to a work or school account requires AAD 2.0.}
+\item{version}{The AAD version, either 1 or 2. Authenticating with a personal account as opposed to a work or school account requires AAD 2.0. The default is AAD 1.0 for compatibility reasons, but you should use AAD 2.0 if possible.}
 
 \item{authorize_args}{An optional list of further parameters for the AAD authorization endpoint. These will be included in the request URI as query parameters. Only used if \code{auth_type="authorization_code"}.}
 
@@ -121,6 +121,8 @@ Use these functions to authenticate with Azure Active Directory (AAD).
 \code{get_azure_token} does much the same thing as \code{\link[httr:oauth2.0_token]{httr::oauth2.0_token()}}, but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. \code{load_azure_token} loads a token given its hash, \code{delete_azure_token} deletes a cached token given either the credentials or the hash, and \code{list_azure_tokens} lists currently cached tokens.
 
 \code{get_managed_token} is a specialised function to acquire tokens for a \emph{managed identity}. This is an Azure service, such as a VM or container, that has been assigned its own identity and can be granted access permissions like a regular user. The advantage of managed identities over the other authentication methods (see below) is that you don't have to store a secret password, which improves security. Note that \code{get_managed_token} can only be used from within the managed identity itself.
+
+By default \code{get_managed_token} retrieves a token using the system-assigned identity for the resource. To obtain a token with a user-assigned identity, pass either the client, object or Azure resource ID in the \code{token_args} argument. See the examples below.
 
 The \code{resource} arg should be a single URL or GUID for AAD v1.0. For AAD v2.0, it should be a vector of \emph{scopes}, where each scope consists of a URL or GUID along with a path that designates the type of access requested. If a v2.0 scope doesn't have a path, \code{get_azure_token} will append the \verb{/.default} path with a warning. A special scope is \code{offline_access}, which requests a refresh token from AAD along with the access token: without this scope, you will have to reauthenticate if you want to refresh the token.
 
@@ -168,13 +170,25 @@ There are 3 generic values that can be used as tenants when authenticating:\tabu
 }
 }
 
-\section{OpenID Connect}{
+\section{Authentication vs authorization}{
 
-\code{get_azure_token} can be used to obtain ID tokens along with regular OAuth access tokens, when using an interactive authentication flow (authorization_code or device_code). The behaviour depends on the AAD version:
+Azure Active Directory can be used for two purposes: \emph{authentication} (verifying that a user is who they claim they are) and \emph{authorization} (granting a user permission to access a resource). In AAD, a successful authorization process concludes with the granting of an OAuth 2.0 access token, as discussed above. Authentication uses the same process but concludes by granting an ID token, as defined in the OpenID Connect protocol.
+
+\code{get_azure_token} can be used to obtain ID tokens along with regular OAuth access tokens, when using an interactive flow (authorization_code or device_code). The behaviour depends on the AAD version:
+
+When retrieving ID tokens, the behaviour depends on the AAD version:
 \itemize{
 \item AAD v1.0 will return an ID token as well as the access token by default; you don't have to do anything extra. However, AAD v1.0 will not \emph{refresh} the ID token when it expires; you must reauthenticate to get a new one. To ensure you don't pull the cached version of the credentials, specify \code{use_cache=FALSE} in the calls to \code{get_azure_token}.
-\item Unlike AAD v1.0, AAD v2.0 does not return an ID token by default. To get a token, specify \code{openid} as a scope. On the other hand it \emph{does} refresh the ID token, so bypassing the cache is not needed. It's recommended to use AAD v2.0 if you only want an ID token.
+\item Unlike AAD v1.0, AAD v2.0 does not return an ID token by default. To get a token, include \code{openid} as a scope. On the other hand it \emph{does} refresh the ID token, so bypassing the cache is not needed. It's recommended to use AAD v2.0 if you only want an ID token.
 }
+
+If you \emph{only} want to do authentication and not authorization (for example if your app does not use any Azure resources), specify the \code{resource} argument as follows:
+\itemize{
+\item For AAD v1.0, use a blank resource (\code{resource=""}).
+\item For AAD v2.0, use \code{resource="openid"} without any other elements. Optionally you can add \code{"offline_access"} as a 2nd element if you want a refresh token as well.
+}
+
+See also the examples below.
 }
 
 \section{Caching}{
@@ -305,6 +319,12 @@ extract_jwt(tok2, "id")
 # get a token from within a managed identity (VM, container or service)
 get_managed_token("https://management.azure.com/")
 
+# get a token from a managed identity, with a user-defined identity:
+# specify one of the identity's object_id, client_id and mi_res_id (Azure resource ID)
+# you can get these values via the Azure Portal or Azure CLI
+get_managed_token("https://management.azure.com/", token_args=list(
+    mi_res_id="/subscriptions/zzzz-zzzz/resourceGroups/resgroupname/..."
+))
 
 # use a refresh token from one resource to get an access token for another resource
 tok <- get_azure_token("https://myresource", "mytenant", "app_id")
@@ -332,6 +352,7 @@ httr::GET("https://myresource/path/for/call", header, ...)
 \link{build_authorization_uri}, \link{get_device_creds}
 
 \href{https://docs.microsoft.com/en-us/azure/active-directory/develop/}{Azure Active Directory for developers},
+\href{https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview}{Managed identities overview}
 \href{https://www.oauth.com/oauth2-servers/device-flow/token-request/}{Device code flow on OAuth.com},
 \href{https://tools.ietf.org/html/rfc6749}{OAuth 2.0 RFC} for the gory details on how OAuth works
 }
