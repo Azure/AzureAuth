@@ -54,7 +54,7 @@ build_assertion.character <- function(assertion, ...)
 
 build_assertion.cert_assertion <- function(assertion, tenant, app, aad_host, version)
 {
-    url <- httr::parse_url(aad_host)
+    url <- httr2::url_parse(aad_host)
     if(url$path == "")
     {
         url$path <- if(version == 1)
@@ -62,7 +62,7 @@ build_assertion.cert_assertion <- function(assertion, tenant, app, aad_host, ver
         else file.path(tenant, "oauth2/v2.0/token")
     }
 
-    claim <- jose::jwt_claim(iss=app, sub=app, aud=httr::build_url(url),
+    claim <- jose::jwt_claim(iss=app, sub=app, aud=httr2::url_build(url),
                              exp=as.numeric(Sys.time() + assertion$duration))
 
     if(!is_empty(assertion$claims))

@@ -35,7 +35,7 @@ private=list(
         ), self$authorize_args)
 
         auth_uri <- do.call(build_authorization_uri, opts)
-        redirect <- httr::parse_url(auth_uri)$query$redirect_uri
+        redirect <- httr2::url_parse(auth_uri)$query$redirect_uri
 
         if(is.null(code))
         {

@@ -1,6 +1,6 @@
 listen_for_authcode <- function(remote_url, local_url)
 {
-    local_url <- httr::parse_url(local_url)
+    local_url <- httr2::url_parse(local_url)
     localhost <- if(local_url$hostname == "localhost") "127.0.0.1" else local_url$hostname
     localport <- local_url$port
 
@@ -10,7 +10,7 @@ listen_for_authcode <- function(remote_url, local_url)
     {
         query <- env$QUERY_STRING
         info <<- if(is.character(query) && nchar(query) > 0)
-            httr::parse_url(query)$query
+            httr2::url_parse(query)$query
         else list()
 
         if(is_empty(info$code))
