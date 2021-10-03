@@ -65,7 +65,11 @@ public=list(
         # time of initial request for token: in case we need to set expiry time manually
         request_time <- Sys.time()
         if(is.null(self$credentials))
-            self$credentials <- private$initfunc(auth_info)
+        {
+            creds <- private$initfunc(auth_info)
+            print(creds)
+            self$credentials <- rlang::exec(httr2::oauth_token, !!!creds, .date=request_time)
+        }
 
         private$set_expiry_time(request_time)
 
@@ -131,8 +135,7 @@ public=list(
         }
         else creds <- private$initfunc() # reauthenticate if no refresh token (cannot reuse any supplied creds)
 
-        self$credentials <- creds
-        private$set_expiry_time(request_time)
+        self$credentials <- rlang::exec(httr2::oauth_token, !!!creds, .date=request_time)
 
         if(private$use_cache)
             self$cache()

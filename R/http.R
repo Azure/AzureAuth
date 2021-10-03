@@ -1,8 +1,9 @@
-call_aad <- function(req, ...)
+call_aad <- function(req)
 {
     req %>%
         httr2::req_error(body=get_aad_error) %>%
-        httr2::req_perform(...)
+        httr2::req_perform() %>%
+        httr2::resp_body_json()
 }
 
 

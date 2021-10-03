@@ -58,17 +58,15 @@ poll_for_token <- function(url, body, interval, period)
             httr2::req_error(
                 is_error=function(resp)
                 {
-                    status <- httr2::resp_status(res)
-                    cont <- httr2::resp_body_json(res)
-                    if(status == 400 && cont$error == "authorization_pending")
-                        FALSE
-                    else TRUE
+                    status <- httr2::resp_status(resp)
+                    cont <- httr2::resp_body_json(resp)
+                    !(status == 400 && cont$error == "authorization_pending")
                 },
                 body=get_aad_error
             ) %>%
             httr2::req_perform() %>%
             httr2::resp_body_json()
-        if(!is_empty(cont$bearer))
+        if(!is_empty(cont$token_type))
             break
     }
     cont
