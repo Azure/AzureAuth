@@ -35,7 +35,7 @@ private=list(
         ), self$authorize_args)
 
         auth_uri <- do.call(build_authorization_uri, opts)
-        redirect <- httr2::url_parse(auth_uri)$query$redirect_uri
+        redirect <- parse_url(auth_uri)$query$redirect_uri
 
         if(is.null(code))
         {
@@ -49,7 +49,7 @@ private=list(
         access_uri <- private$aad_uri("token")
         body <- c(self$client, code=code, redirect_uri=redirect, self$token_args)
 
-        httr::POST(access_uri, body=body, encode="form")
+        req_post_form(access_uri, body) %>% call_aad()
     },
 
     set_request_credentials=function(app, password, username)
@@ -138,7 +138,7 @@ private=list(
         uri <- private$aad_uri("token")
         body <- private$build_access_body()
 
-        httr::POST(uri, body=body, encode="form")
+        req_post_form(uri, body) %>% call_aad()
     },
 
     set_request_credentials=function(app, password, certificate)
@@ -183,7 +183,7 @@ private=list(
         uri <- private$aad_uri("token")
         body <- private$build_access_body()
 
-        httr::POST(uri, body=body, encode="form")
+        req_post_form(uri, body) %>% call_aad()
     },
 
     set_request_credentials=function(app, password, certificate, on_behalf_of)
@@ -234,7 +234,7 @@ private=list(
         uri <- private$aad_uri("token")
         body <- private$build_access_body()
 
-        httr::POST(uri, body=body, encode="form")
+        req_post_form(uri, body) %>% call_aad()
     },
 
     set_request_credentials=function(app, password, username)
@@ -277,10 +277,13 @@ private=list(
 
         secret <- Sys.getenv("MSI_SECRET")
         headers <- if(secret != "")
-            httr::add_headers(secret=secret)
-        else httr::add_headers(metadata="true")
+            list(secret=secret)
+        else list(metadata="true")
 
-        httr::GET(uri, headers, query=query)
+        req <- request(uri) %>%
+            req_headers(!!!headers) %>%
+            req_url_query(!!!query) %>%
+            call_aad()
     }
 ))
 

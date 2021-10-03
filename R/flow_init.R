@@ -78,6 +78,5 @@ get_device_creds <- function(resource, tenant, app, aad_host="https://login.micr
     else list(scope=paste_v2_scopes(resource))
     body <- c(body, client_id=app)
 
-    res <- httr::POST(uri, body=body, encode="form")
-    process_aad_response(res)
+    req_post_form(uri, body) %>% call_aad()
 }

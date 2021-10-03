@@ -65,10 +65,8 @@ public=list(
         # time of initial request for token: in case we need to set expiry time manually
         request_time <- Sys.time()
         if(is.null(self$credentials))
-        {
-            res <- private$initfunc(auth_info)
-            self$credentials <- process_aad_response(res)
-        }
+            self$credentials <- private$initfunc(auth_info)
+
         private$set_expiry_time(request_time)
 
         if(private$use_cache)
@@ -109,7 +107,7 @@ public=list(
     refresh=function()
     {
         request_time <- Sys.time()
-        res <- if(!is.null(self$credentials$refresh_token))
+        if(!is.null(self$credentials$refresh_token))
         {
             body <- list(grant_type="refresh_token",
                 client_id=self$client$client_id,
@@ -122,16 +120,16 @@ public=list(
             )
 
             uri <- private$aad_uri("token")
-            httr::POST(uri, body=body, encode="form")
+            req <- req_post_form(uri, body)
+            creds <- try(call_aad(req, silent=TRUE))
+            if(inherits(creds, "try-error"))
+            {
+                delete_azure_token(hash=self$hash(), confirm=FALSE)
+                rlang::inform("Unable to refresh token")
+                rlang::abort(sub("^Error : ", "", creds))  # error message needs massaging
+            }
         }
-        else private$initfunc() # reauthenticate if no refresh token (cannot reuse any supplied creds)
-
-        creds <- try(process_aad_response(res))
-        if(inherits(creds, "try-error"))
-        {
-            delete_azure_token(hash=self$hash(), confirm=FALSE)
-            stop("Unable to refresh token", call.=FALSE)
-        }
+        else creds <- private$initfunc() # reauthenticate if no refresh token (cannot reuse any supplied creds)
 
         self$credentials <- creds
         private$set_expiry_time(request_time)

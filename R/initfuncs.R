@@ -1,6 +1,6 @@
 listen_for_authcode <- function(remote_url, local_url)
 {
-    local_url <- httr2::url_parse(local_url)
+    local_url <- parse_url(local_url)
     localhost <- if(local_url$hostname == "localhost") "127.0.0.1" else local_url$hostname
     localport <- local_url$port
 
@@ -10,7 +10,7 @@ listen_for_authcode <- function(remote_url, local_url)
     {
         query <- env$QUERY_STRING
         info <<- if(is.character(query) && nchar(query) > 0)
-            httr2::url_parse(query)$query
+            parse_url(query)$query
         else list()
 
         if(is_empty(info$code))
@@ -23,7 +23,7 @@ listen_for_authcode <- function(remote_url, local_url)
     on.exit(httpuv::stopServer(server))
 
     message("Waiting for authentication in browser...\nPress Esc/Ctrl + C to abort")
-    httr::BROWSE(remote_url)
+    utils::browseURL(remote_url)
 
     while(is.null(info))
     {
@@ -54,22 +54,23 @@ poll_for_token <- function(url, body, interval, period)
     {
         Sys.sleep(interval)
 
-        res <- httr::POST(url, body=body, encode="form")
-
-        status <- httr::status_code(res)
-        cont <- httr::content(res)
-        if(status == 400 && cont$error == "authorization_pending")
-        {
-            # do nothing
-        }
-        else if(status >= 300)
-            process_aad_response(res) # fail here on error
-        else break
+        cont <- req_post_form(url, body) %>%
+            httr2::req_error(
+                is_error=function(resp)
+                {
+                    status <- httr2::resp_status(res)
+                    cont <- httr2::resp_body_json(res)
+                    if(status == 400 && cont$error == "authorization_pending")
+                        FALSE
+                    else TRUE
+                },
+                body=get_aad_error
+            ) %>%
+            httr2::req_perform() %>%
+            httr2::resp_body_json()
+        if(!is_empty(cont$bearer))
+            break
     }
-    if(status >= 300)
-        stop("Authentication failed.", call.=FALSE)
-
-    message("Authentication complete.")
-    res
+    cont
 }
 

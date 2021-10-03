@@ -40,26 +40,6 @@ select_auth_type <- function(password, username, certificate, auth_type, on_beha
 }
 
 
-process_aad_response <- function(res)
-{
-    status <- httr::status_code(res)
-    if(status >= 300)
-    {
-        cont <- httr::content(res)
-
-        msg <- if(is.character(cont))
-            cont
-        else if(is.list(cont) && is.character(cont$error_description))
-            cont$error_description
-        else ""
-
-        msg <- paste0("obtain Azure Active Directory token. Message:\n", sub("\\.$", "", msg))
-        list(token=httr::stop_for_status(status, msg))
-    }
-    else httr::content(res)
-}
-
-
 # need to capture bad scopes before requesting auth code
 # v2.0 endpoint will show error page rather than redirecting, causing get_azure_token to wait forever
 verify_v2_scope <- function(scope)
@@ -75,7 +55,7 @@ verify_v2_scope <- function(scope)
         stop("Unsupported OpenID scope: ", scope, call.=FALSE)
 
     # is it a URI or GUID?
-    valid_uri <- !is.null(httr2::url_parse(scope)$scheme)
+    valid_uri <- !is.null(parse_url(scope)$scheme)
     valid_guid <- is_guid(sub("/.*$", "", scope))
     if(!valid_uri && !valid_guid)
         stop("Invalid scope (must be a URI or GUID): ", scope, call.=FALSE)
@@ -83,12 +63,12 @@ verify_v2_scope <- function(scope)
     # if a URI or GUID, check that there is a valid scope in the path
     if(valid_uri)
     {
-        uri <- httr2::url_parse(scope)
+        uri <- parse_url(scope)
         if(uri$path == "")
         {
             warning("No path supplied for scope ", scope, "; setting to /.default", call.=FALSE)
             uri$path <- ".default"
-            scope <- httr2::url_build(uri)
+            scope <- build_url(uri)
         }
     }
     else
@@ -106,7 +86,7 @@ verify_v2_scope <- function(scope)
 
 aad_uri <- function(aad_host, tenant, version, type, query=list())
 {
-    uri <- httr2::url_parse(aad_host)
+    uri <- parse_url(aad_host)
     uri$query <- query
 
     uri$path <- if(nchar(uri$path) == 0)
@@ -117,7 +97,7 @@ aad_uri <- function(aad_host, tenant, version, type, query=list())
     }
     else file.path(uri$path, type)
 
-    httr2::url_build(uri)
+    build_url(uri)
 }
 
 
