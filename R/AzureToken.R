@@ -67,11 +67,8 @@ public=list(
         if(is.null(self$credentials))
         {
             creds <- private$initfunc(auth_info)
-            print(creds)
             self$credentials <- rlang::exec(httr2::oauth_token, !!!creds, .date=request_time)
         }
-
-        private$set_expiry_time(request_time)
 
         if(private$use_cache)
             self$cache()
@@ -170,33 +167,6 @@ private=list(
         self$credentials <- token$credentials
         if(!self$validate())
             self$refresh()
-    },
-
-    set_expiry_time=function(request_time)
-    {
-        # v2.0 endpoint doesn't provide an expires_on field, set it here
-        if(is.null(self$credentials$expires_on))
-        {
-            expiry <- try(decode_jwt(self$credentials$access_token)$payload$exp, silent=TRUE)
-            if(inherits(expiry, "try-error"))
-                expiry <- try(decode_jwt(self$credentials$id_token)$payload$exp, silent=TRUE)
-            if(inherits(expiry, "try-error"))
-                expiry <- NA
-
-            expires_in <- if(!is.null(self$credentials$expires_in))
-                as.numeric(self$credentials$expires_in)
-            else NA
-
-            request_time <- floor(as.numeric(request_time))
-            expires_on <- request_time + expires_in
-
-            self$credentials$expires_on <- if(is.na(expiry) && is.na(expires_on))
-            {
-                warning("Could not set expiry time, using default validity period of 1 hour")
-                as.character(as.numeric(request_time + 3600))
-            }
-            else as.character(as.numeric(min(expiry, expires_on, na.rm=TRUE)))
-        }
     },
 
     aad_uri=function(type, ...)
