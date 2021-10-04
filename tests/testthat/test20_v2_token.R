@@ -103,9 +103,11 @@ test_that("v2.0 refresh with offline scope works",
     # load cached tokens: should not get repeated login prompts/screens
     aut_tok2 <- get_azure_token(c(res, res2), tenant, native_app, auth_type="authorization_code", version=2)
     expect_true(is_azure_token(aut_tok2))
+    expect_true(is.numeric(aut_tok2$credentials$expires_at))
 
     dev_tok2 <- get_azure_token(c(res, res2), tenant, native_app, auth_type="device_code", version=2)
     expect_true(is_azure_token(dev_tok2))
+    expect_true(is.numeric(dev_tok2$credentials$expires_at))
 
     expect_null(
         delete_azure_token(c(res, res2), tenant, native_app, auth_type="authorization_code", version=2, confirm=FALSE))

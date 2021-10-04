@@ -82,7 +82,7 @@ test_that("v1.0 simple authentication works",
 
     dev_tok2 <- get_azure_token(res, tenant, native_app, auth_type="device_code")
     expect_true(is_azure_token(dev_tok2))
-    expect_true(is.numeric(aut_tok2$credentials$expires_at))
+    expect_true(is.numeric(dev_tok2$credentials$expires_at))
     expect_identical(dev_tok2$hash(), dev_hash)
 
     # resource must be a single string
