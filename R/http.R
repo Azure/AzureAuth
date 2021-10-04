@@ -46,3 +46,17 @@ build_url <- function(url)
         url$path <- paste0("/", url$path)
     httr2::url_build(url)
 }
+
+
+# forward-compatibility hacks for AAD v1
+as_httr2_token <- function(credentials, .date=Sys.time())
+{
+    as_num <- function(x)
+    {
+        if(!is_empty(x) && !is.character(x))
+            as.numeric(x)
+    }
+    credentials$expires_in <- as_num(credentials$expires_in)
+    credentials$expires_on <- as_num(credentials$expires_on)
+    rlang::exec(httr2::oauth_token, !!!credentials, .date=.date)
+}
