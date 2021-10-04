@@ -1,3 +1,6 @@
+#' @import magrittr
+NULL
+
 utils::globalVariables(c("self", "private"))
 
 
