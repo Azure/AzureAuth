@@ -122,7 +122,7 @@ public=list(
 
             uri <- private$aad_uri("token")
             req <- req_post_form(uri, body)
-            creds <- try(call_aad(req, silent=TRUE))
+            creds <- try(call_aad(req), silent=TRUE)
             if(inherits(creds, "try-error"))
             {
                 delete_azure_token(hash=self$hash(), confirm=FALSE)
