@@ -91,10 +91,10 @@ public=list(
 
     validate=function()
     {
-        if(is.null(self$credentials$expires_on) || is.na(self$credentials$expires_on))
+        if(is.null(self$credentials$expires_at) || is.na(self$credentials$expires_at))
             return(TRUE)
 
-        expdate <- as.POSIXct(as.numeric(self$credentials$expires_on), origin="1970-01-01")
+        expdate <- as.POSIXct(as.numeric(self$credentials$expires_at), origin="1970-01-01")
         curdate <- Sys.time()
         curdate < expdate
     },
@@ -163,7 +163,7 @@ private=list(
             stop("Invalid or corrupted cached token", call.=FALSE)
         }
 
-        self$credentials <- token$credentials
+        self$credentials <- fix_v1_cached_creds(token$credentials)
         if(!self$validate())
             self$refresh()
     },

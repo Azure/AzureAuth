@@ -52,9 +52,9 @@ test_that("v2.0 simple authentication works",
     expect_identical(dev_tok$hash(), dev_hash)
     expect_identical(resbase, decode_jwt(dev_tok)$payload$aud)
 
-    aut_expire <- as.numeric(aut_tok$credentials$expires_on)
-    ccd_expire <- as.numeric(ccd_tok$credentials$expires_on)
-    dev_expire <- as.numeric(dev_tok$credentials$expires_on)
+    aut_expire <- as.numeric(aut_tok$credentials$expires_at)
+    ccd_expire <- as.numeric(ccd_tok$credentials$expires_at)
+    dev_expire <- as.numeric(dev_tok$credentials$expires_at)
 
     Sys.sleep(2)
 
@@ -63,9 +63,9 @@ test_that("v2.0 simple authentication works",
     ccd_tok$refresh()
     dev_tok$refresh()
 
-    expect_true(as.numeric(aut_tok$credentials$expires_on) > aut_expire)
-    expect_true(as.numeric(ccd_tok$credentials$expires_on) > ccd_expire)
-    expect_true(as.numeric(dev_tok$credentials$expires_on) > dev_expire)
+    expect_true(as.numeric(aut_tok$credentials$expires_at) > aut_expire)
+    expect_true(as.numeric(ccd_tok$credentials$expires_at) > ccd_expire)
+    expect_true(as.numeric(dev_tok$credentials$expires_at) > dev_expire)
 
     expect_null(delete_azure_token(res, tenant, native_app, auth_type="authorization_code", version=2, confirm=FALSE))
     expect_null(delete_azure_token(res, tenant, app, password=password, version=2, confirm=FALSE))
@@ -88,8 +88,8 @@ test_that("v2.0 refresh with offline scope works",
     expect_true(!is_empty(dev_tok$credentials$refresh_token))
     expect_identical(resbase, decode_jwt(dev_tok)$payload$aud)
 
-    aut_expire <- as.numeric(aut_tok$credentials$expires_on)
-    dev_expire <- as.numeric(dev_tok$credentials$expires_on)
+    aut_expire <- as.numeric(aut_tok$credentials$expires_at)
+    dev_expire <- as.numeric(dev_tok$credentials$expires_at)
 
     Sys.sleep(2)
 
@@ -97,8 +97,8 @@ test_that("v2.0 refresh with offline scope works",
     aut_tok$refresh()
     dev_tok$refresh()
 
-    expect_true(as.numeric(aut_tok$credentials$expires_on) > aut_expire)
-    expect_true(as.numeric(dev_tok$credentials$expires_on) > dev_expire)
+    expect_true(as.numeric(aut_tok$credentials$expires_at) > aut_expire)
+    expect_true(as.numeric(dev_tok$credentials$expires_at) > dev_expire)
 
     # load cached tokens: should not get repeated login prompts/screens
     aut_tok2 <- get_azure_token(c(res, res2), tenant, native_app, auth_type="authorization_code", version=2)

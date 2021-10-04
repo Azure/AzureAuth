@@ -30,33 +30,3 @@ get_aad_error <- function(res)
     else ""
 }
 
-
-# back-compatibility hacks for httr2
-parse_url <- function(url)
-{
-    url <- httr2::url_parse(url)
-    if(is_empty(url$path) || url$path == "/")
-        url$path <- ""
-    url
-}
-
-build_url <- function(url)
-{
-    if(!is_empty(url$path) && substr(url$path, 1, 1) != "/")
-        url$path <- paste0("/", url$path)
-    httr2::url_build(url)
-}
-
-
-# forward-compatibility hacks for AAD v1
-as_httr2_token <- function(credentials, .date=Sys.time())
-{
-    as_num <- function(x)
-    {
-        if(!is_empty(x) && !is.character(x))
-            as.numeric(x)
-    }
-    credentials$expires_in <- as_num(credentials$expires_in)
-    credentials$expires_on <- as_num(credentials$expires_on)
-    rlang::exec(httr2::oauth_token, !!!credentials, .date=.date)
-}

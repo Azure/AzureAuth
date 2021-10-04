@@ -54,9 +54,9 @@ test_that("v1.0 simple authentication works",
     expect_true(is_azure_token(aut_tok2))
     expect_identical(aut_tok$credentials$access_token, aut_tok2$credentials$access_token)
 
-    aut_expire <- as.numeric(aut_tok$credentials$expires_on)
-    ccd_expire <- as.numeric(ccd_tok$credentials$expires_on)
-    dev_expire <- as.numeric(dev_tok$credentials$expires_on)
+    aut_expire <- as.numeric(aut_tok$credentials$expires_at)
+    ccd_expire <- as.numeric(ccd_tok$credentials$expires_at)
+    dev_expire <- as.numeric(dev_tok$credentials$expires_at)
 
     Sys.sleep(2)
 
@@ -65,21 +65,24 @@ test_that("v1.0 simple authentication works",
     ccd_tok$refresh()
     dev_tok$refresh()
 
-    expect_true(as.numeric(aut_tok$credentials$expires_on) > aut_expire)
-    expect_true(as.numeric(ccd_tok$credentials$expires_on) > ccd_expire)
-    expect_true(as.numeric(dev_tok$credentials$expires_on) > dev_expire)
+    expect_true(as.numeric(aut_tok$credentials$expires_at) > aut_expire)
+    expect_true(as.numeric(ccd_tok$credentials$expires_at) > ccd_expire)
+    expect_true(as.numeric(dev_tok$credentials$expires_at) > dev_expire)
 
     # load cached tokens: should not get repeated login prompts/screens
     aut_tok2 <- get_azure_token(res, tenant, native_app, auth_type="authorization_code")
     expect_true(is_azure_token(aut_tok2))
+    expect_true(is.numeric(aut_tok2$credentials$expires_at))
     expect_identical(aut_tok2$hash(), aut_hash)
 
     ccd_tok2 <- get_azure_token(res, tenant, app, password=password)
     expect_true(is_azure_token(ccd_tok2))
+    expect_true(is.numeric(aut_tok2$credentials$expires_at))
     expect_identical(ccd_tok2$hash(), ccd_hash)
 
     dev_tok2 <- get_azure_token(res, tenant, native_app, auth_type="device_code")
     expect_true(is_azure_token(dev_tok2))
+    expect_true(is.numeric(aut_tok2$credentials$expires_at))
     expect_identical(dev_tok2$hash(), dev_hash)
 
     # resource must be a single string
