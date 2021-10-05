@@ -280,7 +280,7 @@ private=list(
             list(secret=secret)
         else list(metadata="true")
 
-        req <- request(uri) %>%
+        request(uri) %>%
             req_headers(!!!headers) %>%
             req_url_query(!!!query) %>%
             call_aad()

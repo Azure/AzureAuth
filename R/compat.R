@@ -18,7 +18,7 @@ build_url <- function(url)
 # forward-compatibility hacks for AAD v1
 as_httr2_token <- function(credentials, .date=Sys.time())
 {
-    if(!is_empty(credentials$expires_in))
+    if(!is_empty(credentials$expires_in) && !is.numeric(credentials$expires_in))
         credentials$expires_in <- as.numeric(credentials$expires_in)
 
     if(is_empty(credentials$expires_in) && !is_empty(credentials$ext_expires_in))
