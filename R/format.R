@@ -8,7 +8,6 @@ format_auth_header <- function(token)
 {
     stopifnot(is_azure_token(token))
     expiry <- as.POSIXct(as.numeric(token$credentials$expires_at), origin="1970-01-01")
-    obtained <- expiry - as.numeric(token$credentials$expires_in)
 
     if(is_azure_v1_token(token))
     {
@@ -39,6 +38,6 @@ format_auth_header <- function(token)
            "  Tenant: ", tenant, "\n",
            "  App ID: ", token$client$client_id, "\n",
            "  Authentication method: ", token$auth_type, "\n",
-           "  Token valid from: ", format(obtained, usetz=TRUE), "  to: ", format(expiry, usetz=TRUE), "\n",
+           "  Token valid to: ", format(expiry, usetz=TRUE), "\n",
            "  MD5 hash of inputs: ", token$hash(), "\n")
 }

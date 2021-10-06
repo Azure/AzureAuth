@@ -94,7 +94,7 @@ public=list(
         if(is.null(self$credentials$expires_at) || is.na(self$credentials$expires_at))
             return(TRUE)
 
-        expdate <- as.POSIXct(as.numeric(self$credentials$expires_at), origin="1970-01-01")
+        expdate <- as.POSIXct(self$credentials$expires_at, origin="1970-01-01")
         curdate <- Sys.time()
         curdate < expdate
     },

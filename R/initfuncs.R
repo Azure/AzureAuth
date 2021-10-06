@@ -22,6 +22,9 @@ listen_for_authcode <- function(remote_url, local_url)
     server <- httpuv::startServer(as.character(localhost), as.integer(localport), list(call=listen))
     on.exit(httpuv::stopServer(server))
 
+    # give httpuv time to wake up
+    Sys.sleep(1)
+
     message("Waiting for authentication in browser...\nPress Esc/Ctrl + C to abort")
     utils::browseURL(remote_url)
 
