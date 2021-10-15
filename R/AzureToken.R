@@ -56,8 +56,12 @@ public=list(
         private$use_cache <- use_cache
 
         # use_cache = NA means return dummy object: initialize fields, but don't contact AAD
+        # - set private field to TRUE as NA value is also used in constructing new object when loading cached tokens
         if(is.na(use_cache))
+        {
+            private$use_cache <- TRUE
             return()
+        }
 
         if(use_cache)
             private$load_cached_credentials()

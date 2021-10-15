@@ -304,7 +304,36 @@ delete_azure_token <- function(resource, tenant, app, password=NULL, username=NU
 #' @export
 load_azure_token <- function(hash)
 {
-    readRDS(file.path(AzureR_dir(), hash))
+    oldtok <- readRDS(file.path(AzureR_dir(), hash))
+
+    blank_args <- list(use_cache=NA)
+    newtok <- switch(oldtok$auth_type,
+        authorization_code=
+            AzureTokenAuthCode$new(blank_args, "", ""),
+        device_code=
+            AzureTokenDeviceCode$new(blank_args, ""),
+        client_credentials=
+            AzureTokenClientCreds$new(blank_args),
+        on_behalf_of=
+            AzureTokenOnBehalfOf$new(blank_args, ""),
+        resource_owner=
+            AzureTokenResOwner$new(blank_args),
+        stop("Unknown authentication method ", oldtok$auth_type, call.=FALSE))
+
+    newtok <- newtok_gen$new(list(use_cache=NA))
+    newtok$version <- oldtok$version
+    newtok$resource <- oldtok$resource
+    newtok$scope <- oldtok$scope
+    newtok$aad_host <- oldtok$aad_host
+    newtok$tenant <- oldtok$tenant
+    newtok$auth_type <- oldtok$auth_type
+    newtok$client <- oldtok$auth_type
+    newtok$token_args <- oldtok$token_args
+    newtok$authorize_args <- oldtok$authorize_args
+    newtok$use_cache <- oldtok$use_cache
+    newtok$credentials <- oldtok$credentials
+
+    newtok
 }
 
 
