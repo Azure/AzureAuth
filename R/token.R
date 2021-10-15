@@ -306,7 +306,16 @@ load_azure_token <- function(hash)
 {
     oldtok <- readRDS(file.path(AzureR_dir(), hash))
 
-    blank_args <- list(use_cache=NA)
+    # create a blank token of the given class, then fill in the fields
+    blank_args <- list(
+        use_cache=NA,
+        resource="",
+        tenant="",
+        app="",
+        password="",
+        username="",
+        certificate=""
+    )
     newtok <- switch(oldtok$auth_type,
         authorization_code=
             AzureTokenAuthCode$new(blank_args, "", ""),
@@ -318,16 +327,17 @@ load_azure_token <- function(hash)
             AzureTokenOnBehalfOf$new(blank_args, ""),
         resource_owner=
             AzureTokenResOwner$new(blank_args),
+        managed=
+            AzureTokenManaged$new("", "", "", use_cache=NA),  # odd one out
         stop("Unknown authentication method ", oldtok$auth_type, call.=FALSE))
 
-    newtok <- newtok_gen$new(list(use_cache=NA))
     newtok$version <- oldtok$version
     newtok$resource <- oldtok$resource
     newtok$scope <- oldtok$scope
     newtok$aad_host <- oldtok$aad_host
     newtok$tenant <- oldtok$tenant
     newtok$auth_type <- oldtok$auth_type
-    newtok$client <- oldtok$auth_type
+    newtok$client <- oldtok$client
     newtok$token_args <- oldtok$token_args
     newtok$authorize_args <- oldtok$authorize_args
     newtok$credentials <- oldtok$credentials

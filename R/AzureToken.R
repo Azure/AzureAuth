@@ -53,7 +53,6 @@ public=list(
         self$aad_host <- aad_host
         self$tenant <- normalize_tenant(tenant)
         self$token_args <- token_args
-        private$use_cache <- use_cache
 
         # use_cache = NA means return dummy object: initialize fields, but don't contact AAD
         # - set private field to TRUE as NA value is also used in constructing new object when loading cached tokens
@@ -62,6 +61,7 @@ public=list(
             private$use_cache <- TRUE
             return()
         }
+        else private$use_cache <- use_cache
 
         if(use_cache)
             private$load_cached_credentials()
