@@ -330,7 +330,6 @@ load_azure_token <- function(hash)
     newtok$client <- oldtok$auth_type
     newtok$token_args <- oldtok$token_args
     newtok$authorize_args <- oldtok$authorize_args
-    newtok$use_cache <- oldtok$use_cache
     newtok$credentials <- oldtok$credentials
 
     newtok
