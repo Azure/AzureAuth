@@ -19,7 +19,7 @@
 #' @param device_creds For the `device_code` flow, the device credentials used to verify the session between the client and the server. Only used if `auth_type == "device_code"`.
 #'
 #' @details
-#' `get_azure_token` does much the same thing as [httr::oauth2.0_token()], but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. `load_azure_token` loads a token given its hash, `delete_azure_token` deletes a cached token given either the credentials or the hash, and `list_azure_tokens` lists currently cached tokens.
+#' `get_azure_token` is a specialised package for authenticating to Azure Active Directory via OAuth. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. `load_azure_token` loads a token given its hash, `delete_azure_token` deletes a cached token given either the credentials or the hash, and `list_azure_tokens` lists currently cached tokens.
 #'
 #' `get_managed_token` is a specialised function to acquire tokens for a _managed identity_. This is an Azure service, such as a VM or container, that has been assigned its own identity and can be granted access permissions like a regular user. The advantage of managed identities over the other authentication methods (see below) is that you don't have to store a secret password, which improves security. Note that `get_managed_token` can only be used from within the managed identity itself.
 #'
@@ -46,7 +46,7 @@
 #'
 #' If the authentication method is not specified, it is chosen based on the presence or absence of the other arguments, and whether httpuv is installed.
 #'
-#' The httpuv package must be installed to use the authorization_code method, as this requires a web server to listen on the (local) redirect URI. See [httr::oauth2.0_token] for more information; note that Azure does not support the `use_oob` feature of the httr OAuth 2.0 token class.
+#' The httpuv package must be installed to use the authorization_code method, as this requires a web server to listen on the (local) redirect URI.
 #'
 #' Similarly, since the authorization_code method opens a browser to load the AAD authorization page, your machine must have an Internet browser installed that can be run from inside R. In particular, if you are using a Linux [Data Science Virtual Machine](https://azure.microsoft.com/en-us/services/virtual-machines/data-science-virtual-machines/) in Azure, you may run into difficulties; use one of the other methods instead.
 #'
@@ -102,10 +102,10 @@
 #'
 #' For `list_azure_tokens`, a list of such objects retrieved from disk.
 #'
-#' The actual credentials that are returned from the authorization endpoint can be found in the `credentials` field, the same as with a `httr::Token` object. The access token (if present) will be `credentials$access_token`, and the ID token (if present) will be `credentials$id_token`. Use these if you are manually constructing a HTTP request and need to insert an "Authorization" header, for example.
+#' The actual credentials that are returned from the authorization endpoint can be found in the `credentials` field. The access token (if present) will be `credentials$access_token`, and the ID token (if present) will be `credentials$id_token`. Use these if you are manually constructing a HTTP request and need to insert an "Authorization" header, for example.
 #'
 #' @seealso
-#' [AzureToken], [httr::oauth2.0_token], [httr::Token], [cert_assertion],
+#' [AzureToken], [cert_assertion],
 #' [build_authorization_uri], [get_device_creds]
 #'
 #' [Azure Active Directory for developers](https://docs.microsoft.com/en-us/azure/active-directory/develop/),
@@ -235,8 +235,9 @@
 #'
 #' # manually adding auth header for a HTTP request
 #' tok <- get_azure_token("https://myresource", "mytenant", "app_id")
-#' header <- httr::add_headers(Authorization=paste("Bearer", tok$credentials$access_token))
-#' httr::GET("https://myresource/path/for/call", header, ...)
+#' req <- httr2::request("https://myresource/path/for/call") %>%
+#'     httr2::req_auth_bearer_token(tok$credentials$access_token) %>%
+#'     httr2::req_perform()
 #'
 #' }
 #' @export

@@ -14,7 +14,7 @@
 An R6 object representing an Azure Active Directory token and its associated credentials. \code{AzureToken} is the base class, and the others inherit from it.
 }
 \description{
-Azure OAuth 2.0 token classes, with an interface based on the \link[httr:Token-class]{Token2.0 class} in httr. Rather than calling the initialization methods directly, tokens should be created via \code{\link[=get_azure_token]{get_azure_token()}}.
+Azure OAuth 2.0 token classes. Rather than calling the initialization methods directly, tokens should be created via \code{\link[=get_azure_token]{get_azure_token()}}.
 }
 \section{Methods}{
 
@@ -27,5 +27,5 @@ Azure OAuth 2.0 token classes, with an interface based on the \link[httr:Token-c
 }
 
 \seealso{
-\link{get_azure_token}, \link[httr:Token-class]{httr::Token}
+\link{get_azure_token}
 }

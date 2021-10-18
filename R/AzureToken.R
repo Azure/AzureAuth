@@ -1,6 +1,6 @@
 #' Azure OAuth authentication
 #'
-#' Azure OAuth 2.0 token classes, with an interface based on the [Token2.0 class][httr::Token2.0] in httr. Rather than calling the initialization methods directly, tokens should be created via [get_azure_token()].
+#' Azure OAuth 2.0 token classes. Rather than calling the initialization methods directly, tokens should be created via [get_azure_token()].
 #'
 #' @docType class
 #' @section Methods:
@@ -10,7 +10,7 @@
 #' - `cache`: Stores the token on disk for use in future sessions.
 #'
 #' @seealso
-#' [get_azure_token], [httr::Token]
+#' [get_azure_token]
 #'
 #' @format An R6 object representing an Azure Active Directory token and its associated credentials. `AzureToken` is the base class, and the others inherit from it.
 #' @export

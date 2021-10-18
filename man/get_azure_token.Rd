@@ -118,7 +118,7 @@ is_azure_v2_token(object)
 Use these functions to authenticate with Azure Active Directory (AAD).
 }
 \details{
-\code{get_azure_token} does much the same thing as \code{\link[httr:oauth2.0_token]{httr::oauth2.0_token()}}, but customised for Azure. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. \code{load_azure_token} loads a token given its hash, \code{delete_azure_token} deletes a cached token given either the credentials or the hash, and \code{list_azure_tokens} lists currently cached tokens.
+\code{get_azure_token} is a specialised package for authenticating to Azure Active Directory via OAuth. It obtains an OAuth token, first by checking if a cached value exists on disk, and if not, acquiring it from the AAD server. \code{load_azure_token} loads a token given its hash, \code{delete_azure_token} deletes a cached token given either the credentials or the hash, and \code{list_azure_tokens} lists currently cached tokens.
 
 \code{get_managed_token} is a specialised function to acquire tokens for a \emph{managed identity}. This is an Azure service, such as a VM or container, that has been assigned its own identity and can be granted access permissions like a regular user. The advantage of managed identities over the other authentication methods (see below) is that you don't have to store a secret password, which improves security. Note that \code{get_managed_token} can only be used from within the managed identity itself.
 
@@ -144,7 +144,7 @@ One particular use of the \code{authorize_args} argument is to specify a differe
 
 If the authentication method is not specified, it is chosen based on the presence or absence of the other arguments, and whether httpuv is installed.
 
-The httpuv package must be installed to use the authorization_code method, as this requires a web server to listen on the (local) redirect URI. See \link[httr:oauth2.0_token]{httr::oauth2.0_token} for more information; note that Azure does not support the \code{use_oob} feature of the httr OAuth 2.0 token class.
+The httpuv package must be installed to use the authorization_code method, as this requires a web server to listen on the (local) redirect URI.
 
 Similarly, since the authorization_code method opens a browser to load the AAD authorization page, your machine must have an Internet browser installed that can be run from inside R. In particular, if you are using a Linux \href{https://azure.microsoft.com/en-us/services/virtual-machines/data-science-virtual-machines/}{Data Science Virtual Machine} in Azure, you may run into difficulties; use one of the other methods instead.
 }
@@ -217,7 +217,7 @@ For \code{get_azure_token}, an object inheriting from \code{AzureToken}. The spe
 
 For \code{list_azure_tokens}, a list of such objects retrieved from disk.
 
-The actual credentials that are returned from the authorization endpoint can be found in the \code{credentials} field, the same as with a \code{httr::Token} object. The access token (if present) will be \code{credentials$access_token}, and the ID token (if present) will be \code{credentials$id_token}. Use these if you are manually constructing a HTTP request and need to insert an "Authorization" header, for example.
+The actual credentials that are returned from the authorization endpoint can be found in the \code{credentials} field. The access token (if present) will be \code{credentials$access_token}, and the ID token (if present) will be \code{credentials$id_token}. Use these if you are manually constructing a HTTP request and need to insert an "Authorization" header, for example.
 }
 
 \examples{
@@ -342,13 +342,14 @@ tok2$refresh()
 
 # manually adding auth header for a HTTP request
 tok <- get_azure_token("https://myresource", "mytenant", "app_id")
-header <- httr::add_headers(Authorization=paste("Bearer", tok$credentials$access_token))
-httr::GET("https://myresource/path/for/call", header, ...)
+req <- httr2::request("https://myresource/path/for/call") \%>\%
+    httr2::req_auth_bearer_token(tok$credentials$access_token) \%>\%
+    httr2::req_perform()
 
 }
 }
 \seealso{
-\link{AzureToken}, \link[httr:oauth2.0_token]{httr::oauth2.0_token}, \link[httr:Token-class]{httr::Token}, \link{cert_assertion},
+\link{AzureToken}, \link{cert_assertion},
 \link{build_authorization_uri}, \link{get_device_creds}
 
 \href{https://docs.microsoft.com/en-us/azure/active-directory/develop/}{Azure Active Directory for developers},

@@ -31,7 +31,7 @@ resource <- c("https://management.azure.com/.default", "openid")
 # this must also be the redirect for your registered app in Azure Active Directory
 redirect <- "http://localhost:8100"
 
-port <- httr::parse_url(redirect)$port
+port <- httr2::url_parse(redirect)$port
 options(shiny.port=if(is.null(port)) 80 else as.numeric(port))
 
 # replace this with your app's regular UI
