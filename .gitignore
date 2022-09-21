@@ -263,4 +263,4 @@ __pycache__/
 .RHistory
 misc/
 .Rproj.user
-.vscode/settings.json
+.vscode/
