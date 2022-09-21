@@ -315,6 +315,7 @@ AzureTokenCLI <- R6::R6Class("AzureTokenCLI",
                 warning = function(cond)
                 {
                     not_found <- grepl("az: not found", cond, fixed = TRUE)
+                    # TODO: handle bash, windows, powershell errors for command not found
                     not_loggedin <- grepl("az login", cond, fixed = TRUE) |
                         grepl("az account set", cond, fixed = TRUE)
                     bad_resource <- grepl(
