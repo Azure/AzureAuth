@@ -3,7 +3,7 @@ select_auth_type <- function(password, username, certificate, auth_type, on_beha
         if (!auth_type %in%
             c(
                 "authorization_code", "device_code", "client_credentials",
-                "resource_owner", "on_behalf_of", "managed", "azure_cli"
+                "resource_owner", "on_behalf_of", "managed", "cli"
             )) {
             stop("Invalid authentication method")
         }
@@ -145,34 +145,4 @@ get_confirmation <- function(msg, default = TRUE) {
 
 in_shiny <- function() {
     ("shiny" %in% loadedNamespaces()) && shiny::isRunning()
-}
-
-get_az_cli_token() <- function(scope) {
-    tryCatch(
-        {
-            result <- system2(
-                "az",
-                args = c(
-                    "account", "get-access-token", "--output json",
-                    paste0("--resource ", scope)
-                ),
-                stdout = TRUE
-            )
-            result <- paste(result, collapse = "")
-            jsonlite::fromJSON(result)
-        },
-        warning = function(cond) {
-            not_found <- grepl("az: not found", cond, fixed = TRUE)
-            not_loggedin <- grepl("az login", cond, fixed = TRUE) |
-                grepl("az account set", cond, fixed = TRUE)
-            bad_resource <- grepl("was not found in the tenant", cond, fixed = TRUE)
-            if (not_found) {
-                message("Azure CLI not found on path.")
-            } else if (not_loggedin) {
-                message("Please run 'az login' to set up account.")
-            } else {
-                message("Failed to invoke the Azure CLI.")
-            }
-        }
-    )
 }

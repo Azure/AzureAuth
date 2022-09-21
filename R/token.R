@@ -271,6 +271,8 @@ get_azure_token <- function(resource, tenant, app, password=NULL, username=NULL,
             AzureTokenOnBehalfOf$new(common_args, on_behalf_of),
         resource_owner=
             AzureTokenResOwner$new(common_args),
+        cli=
+            AzureTokenCLI$new(common_args),
         stop("Unknown authentication method ", auth_type, call.=FALSE))
 }
 
