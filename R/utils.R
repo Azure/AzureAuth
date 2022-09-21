@@ -3,8 +3,8 @@ select_auth_type <- function(password, username, certificate, auth_type, on_beha
     if(!is.null(auth_type))
     {
         if(!auth_type %in%
-           c("authorization_code", "device_code", "client_credentials", "resource_owner", "on_behalf_of",
-             "managed"))
+           c("authorization_code", "device_code", "client_credentials",
+             "resource_owner", "on_behalf_of", "managed", "cli"))
             stop("Invalid authentication method")
         return(auth_type)
     }
