@@ -147,3 +147,17 @@ in_shiny <- function()
 {
     ("shiny" %in% loadedNamespaces()) && shiny::isRunning()
 }
+
+build_access_token_cmd <- function(command="az", resource, tenant)
+{
+    if (Sys.which(command) == "")
+    {
+        stop(paste(command, "is not installed."))
+    }
+    args <- c(
+        "account", "get-access-token", "--output json",
+        paste("--resource", resource),
+        paste("--tenant", tenant)
+    )
+    list(command = command, args = args)
+}
