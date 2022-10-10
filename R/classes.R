@@ -301,9 +301,11 @@ AzureTokenCLI <- R6::R6Class("AzureTokenCLI",
         {
             tryCatch(
                 {
-                    cmd <- build_access_token_cmd(resource = self$resource,
-                                                  tenant = self$tenant)
-                    result <- do.call(system2, append(cmd, list(stdout = TRUE)))
+                    cmd <- build_access_token_cmd(
+                        resource = self$resource,
+                        tenant = self$tenant
+                    )
+                    result <- execute_az_token_cmd(cmd)
                     # result is a multi-line JSON string, concatenate together
                     paste0(result)
                 },
@@ -328,15 +330,7 @@ AzureTokenCLI <- R6::R6Class("AzureTokenCLI",
         },
         process_response = function(res)
         {
-            # Parse the JSON from the CLI and fix the names to snake_case
-            message(res)
-            ret <- jsonlite::parse_json(res)
-            list(
-                token_type = ret$tokenType,
-                access_token = ret$accessToken,
-                expires_on = as.numeric(as.POSIXct(ret$expiresOn)),
-                resource = self$resource
-            )
+            process_cli_response(res, self$resource)
         }
     )
 )

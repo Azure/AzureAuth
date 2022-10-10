@@ -59,6 +59,20 @@ process_aad_response <- function(res)
     else httr::content(res)
 }
 
+process_cli_response <- function(res, resource)
+{
+    # Parse the JSON from the CLI and fix the names to snake_case
+    ret <- jsonlite::parse_json(res)
+    tok_data <- list(
+        token_type = ret$tokenType,
+        access_token = ret$accessToken,
+        expires_on = as.numeric(as.POSIXct(ret$expiresOn))
+    )
+    # CLI doesn't return resource identifier so we need to pass it through
+    if (!missing(resource)) tok_data$resource <- resource
+    return(tok_data)
+}
+
 
 # need to capture bad scopes before requesting auth code
 # v2.0 endpoint will show error page rather than redirecting, causing get_azure_token to wait forever
@@ -148,16 +162,52 @@ in_shiny <- function()
     ("shiny" %in% loadedNamespaces()) && shiny::isRunning()
 }
 
-build_access_token_cmd <- function(command="az", resource, tenant)
+build_az_token_cmd <- function(command = "az", resource, tenant)
 {
-    if (Sys.which(command) == "")
-    {
-        stop(paste(command, "is not installed."))
-    }
-    args <- c(
-        "account", "get-access-token", "--output json",
-        paste("--resource", resource),
-        paste("--tenant", tenant)
-    )
+    args <- c("account", "get-access-token", "--output json")
+    if (!missing(resource)) args <- c(args, paste("--resource", resource))
+    if (!missing(tenant)) args <- c(args, paste("--tenant", tenant))
     list(command = command, args = args)
+}
+
+handle_az_cmd_errors <- function(cond)
+{
+    not_found <- grepl("not found", cond, fixed = TRUE)
+    not_loggedin <- grepl("az login", cond, fixed = TRUE) |
+        grepl("az account set", cond, fixed = TRUE)
+    if (not_found)
+    {
+        msg <- paste("az is not installed or not in PATH.\n",
+            "Please see: ",
+            "https://learn.microsoft.com/en-us/cli/azure/install-azure-cli\n",
+            "for installation instructions."
+        )
+        stop(msg)
+    }
+    else if (not_loggedin)
+    {
+        stop("You are not logged into the Azure CLI. Please run 'az login' and try again.")
+    }
+    else
+    {
+        # Other misc errors, pass through the CLI error message
+        message("Failed to invoke the Azure CLI.")
+        stop(cond)
+    }
+}
+
+execute_az_token_cmd <- function(cmd)
+{
+    tryCatch(
+        {
+            result <- do.call(system2, append(cmd, list(stdout = TRUE)))
+            # result is a multi-line JSON string, concatenate together
+            paste0(result)
+        },
+        warning = function(cond)
+        {
+            # if an error case, catch it, pass the error string and handle it
+            handle_az_cmd_errors(cond)
+        }
+    )
 }
