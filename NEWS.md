@@ -1,3 +1,8 @@
+# AzureAuth 1.4.0
+
+- Add new CLI auth type, `get_azure_token(auth_type="cli")` to use the Azure CLI
+  to retrieve a user token.
+
 # AzureAuth 1.3.3
 
 - Documentation update only:
