@@ -200,29 +200,11 @@ handle_az_cmd_errors <- function(cond)
     }
 }
 
-capt <- function(...) {
-    print(list(...))
-    print("a" %in% list(...))
-}
-
-az_login <- function(command = "az",...)
-{
-    args <- list(...)
-    cmdargs <- list(command = command, args = c("login"))
-    for (arg in c("username", "password", "tenant", "scope",
-                  "service_principal", "use_device_code")) {
-        if (arg %in% names(args))
-            cmdargs$args <- c(cmdargs$args, paste0("--", arg, " ", args[arg]))
-    }
-    cat("Trying to open a web browser to log into Azure CLI...\n")
-    cat(cmdargs$command, paste(cmdargs$args), "\n")
-    do.call(system2, cmdargs)
-}
-
-execute_az_token_cmd <- function(cmd)
+execute_cmd <- function(cmd)
 {
     tryCatch(
         {
+            cat(cmd$command, paste(cmd$args), "\n")
             result <- do.call(system2, append(cmd, list(stdout = TRUE)))
             # result is a multi-line JSON string, concatenate together
             paste0(result)

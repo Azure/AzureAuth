@@ -305,7 +305,7 @@ AzureTokenCLI <- R6::R6Class("AzureTokenCLI",
                         resource = self$resource,
                         tenant = self$tenant
                     )
-                    result <- execute_az_token_cmd(cmd)
+                    result <- execute_cmd(cmd)
                     # result is a multi-line JSON string, concatenate together
                     paste0(result)
                 },

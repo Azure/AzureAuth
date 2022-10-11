@@ -240,7 +240,7 @@
 #'
 #' }
 #' @export
-get_azure_token <- function(resource, tenant, app=NULL, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
+get_azure_token <- function(resource=NULL, tenant=NULL, app=NULL, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
                             aad_host="https://login.microsoftonline.com/", version=1,
                             authorize_args=list(), token_args=list(),
                             use_cache=NULL, on_behalf_of=NULL, auth_code=NULL, device_creds=NULL)
@@ -281,7 +281,7 @@ get_azure_token <- function(resource, tenant, app=NULL, password=NULL, username=
 #' @param confirm For `delete_azure_token`, whether to prompt for confirmation before deleting a token.
 #' @rdname get_azure_token
 #' @export
-delete_azure_token <- function(resource, tenant, app=NULL, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
+delete_azure_token <- function(resource=NULL, tenant=NULL, app=NULL, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
                                aad_host="https://login.microsoftonline.com/", version=1,
                                authorize_args=list(), token_args=list(), on_behalf_of=NULL,
                                hash=NULL, confirm=TRUE)
@@ -346,7 +346,7 @@ list_azure_tokens <- function()
 
 #' @rdname get_azure_token
 #' @export
-token_hash <- function(resource, tenant, app = NULL, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
+token_hash <- function(resource=NULL, tenant=NULL, app=NULL, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
                        aad_host="https://login.microsoftonline.com/", version=1,
                        authorize_args=list(), token_args=list(), on_behalf_of=NULL)
 {
@@ -412,4 +412,23 @@ is_azure_v1_token <- function(object)
 is_azure_v2_token <- function(object)
 {
     is_azure_token(object) && object$version == 2
+}
+
+#' @rdname az_login
+#' @export
+az_login <- function(...)
+{
+    args <- list(...)
+    cmdargs <- list(command = "az", args = c("login"))
+    for (arg in names(args)) 
+    {
+        argval <- args[[arg]]
+        # CLI expects dashes, not underscores
+        argkey <- gsub("_", "-", arg)
+        if (is.logical(argval))
+            cmdargs$args <- c(cmdargs$args, paste0("--", argkey))
+        else
+            cmdargs$args <- c(cmdargs$args, paste0("--", argkey, " ", argval))
+    }
+    execute_cmd(cmdargs)
 }
