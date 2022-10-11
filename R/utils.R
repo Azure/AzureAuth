@@ -3,8 +3,8 @@ select_auth_type <- function(password, username, certificate, auth_type, on_beha
     if(!is.null(auth_type))
     {
         if(!auth_type %in%
-           c("authorization_code", "device_code", "client_credentials", "resource_owner", "on_behalf_of",
-             "managed"))
+           c("authorization_code", "device_code", "client_credentials",
+             "resource_owner", "on_behalf_of", "managed", "cli"))
             stop("Invalid authentication method")
         return(auth_type)
     }
@@ -57,6 +57,20 @@ process_aad_response <- function(res)
         list(token=httr::stop_for_status(status, msg))
     }
     else httr::content(res)
+}
+
+process_cli_response <- function(res, resource)
+{
+    # Parse the JSON from the CLI and fix the names to snake_case
+    ret <- jsonlite::parse_json(res)
+    tok_data <- list(
+        token_type = ret$tokenType,
+        access_token = ret$accessToken,
+        expires_on = as.numeric(as.POSIXct(ret$expiresOn))
+    )
+    # CLI doesn't return resource identifier so we need to pass it through
+    if (!missing(resource)) tok_data$resource <- resource
+    return(tok_data)
 }
 
 
@@ -146,4 +160,63 @@ get_confirmation <- function(msg, default=TRUE)
 in_shiny <- function()
 {
     ("shiny" %in% loadedNamespaces()) && shiny::isRunning()
+}
+
+build_az_token_cmd <- function(command = "az", resource, tenant)
+{
+    args <- c("account", "get-access-token", "--output json")
+    if (!missing(resource)) args <- c(args, paste("--resource", resource))
+    if (!missing(tenant)) args <- c(args, paste("--tenant", tenant))
+    list(command = command, args = args)
+}
+
+handle_az_cmd_errors <- function(cond)
+{
+    not_loggedin <- grepl("az login", cond, fixed = TRUE) |
+        grepl("az account set", cond, fixed = TRUE)
+    not_found <- grepl("not found", cond, fixed = TRUE)
+    error_in <- grepl("error in running", cond, fixed = TRUE)
+
+    if (not_found | error_in)
+    {
+        msg <- paste("az is not installed or not in PATH.\n",
+            "Please see: ",
+            "https://learn.microsoft.com/en-us/cli/azure/install-azure-cli\n",
+            "for installation instructions."
+        )
+        stop(msg)
+    }
+    else if (not_loggedin)
+    {
+        stop("You are not logged into the Azure CLI.
+        Please call AzureAuth::az_login()
+        or run 'az login' from your shell and try again.")
+    }
+    else
+    {
+        # Other misc errors, pass through the CLI error message
+        message("Failed to invoke the Azure CLI.")
+        stop(cond)
+    }
+}
+
+execute_cmd <- function(cmd)
+{
+    tryCatch(
+        {
+            cat(cmd$command, paste(cmd$args), "\n")
+            result <- do.call(system2, append(cmd, list(stdout = TRUE)))
+            # result is a multi-line JSON string, concatenate together
+            paste0(result)
+        },
+        warning = function()
+        {
+            # if an error case, catch it, pass the error string and handle it
+            handle_az_cmd_errors(result)
+        },
+        error = function(cond)
+        {
+            handle_az_cmd_errors(cond$message)
+        }
+    )
 }

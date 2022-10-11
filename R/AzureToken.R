@@ -67,7 +67,7 @@ public=list(
         if(is.null(self$credentials))
         {
             res <- private$initfunc(auth_info)
-            self$credentials <- process_aad_response(res)
+            self$credentials <- private$process_response(res)
         }
         private$set_expiry_time(request_time)
 
@@ -126,7 +126,7 @@ public=list(
         }
         else private$initfunc() # reauthenticate if no refresh token (cannot reuse any supplied creds)
 
-        creds <- try(process_aad_response(res))
+        creds <- try(private$process_response(res))
         if(inherits(creds, "try-error"))
         {
             delete_azure_token(hash=self$hash(), confirm=FALSE)
@@ -216,6 +216,11 @@ private=list(
                 list(resource=self$resource)
             else list(scope=paste_v2_scopes(self$scope))
         )
+    },
+
+    process_response = function(res)
+    {
+        process_aad_response(res)
     }
 ))
 

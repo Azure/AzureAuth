@@ -285,6 +285,57 @@ private=list(
 ))
 
 
+#' @rdname AzureToken
+#' @export
+AzureTokenCLI <- R6::R6Class("AzureTokenCLI",
+    inherit = AzureToken,
+    public = list(
+        initialize = function(common_args)
+        {
+            self$auth_type <- "cli"
+            do.call(super$initialize, common_args)
+        }
+    ),
+    private = list(
+        initfunc = function(init_args)
+        {
+            tryCatch(
+                {
+                    cmd <- build_az_token_cmd(
+                        resource = self$resource,
+                        tenant = self$tenant
+                    )
+                    result <- execute_cmd(cmd)
+                    # result is a multi-line JSON string, concatenate together
+                    paste0(result)
+                },
+                warning = function(cond)
+                {
+                    not_found <- grepl("not found", cond, fixed = TRUE)
+                    not_loggedin <- grepl("az login", cond, fixed = TRUE) |
+                        grepl("az account set", cond, fixed = TRUE)
+                    bad_resource <- grepl(
+                        "was not found in the tenant",
+                        cond,
+                        fixed = TRUE
+                    )
+                    if (not_found)
+                        message("Azure CLI not found on path.")
+                    else if (not_loggedin)
+                        message("Please run 'az login' to set up account.")
+                    else
+                        message("Failed to invoke the Azure CLI.")
+                }
+            )
+        },
+        process_response = function(res)
+        {
+            process_cli_response(res, self$resource)
+        }
+    )
+)
+
+
 norenew_alert <- function(version)
 {
     if(version == 1)

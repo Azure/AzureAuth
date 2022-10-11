@@ -263,3 +263,6 @@ __pycache__/
 .RHistory
 misc/
 .Rproj.user
+.vscode/
+
+.Renviron

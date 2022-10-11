@@ -79,6 +79,15 @@ tok2 <- get_azure_token("resource2", "mytenant," "serviceapp_id",
                         password="serviceapp_secret", auth_type="on_behalf_of", on_behalf_of=tok0)
 ```
 
+6. The **cli** method uses the
+   [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
+   command `az account get-access-token` to retrieve an auth token. It is mostly
+   useful for interactive programming.
+
+```r
+get_azure_token(auth_type="cli")
+```
+
 If you don't specify the method, `get_azure_token` makes a best guess based on the presence or absence of the other authentication arguments, and whether httpuv is installed.
 
 ### Managed identities
