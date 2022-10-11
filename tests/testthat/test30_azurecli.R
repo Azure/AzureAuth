@@ -38,7 +38,6 @@ test_that("az account command is assembled properly even if missing tenant",
     )
 })
 
-
 test_that("az account command is assembled properly even if missing resource",
 {
     tenant <- "microsoft.com"
@@ -100,14 +99,8 @@ test_that("the token data from az login is handled by AzureTokenCLI",
 test_that("the appropriate error is thrown when the az CLI is not installed",
 {
     expect_error(
-        execute_az_token_cmd(
-                build_az_token_cmd(
-                "bnrwfq", # pass a different command name that is unlikely to exist
-                resource = "foo",
-                tenant = "bar"
-            )
-        ),
-        regexp = "bnrwfq is not installed."
+        handle_az_cmd_errors("error in running command"),
+        regexp = "az is not installed or not in PATH."
     )
 })
 
@@ -124,36 +117,17 @@ test_that("invalid scope error is handled", {
         "To re-authenticate, please run:\n",
         "az login --scope my_resource/.default"
     )
-    expect_error(, regexp = "")
+    expect_error(handle_az_cmd_errors(msg))
 })
 
-if (Sys.which("az") == "")
-    skip("az not installed, skipping tests.")
-
-# cond <- system2("az", args = c("account show"), stdout = TRUE)
-# not_loggedin <- grepl("az login", cond, fixed = TRUE) |
-#                         grepl("az account set", cond, fixed = TRUE)
-# if (not_loggedin)
-#     skip("az not logged in, skipping tests.")
-
-test_that("the appropriate error is thrown when the resource is invalid",
+test_that("the appropriate error is thrown when the tenant is invalid",
 {
-
-    fail("TODO")
+    errmsg <- "Failed to resolve tenant 'faketenant'"
+    expect_error(handle_az_cmd_errors(errmsg), regexp = "Failed to resolve tenant")
 })
 
-test_that("the appropriate error is thrown when az login fails",
+test_that("the appropriate error is thrown when the user is not logged in",
 {
-    fail("TODO")
-})
-
-
-test_that("az login is called if the user is not already logged in",
-{
-    fail("TODO")
-})
-
-test_that("token is successfully retrieved if user is logged in",
-{
-    fail("TODO")
+    errmsg <- "ERROR: Please run 'az login' to setup account."
+    expect_error(handle_az_cmd_errors(errmsg), regexp = "You are not logged in")
 })

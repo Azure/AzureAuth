@@ -172,10 +172,12 @@ build_az_token_cmd <- function(command = "az", resource, tenant)
 
 handle_az_cmd_errors <- function(cond)
 {
-    not_found <- grepl("not found", cond, fixed = TRUE)
     not_loggedin <- grepl("az login", cond, fixed = TRUE) |
         grepl("az account set", cond, fixed = TRUE)
-    if (not_found)
+    not_found <- grepl("not found", cond, fixed = TRUE)
+    error_in <- grepl("error in running", cond, fixed = TRUE)
+
+    if (not_found | error_in)
     {
         msg <- paste("az is not installed or not in PATH.\n",
             "Please see: ",
@@ -186,7 +188,9 @@ handle_az_cmd_errors <- function(cond)
     }
     else if (not_loggedin)
     {
-        stop("You are not logged into the Azure CLI. Please run 'az login' and try again.")
+        stop("You are not logged into the Azure CLI.
+        Please call AzureAuth::az_login()
+        or run 'az login' from your shell and try again.")
     }
     else
     {
@@ -194,6 +198,25 @@ handle_az_cmd_errors <- function(cond)
         message("Failed to invoke the Azure CLI.")
         stop(cond)
     }
+}
+
+capt <- function(...) {
+    print(list(...))
+    print("a" %in% list(...))
+}
+
+az_login <- function(command = "az",...)
+{
+    args <- list(...)
+    cmdargs <- list(command = command, args = c("login"))
+    for (arg in c("username", "password", "tenant", "scope",
+                  "service_principal", "use_device_code")) {
+        if (arg %in% names(args))
+            cmdargs$args <- c(cmdargs$args, paste0("--", arg, " ", args[arg]))
+    }
+    cat("Trying to open a web browser to log into Azure CLI...\n")
+    cat(cmdargs$command, paste(cmdargs$args), "\n")
+    do.call(system2, cmdargs)
 }
 
 execute_az_token_cmd <- function(cmd)
@@ -204,10 +227,14 @@ execute_az_token_cmd <- function(cmd)
             # result is a multi-line JSON string, concatenate together
             paste0(result)
         },
-        warning = function(cond)
+        warning = function()
         {
             # if an error case, catch it, pass the error string and handle it
-            handle_az_cmd_errors(cond)
+            handle_az_cmd_errors(result)
+        },
+        error = function(cond)
+        {
+            handle_az_cmd_errors(cond$message)
         }
     )
 }

@@ -301,7 +301,7 @@ AzureTokenCLI <- R6::R6Class("AzureTokenCLI",
         {
             tryCatch(
                 {
-                    cmd <- build_access_token_cmd(
+                    cmd <- build_az_token_cmd(
                         resource = self$resource,
                         tenant = self$tenant
                     )
