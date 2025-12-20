@@ -53,7 +53,7 @@ token3 <- get_azure_token(scopes, "mytenant", "app_id", version=2)
 AzureAuth supports the following methods for authenticating with AAD: **authorization_code**, **device_code**, **client_credentials**, **resource_owner** and **on_behalf_of**.
 
 1. Using the **authorization_code** method is a multi-step process. First, `get_azure_token` opens a login window in your browser, where you can enter your AAD credentials. In the background, it loads the [httpuv](https://github.com/rstudio/httpuv) package to listen on a local port. Once you have logged in, the AAD server redirects your browser to a local URL that contains an authorization code. `get_azure_token` retrieves this authorization code and sends it to the AAD access endpoint, which returns the OAuth token.</p>
-The httpuv package must be installed to use this method, as it requires a web server to listen on the (local) redirect URI. Since it opens a browser to load the AAD authorization page, your machine must also have an Internet browser installed that can be run from inside R. In particular, if you are using a Linux [Data Science Virtual Machine](https://azure.microsoft.com/en-us/services/virtual-machines/data-science-virtual-machines/) in Azure, you may run into difficulties; use one of the other methods instead.
+The httpuv package must be installed to use this method, as it requires a web server to listen on the (local) redirect URI. Since it opens a browser to load the AAD authorization page, your machine must also have an Internet browser installed that can be run from inside R. In particular, if you are using a Linux [Data Science Virtual Machine](https://azure.microsoft.com/en-us/products/virtual-machines/data-science-virtual-machines/) in Azure, you may run into difficulties; use one of the other methods instead.
 
 ```r
 # obtain a token using authorization_code
@@ -209,6 +209,6 @@ tok2$refresh()
 
 ## More information
 
-For the details on Azure Active Directory, consult the [Microsoft documentation](https://docs.microsoft.com/en-us/azure/active-directory/develop/).
+For the details on Azure Active Directory, consult the [Microsoft documentation](https://learn.microsoft.com/en-us/azure/active-directory/develop/).
 
 

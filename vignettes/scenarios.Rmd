@@ -8,7 +8,7 @@ vignette: >
   %\VignetteEncoding{utf8}
 ---
 
-The interaction between app registration configuration and requesting a token can be confusing. This vignette outlines some common authentication scenarios that R users might encounter. For each scenario, we briefly describe the necessary settings for your app registration in Azure, and how to request a token using AzureAuth. The [Azure Active Directory documentation](https://docs.microsoft.com/en-au/azure/active-directory/develop/v2-overview) is the authoritative reference.
+The interaction between app registration configuration and requesting a token can be confusing. This vignette outlines some common authentication scenarios that R users might encounter. For each scenario, we briefly describe the necessary settings for your app registration in Azure, and how to request a token using AzureAuth. The [Azure Active Directory documentation](https://learn.microsoft.com/en-au/azure/active-directory/develop/v2-overview) is the authoritative reference.
 
 ## Interactive authentication on a local machine
 
@@ -104,8 +104,8 @@ As an alternative to a client secret, it's possible to authenticate using a TLS 
 
 The following pages at the AAD documentation will be helpful if you're new to creating app registrations:
 
-- [A step-by-step guide](https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app) to registering an app in the Azure portal.
+- [A step-by-step guide](https://learn.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app) to registering an app in the Azure portal.
 
-- [How to set permissions for an app](https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-configure-app-access-web-apis). For interactive authentication (authenticating as a user), you want _delegated_ permissions. For non-interactive authentication (authenticating as the application), you want _application_ permissions.
+- [How to set permissions for an app](https://learn.microsoft.com/en-us/azure/active-directory/develop/quickstart-configure-app-access-web-apis). For interactive authentication (authenticating as a user), you want _delegated_ permissions. For non-interactive authentication (authenticating as the application), you want _application_ permissions.
 
-- [Restricting your app to a set of users](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-restrict-your-app-to-a-set-of-users)---if you don't want your app to be accessible to every user in your organisation. Only applies to webapps, not native (desktop & mobile) apps.
+- [Restricting your app to a set of users](https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-restrict-your-app-to-a-set-of-users)---if you don't want your app to be accessible to every user in your organisation. Only applies to webapps, not native (desktop & mobile) apps.

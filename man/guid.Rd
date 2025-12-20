@@ -65,5 +65,5 @@ normalize_tenant(c("microsoft", ids))
 \seealso{
 \link{get_azure_token}
 
-\href{https://docs.microsoft.com/en-us/dotnet/api/system.guid.parse}{Parsing rules for GUIDs in .NET}. \code{is_guid} and \code{normalize_guid} recognise the "N", "D", "B" and "P" formats.
+\href{https://learn.microsoft.com/en-us/dotnet/api/system.guid.parse}{Parsing rules for GUIDs in .NET}. \code{is_guid} and \code{normalize_guid} recognise the "N", "D", "B" and "P" formats.
 }

@@ -48,7 +48,7 @@
 #'
 #' The httpuv package must be installed to use the authorization_code method, as this requires a web server to listen on the (local) redirect URI. See [httr::oauth2.0_token] for more information; note that Azure does not support the `use_oob` feature of the httr OAuth 2.0 token class.
 #'
-#' Similarly, since the authorization_code method opens a browser to load the AAD authorization page, your machine must have an Internet browser installed that can be run from inside R. In particular, if you are using a Linux [Data Science Virtual Machine](https://azure.microsoft.com/en-us/services/virtual-machines/data-science-virtual-machines/) in Azure, you may run into difficulties; use one of the other methods instead.
+#' Similarly, since the authorization_code method opens a browser to load the AAD authorization page, your machine must have an Internet browser installed that can be run from inside R. In particular, if you are using a Linux [Data Science Virtual Machine](https://azure.microsoft.com/en-us/products/virtual-machines/data-science-virtual-machines/) in Azure, you may run into difficulties; use one of the other methods instead.
 #'
 #' @section Certificate authentication:
 #' OAuth tokens can be authenticated via an SSL/TLS certificate, which is considered more secure than a client secret. To do this, use the `certificate` argument, which can contain any of the following:
@@ -108,10 +108,10 @@
 #' [AzureToken], [httr::oauth2.0_token], [httr::Token], [cert_assertion],
 #' [build_authorization_uri], [get_device_creds]
 #'
-#' [Azure Active Directory for developers](https://docs.microsoft.com/en-us/azure/active-directory/develop/),
-#' [Managed identities overview](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview)
+#' [Azure Active Directory for developers](https://learn.microsoft.com/en-us/azure/active-directory/develop/),
+#' [Managed identities overview](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview)
 #' [Device code flow on OAuth.com](https://www.oauth.com/oauth2-servers/device-flow/token-request/),
-#' [OAuth 2.0 RFC](https://tools.ietf.org/html/rfc6749) for the gory details on how OAuth works
+#' [OAuth 2.0 RFC](https://datatracker.ietf.org/doc/html/rfc6749) for the gory details on how OAuth works
 #'
 #' @examples
 #' \dontrun{

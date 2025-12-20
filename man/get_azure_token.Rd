@@ -146,7 +146,7 @@ If the authentication method is not specified, it is chosen based on the presenc
 
 The httpuv package must be installed to use the authorization_code method, as this requires a web server to listen on the (local) redirect URI. See \link[httr:oauth2.0_token]{httr::oauth2.0_token} for more information; note that Azure does not support the \code{use_oob} feature of the httr OAuth 2.0 token class.
 
-Similarly, since the authorization_code method opens a browser to load the AAD authorization page, your machine must have an Internet browser installed that can be run from inside R. In particular, if you are using a Linux \href{https://azure.microsoft.com/en-us/services/virtual-machines/data-science-virtual-machines/}{Data Science Virtual Machine} in Azure, you may run into difficulties; use one of the other methods instead.
+Similarly, since the authorization_code method opens a browser to load the AAD authorization page, your machine must have an Internet browser installed that can be run from inside R. In particular, if you are using a Linux \href{https://azure.microsoft.com/en-us/products/virtual-machines/data-science-virtual-machines/}{Data Science Virtual Machine} in Azure, you may run into difficulties; use one of the other methods instead.
 }
 
 \section{Certificate authentication}{
@@ -351,8 +351,8 @@ httr::GET("https://myresource/path/for/call", header, ...)
 \link{AzureToken}, \link[httr:oauth2.0_token]{httr::oauth2.0_token}, \link[httr:Token-class]{httr::Token}, \link{cert_assertion},
 \link{build_authorization_uri}, \link{get_device_creds}
 
-\href{https://docs.microsoft.com/en-us/azure/active-directory/develop/}{Azure Active Directory for developers},
-\href{https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview}{Managed identities overview}
+\href{https://learn.microsoft.com/en-us/azure/active-directory/develop/}{Azure Active Directory for developers},
+\href{https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview}{Managed identities overview}
 \href{https://www.oauth.com/oauth2-servers/device-flow/token-request/}{Device code flow on OAuth.com},
-\href{https://tools.ietf.org/html/rfc6749}{OAuth 2.0 RFC} for the gory details on how OAuth works
+\href{https://datatracker.ietf.org/doc/html/rfc6749}{OAuth 2.0 RFC} for the gory details on how OAuth works
 }
