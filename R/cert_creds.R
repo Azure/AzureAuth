@@ -52,7 +52,7 @@ build_assertion.character <- function(assertion, ...)
 }
 
 
-build_assertion.cert_assertion <- function(assertion, tenant, app, aad_host, version)
+build_assertion.cert_assertion <- function(assertion, tenant, app, aad_host, version, ...)
 {
     url <- httr::parse_url(aad_host)
     if(url$path == "")

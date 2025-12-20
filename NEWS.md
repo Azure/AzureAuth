@@ -1,3 +1,7 @@
+# AzureAuth 1.3.4
+
+- New `get_manual_token` function to create a token object from an external token string. Thanks to @falbukrek.
+
 # AzureAuth 1.3.3
 
 - Documentation update only:
