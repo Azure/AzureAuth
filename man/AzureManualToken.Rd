@@ -7,42 +7,13 @@
 \format{
 An R6 object of class \code{AzureManualToken}, inheriting from \code{AzureToken}.
 }
-\arguments{
-\item{token}{A character string containing the access token.}
-
-\item{type}{The token type, usually "Bearer".}
-
-\item{tenant}{Optional tenant ID. If NULL, extracted from JWT claims.}
-
-\item{resource}{Optional resource/audience. If NULL, extracted from JWT claims.}
-}
-\value{
-Returns self invisibly.
-
-Always returns FALSE for manual tokens.
-
-Returns NULL invisibly.
-
-An MD5 hash string based on the token content.
-}
 \description{
-Initialize a manual token from a raw access token string.
-
-Refresh the token. Manual tokens cannot be refreshed.
-
-Check if this token can be refreshed.
-
-Cache the token. Manual tokens are not cached.
-
-Compute a hash for this token.
-
-Print the token object.
-}
-\details{
 Create an Azure token object from a pre-existing access token string. This is useful
 when you have obtained a token externally (e.g., via Azure CLI, Python, or another
-authentication mechanism) and want to use it with the AzureR ecosystem.
-
+authentication mechanism) and want to use it with the AzureR ecosystem. Rather than
+calling the new() method directly, tokens should be created via \code{\link[=get_manual_token]{get_manual_token()}}.
+}
+\details{
 The \code{AzureManualToken} class provides a way to wrap an externally-obtained access
 token string so it can be used with packages like \code{AzureGraph}, \code{AzureRMR},
 and other AzureR family packages that expect an \code{AzureToken} object.
@@ -57,12 +28,13 @@ object with a fresh token string.
 }
 \section{Methods}{
 
+
+This section documents how the methods for manual tokens differ from other token objects.
 \itemize{
-\item \code{new(token, type, tenant, resource)}: Initialize a new manual token object.
-\item \code{refresh()}: Cannot refresh a manual token; issues a warning and returns self.
-\item \code{validate()}: Checks if the token has expired based on JWT claims.
-\item \code{can_refresh()}: Returns FALSE since manual tokens cannot be refreshed.
-\item \code{cache()}: No-op; manual tokens are not cached.
+\item \code{refresh}: Manual tokens cannot be refreshed; you must create a new token object.
+\item \code{can_refresh}: Always returns FALSE for manual tokens.
+\item \code{cache}: Manual tokens are not cached; this method does nothing.
+\item \code{hash}: The hash is based on the token string itself, rather than the R-level metadata.
 }
 }
 

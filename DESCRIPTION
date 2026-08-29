@@ -33,5 +33,6 @@ Suggests:
     shinyjs,
     AzureRMR,
     AzureGraph
+Encoding: UTF-8
 Roxygen: list(markdown=TRUE, r6=FALSE)
-RoxygenNote: 7.3.2
+Config/roxygen2/version: 8.1.0

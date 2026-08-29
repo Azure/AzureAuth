@@ -348,7 +348,7 @@ httr::GET("https://myresource/path/for/call", header, ...)
 }
 }
 \seealso{
-\link{AzureToken}, \link[httr:oauth2.0_token]{httr::oauth2.0_token}, \link[httr:Token-class]{httr::Token}, \link{cert_assertion},
+\link{AzureToken}, \link[httr:oauth2.0_token]{httr::oauth2.0_token}, \link[httr:Token]{httr::Token}, \link{cert_assertion},
 \link{build_authorization_uri}, \link{get_device_creds}
 
 \href{https://learn.microsoft.com/en-us/azure/active-directory/develop/}{Azure Active Directory for developers},
