@@ -1,3 +1,7 @@
+# AzureAuth 1.3.5
+
+- Fix to `get_managed_token` to handle host URLs that already have the `/token` endpoint included.
+
 # AzureAuth 1.3.4
 
 - New `get_manual_token` function to create a token object from an external token string. Thanks to @falbukrek.

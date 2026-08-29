@@ -2,17 +2,18 @@
 #'
 #' Create an Azure token object from a pre-existing access token string. This is useful
 #' when you have obtained a token externally (e.g., via Azure CLI, Python, or another
-#' authentication mechanism) and want to use it with the AzureR ecosystem.
+#' authentication mechanism) and want to use it with the AzureR ecosystem. Rather than
+#' calling the new() method directly, tokens should be created via [get_manual_token()].
 #'
 #' @docType class
 #' @section Methods:
-#' \itemize{
-#'   \item \code{new(token, type, tenant, resource)}: Initialize a new manual token object.
-#'   \item \code{refresh()}: Cannot refresh a manual token; issues a warning and returns self.
-#'   \item \code{validate()}: Checks if the token has expired based on JWT claims.
-#'   \item \code{can_refresh()}: Returns FALSE since manual tokens cannot be refreshed.
-#'   \item \code{cache()}: No-op; manual tokens are not cached.
-#' }
+#'
+#' This section documents how the methods for manual tokens differ from other token objects.
+#'
+#' - `refresh`: Manual tokens cannot be refreshed; you must create a new token object.
+#' - `can_refresh`: Always returns FALSE for manual tokens.
+#' - `cache`: Manual tokens are not cached; this method does nothing.
+#' - `hash`: The hash is based on the token string itself, rather than the R-level metadata.
 #'
 #' @details
 #' The \code{AzureManualToken} class provides a way to wrap an externally-obtained access
@@ -58,11 +59,6 @@ AzureManualToken <- R6::R6Class("AzureManualToken", inherit = AzureToken,
 
 public = list(
 
-    #' @description Initialize a manual token from a raw access token string.
-    #' @param token A character string containing the access token.
-    #' @param type The token type, usually "Bearer".
-    #' @param tenant Optional tenant ID. If NULL, extracted from JWT claims.
-    #' @param resource Optional resource/audience. If NULL, extracted from JWT claims.
     initialize = function(token, type = "Bearer", tenant = NULL, resource = NULL)
     {
         if(missing(token) || is.null(token) || !is.character(token) || nchar(token) == 0)
@@ -173,30 +169,22 @@ public = list(
         invisible(self)
     },
 
-    #' @description Refresh the token. Manual tokens cannot be refreshed.
-    #' @return Returns self invisibly.
     refresh = function()
     {
         invisible(self)
     },
 
-    #' @description Check if this token can be refreshed.
-    #' @return Always returns FALSE for manual tokens.
     can_refresh = function()
     {
         FALSE
     },
 
-    #' @description Cache the token. Manual tokens are not cached.
-    #' @return Returns NULL invisibly.
     cache = function()
     {
         # Do not cache manual tokens - they are managed externally
         invisible(NULL)
     },
 
-    #' @description Compute a hash for this token.
-    #' @return An MD5 hash string based on the token content.
     hash = function()
     {
         # Hash based on the token string itself
@@ -209,7 +197,6 @@ public = list(
         paste(openssl::md5(msg[-(1:14)]), collapse = "")
     },
 
-    #' @description Print the token object.
     print = function()
     {
         cat(format_auth_header(self))

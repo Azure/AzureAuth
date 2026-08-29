@@ -39,12 +39,14 @@ build_assertion <- function(assertion, ...)
 }
 
 
+#' @export
 build_assertion.stored_cert <- function(assertion, ...)
 {
     build_assertion(cert_assertion(assertion), ...)
 }
 
 
+#' @export
 build_assertion.character <- function(assertion, ...)
 {
     pair <- read_cert_pair(assertion)
@@ -52,6 +54,7 @@ build_assertion.character <- function(assertion, ...)
 }
 
 
+#' @export
 build_assertion.cert_assertion <- function(assertion, tenant, app, aad_host, version, ...)
 {
     url <- httr::parse_url(aad_host)
@@ -72,6 +75,7 @@ build_assertion.cert_assertion <- function(assertion, tenant, app, aad_host, ver
 }
 
 
+#' @export
 build_assertion.default <- function(assertion, ...)
 {
     if(is.null(assertion))
@@ -86,6 +90,7 @@ sign_assertion <- function(certificate, claim, size)
 }
 
 
+#' @export
 sign_assertion.stored_cert <- function(certificate, claim, size)
 {
     kty <- certificate$policy$key_props$kty  # key type determines signing alg
@@ -100,6 +105,7 @@ sign_assertion.stored_cert <- function(certificate, claim, size)
 }
 
 
+#' @export
 sign_assertion.openssl_cert_pair <- function(certificate, claim, size)
 {
     alg <- if(inherits(certificate$key, "rsa"))
@@ -115,6 +121,7 @@ sign_assertion.openssl_cert_pair <- function(certificate, claim, size)
 }
 
 
+#' @export
 sign_assertion.character <- function(certificate, claim, size)
 {
     pair <- read_cert_pair(certificate)
