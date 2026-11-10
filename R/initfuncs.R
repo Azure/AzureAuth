@@ -9,6 +9,11 @@ listen_for_authcode <- function(remote_url, local_url)
     listen <- function(env)
     {
         query <- env$QUERY_STRING
+        # response_mode=form_post
+        if(env$REQUEST_METHOD == "POST")
+        {
+            query <- paste0("?", rawToChar(env$rook.input$read()))
+        }
         info <<- if(is.character(query) && nchar(query) > 0)
             httr::parse_url(query)$query
         else list()
